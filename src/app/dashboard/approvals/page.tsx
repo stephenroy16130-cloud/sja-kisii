@@ -31,15 +31,15 @@ export default async function ApprovalsPage() {
       <p className="mb-8 mt-1 text-sm text-neutral-500">Members waiting for your decision.</p>
 
       {pending.length === 0 ? (
-        <div className="rounded-2xl bg-white shadow-sm ring-1 ring-black/5 p-6 text-sm text-neutral-500">Nothing waiting. All caught up.</div>
+        <div className="rounded-2xl bg-white ring-1 ring-black/15 p-6 text-sm text-neutral-500">Nothing waiting. All caught up.</div>
       ) : (
         <div className="space-y-3">
           {pending.map((p) => (
-            <div key={p.id} className="flex items-center justify-between gap-4 rounded-2xl bg-white shadow-sm ring-1 ring-black/5 p-5">
+            <div key={p.id} className="flex items-center justify-between gap-4 rounded-2xl bg-white ring-1 ring-black/15 p-5">
               <div>
                 <p className="font-medium">{p.fullName} <span className="font-normal text-neutral-500">@{p.username}</span></p>
                 <p className="mt-1 text-sm text-neutral-500">{p.email} · {p.phone} · {crewName(p.crewId)}</p>
-                <p className="mt-2 text-xs uppercase tracking-wide text-amber-600">
+                <p className="mt-2 text-xs uppercase tracking-wide text-neutral-500">
                   {p.status === "PENDING_ADMIN" ? "Awaiting DO Admin" : "Awaiting Crew Leader"}
                 </p>
               </div>

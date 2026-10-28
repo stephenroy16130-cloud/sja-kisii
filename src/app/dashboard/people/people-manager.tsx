@@ -50,7 +50,7 @@ function PersonRow({ person }: { person: Person }) {
   }
 
   return (
-    <div className="rounded-2xl bg-white shadow-sm ring-1 ring-black/5 p-5">
+    <div className="rounded-2xl bg-white ring-1 ring-black/15 p-5">
       <div className="mb-3 flex items-center justify-between">
         <p className="font-medium">
           {person.fullName} <span className="font-normal text-neutral-500">@{person.username}</span>
@@ -105,7 +105,7 @@ function ProvisionForm() {
   }
 
   return (
-    <form onSubmit={onSubmit} className="grid gap-4 rounded-2xl bg-white shadow-sm ring-1 ring-black/5 p-6 sm:grid-cols-2">
+    <form onSubmit={onSubmit} className="grid gap-4 rounded-2xl bg-white ring-1 ring-black/15 p-6 sm:grid-cols-2">
       <div><label className={labelCls}>Full name</label><input name="fullName" required className={inputCls} /></div>
       <div><label className={labelCls}>Username</label><input name="username" required className={inputCls} /></div>
       <div><label className={labelCls}>Email</label><input name="email" type="email" required className={inputCls} /></div>
@@ -139,7 +139,7 @@ export default function PeopleManager({ people }: { people: Person[] }) {
       <section>
         <h2 className="mb-4 text-xl font-light">Active members ({people.length})</h2>
         {people.length === 0 ? (
-          <div className="rounded-2xl bg-white shadow-sm ring-1 ring-black/5 p-6 text-sm text-neutral-500">No other active members yet.</div>
+          <div className="rounded-2xl bg-white ring-1 ring-black/15 p-6 text-sm text-neutral-500">No other active members yet.</div>
         ) : (
           <div className="space-y-3">
             {people.map((p) => <PersonRow key={p.id + p.titles.join()} person={p} />)}

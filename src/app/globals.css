@@ -1,14 +1,11 @@
 @import "tailwindcss";
 
 @theme {
-  --color-cream: #f5f1ea;
-  --color-ink: #0b0b0b;
-  --color-glow: #e3a33b;
-  --color-glow-deep: #b9731a;
+  --color-cream: #f4f4f4;
 }
 
 body {
-  background: var(--color-cream);
-  color: var(--color-ink);
+  background: #ffffff;
+  color: #0a0a0a;
   letter-spacing: -0.01em;
 }
