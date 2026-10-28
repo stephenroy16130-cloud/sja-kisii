@@ -1,0 +1,458 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Title {
+  CORPORAL
+  SERGEANT
+  DSM
+  BAND_LEAD
+  BAND_MEMBER
+  DO_OPERATIONS
+  DO_TRAINING
+  DO_ADMIN
+  DO_FINANCE
+}
+
+enum UserStatus {
+  PENDING_ADMIN
+  PENDING_CREW
+  ACTIVE
+  REJECTED
+  SUSPENDED
+  DISABLED
+}
+
+enum Audience {
+  GENERAL
+  CREW
+  BAND
+}
+
+enum EventType {
+  MEETING
+  FIELD_OP
+  TRAINING
+}
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  EXCUSED
+}
+
+enum RequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum TrainingType {
+  DRILL
+  FIRST_AID
+}
+
+enum VerificationStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+enum StockType {
+  READY_STOCK
+  MADE_TO_ORDER
+}
+
+enum OrderStatus {
+  PENDING_PAYMENT
+  PAID
+  CANCELLED
+  FULFILLED
+}
+
+enum TransactionPurpose {
+  REGISTRATION_FEE
+  STORE_ORDER
+  CREW_EVENT
+}
+
+enum TransactionStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  CANCELLED
+}
+
+enum InstrumentStatus {
+  AVAILABLE
+  ISSUED
+  LOST
+  DAMAGED
+}
+
+enum MembershipAction {
+  ADD
+  REMOVE
+}
+
+enum RsvpResponse {
+  GOING
+  NOT_GOING
+  MAYBE
+}
+
+model User {
+  id               String     @id @default(cuid())
+  username         String     @unique
+  email            String     @unique
+  phone            String     @unique
+  fullName         String
+  passwordHash     String
+  status           UserStatus @default(PENDING_ADMIN)
+  titles           Title[]    @default([])
+  isSuperintendent Boolean    @default(false)
+  isDeveloper      Boolean    @default(false)
+  crewId           Int?
+  crew             Crew?      @relation("CrewMembers", fields: [crewId], references: [id])
+  approvedById     String?
+  crewApprovedById String?
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+
+  passwordResets     PasswordResetToken[]
+  attendance         AttendanceRecord[]      @relation("AttendanceMember")
+  recordedAttendance AttendanceRecord[]      @relation("AttendanceRecorder")
+  apologies          Apology[]
+  meetingsCreated    Meeting[]
+  fieldOpsCreated    FieldOp[]
+  trainingsCreated   Training[]              @relation("TrainingCreator")
+  trainingsVerified  Training[]              @relation("TrainingVerifier")
+  orders             Order[]
+  transactions       Transaction[]
+  announcements      Announcement[]
+  rsvps              AnnouncementRsvp[]
+  instrumentsHeld    InstrumentIssuanceLog[] @relation("IssuedTo")
+  instrumentsIssued  InstrumentIssuanceLog[] @relation("IssuedBy")
+  instrumentsTaken   InstrumentIssuanceLog[] @relation("ReceivedBy")
+  articles           Article[]
+  documents          Document[]
+  auditLogs          AuditLog[]
+  requestsMade       MembershipRequest[]     @relation("RequestedBy")
+  requestsAboutMe    MembershipRequest[]     @relation("RequestTarget")
+
+  @@index([status])
+  @@index([crewId])
+}
+
+model Crew {
+  id           Int     @id
+  name         String
+  whatsappLink String?
+
+  members            User[]              @relation("CrewMembers")
+  fieldOps           FieldOp[]
+  trainings          Training[]
+  attendance         AttendanceRecord[]
+  announcements      Announcement[]
+  membershipRequests MembershipRequest[]
+  articles           Article[]
+  documents          Document[]
+}
+
+model SystemSetting {
+  key       String   @id
+  value     Json
+  updatedAt DateTime @updatedAt
+}
+
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+}
+
+model Meeting {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  location    String?
+  startsAt    DateTime
+  createdById String
+  createdBy   User     @relation(fields: [createdById], references: [id])
+  createdAt   DateTime @default(now())
+
+  apologies  Apology[]
+  attendance AttendanceRecord[]
+}
+
+model Apology {
+  id          String        @id @default(cuid())
+  meetingId   String
+  meeting     Meeting       @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User          @relation(fields: [userId], references: [id])
+  reason      String
+  status      RequestStatus @default(PENDING)
+  decidedById String?
+  createdAt   DateTime      @default(now())
+
+  @@unique([meetingId, userId])
+}
+
+model FieldOp {
+  id          String    @id @default(cuid())
+  title       String
+  description String?
+  location    String?
+  startsAt    DateTime
+  endsAt      DateTime?
+  allCrews    Boolean   @default(true)
+  crews       Crew[]
+  createdById String
+  createdBy   User      @relation(fields: [createdById], references: [id])
+  createdAt   DateTime  @default(now())
+
+  attendance AttendanceRecord[]
+}
+
+model Training {
+  id           String             @id @default(cuid())
+  type         TrainingType
+  title        String
+  description  String?
+  heldAt       DateTime
+  crewId       Int?
+  crew         Crew?              @relation(fields: [crewId], references: [id])
+  createdById  String
+  createdBy    User               @relation("TrainingCreator", fields: [createdById], references: [id])
+  status       VerificationStatus @default(PENDING)
+  verifiedById String?
+  verifiedBy   User?              @relation("TrainingVerifier", fields: [verifiedById], references: [id])
+  verifiedAt   DateTime?
+  createdAt    DateTime           @default(now())
+
+  attendance AttendanceRecord[]
+}
+
+model AttendanceRecord {
+  id            String           @id @default(cuid())
+  eventType     EventType
+  meetingId     String?
+  meeting       Meeting?         @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  fieldOpId     String?
+  fieldOp       FieldOp?         @relation(fields: [fieldOpId], references: [id], onDelete: Cascade)
+  trainingId    String?
+  training      Training?        @relation(fields: [trainingId], references: [id], onDelete: Cascade)
+  userId        String
+  user          User             @relation("AttendanceMember", fields: [userId], references: [id])
+  crewId        Int?
+  crew          Crew?            @relation(fields: [crewId], references: [id])
+  status        AttendanceStatus
+  recordedById  String
+  recordedBy    User             @relation("AttendanceRecorder", fields: [recordedById], references: [id])
+  disputed      Boolean          @default(false)
+  disputeReason String?
+  disputeStatus RequestStatus?
+  recordedAt    DateTime         @default(now())
+
+  @@unique([userId, meetingId])
+  @@unique([userId, fieldOpId])
+  @@unique([userId, trainingId])
+  @@index([crewId])
+}
+
+model Item {
+  id            String    @id @default(cuid())
+  name          String
+  description   String?
+  imageUrl      String?
+  stockType     StockType
+  price         Decimal   @db.Decimal(10, 2)
+  quantity      Int?
+  sizes         String[]  @default([])
+  orderOpensAt  DateTime?
+  orderClosesAt DateTime?
+  isActive      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+
+  orderItems OrderItem[]
+}
+
+model Order {
+  id        String      @id @default(cuid())
+  userId    String
+  user      User        @relation(fields: [userId], references: [id])
+  status    OrderStatus @default(PENDING_PAYMENT)
+  total     Decimal     @db.Decimal(10, 2)
+  createdAt DateTime    @default(now())
+
+  items        OrderItem[]
+  transactions Transaction[]
+}
+
+model OrderItem {
+  id        String  @id @default(cuid())
+  orderId   String
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  itemId    String
+  item      Item    @relation(fields: [itemId], references: [id])
+  size      String?
+  notes     String?
+  quantity  Int
+  unitPrice Decimal @db.Decimal(10, 2)
+}
+
+model Transaction {
+  id                String             @id @default(cuid())
+  userId            String
+  user              User               @relation(fields: [userId], references: [id])
+  purpose           TransactionPurpose
+  amount            Decimal            @db.Decimal(10, 2)
+  phone             String
+  status            TransactionStatus  @default(PENDING)
+  merchantRequestId String?
+  checkoutRequestId String?            @unique
+  mpesaReceipt      String?            @unique
+  resultCode        Int?
+  resultDesc        String?
+  rawCallback       Json?
+  orderId           String?
+  order             Order?             @relation(fields: [orderId], references: [id])
+  announcementId    String?
+  announcement      Announcement?      @relation(fields: [announcementId], references: [id])
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+}
+
+model Announcement {
+  id            String    @id @default(cuid())
+  crewId        Int
+  crew          Crew      @relation(fields: [crewId], references: [id])
+  createdById   String
+  createdBy     User      @relation(fields: [createdById], references: [id])
+  title         String
+  body          String
+  eventDate     DateTime?
+  requiresRsvp  Boolean   @default(false)
+  paymentAmount Decimal?  @db.Decimal(10, 2)
+  paymentLabel  String?
+  createdAt     DateTime  @default(now())
+
+  rsvps        AnnouncementRsvp[]
+  transactions Transaction[]
+}
+
+model AnnouncementRsvp {
+  id             String       @id @default(cuid())
+  announcementId String
+  announcement   Announcement @relation(fields: [announcementId], references: [id], onDelete: Cascade)
+  userId         String
+  user           User         @relation(fields: [userId], references: [id])
+  response       RsvpResponse
+  createdAt      DateTime     @default(now())
+
+  @@unique([announcementId, userId])
+}
+
+model MembershipRequest {
+  id            String           @id @default(cuid())
+  crewId        Int
+  crew          Crew             @relation(fields: [crewId], references: [id])
+  targetUserId  String
+  targetUser    User             @relation("RequestTarget", fields: [targetUserId], references: [id])
+  action        MembershipAction
+  status        RequestStatus    @default(PENDING)
+  requestedById String
+  requestedBy   User             @relation("RequestedBy", fields: [requestedById], references: [id])
+  decidedById   String?
+  createdAt     DateTime         @default(now())
+}
+
+model BandInstrument {
+  id           String           @id @default(cuid())
+  name         String
+  type         String
+  serialNumber String?          @unique
+  condition    String?
+  notes        String?
+  status       InstrumentStatus @default(AVAILABLE)
+  createdAt    DateTime         @default(now())
+
+  logs InstrumentIssuanceLog[]
+}
+
+model InstrumentIssuanceLog {
+  id                String         @id @default(cuid())
+  instrumentId      String
+  instrument        BandInstrument @relation(fields: [instrumentId], references: [id])
+  issuedToId        String
+  issuedTo          User           @relation("IssuedTo", fields: [issuedToId], references: [id])
+  issuedById        String
+  issuedBy          User           @relation("IssuedBy", fields: [issuedById], references: [id])
+  issuedAt          DateTime       @default(now())
+  returnedAt        DateTime?
+  receivedById      String?
+  receivedBy        User?          @relation("ReceivedBy", fields: [receivedById], references: [id])
+  conditionOnReturn String?
+  markedLost        Boolean        @default(false)
+  markedDamaged     Boolean        @default(false)
+  notes             String?
+}
+
+model Article {
+  id            String    @id @default(cuid())
+  title         String
+  content       String    @db.Text
+  images        String[]  @default([])
+  audience      Audience  @default(GENERAL)
+  crewId        Int?
+  crew          Crew?     @relation(fields: [crewId], references: [id])
+  isPublished   Boolean   @default(true)
+  notifyMembers Boolean   @default(false)
+  authorId      String
+  author        User      @relation(fields: [authorId], references: [id])
+  moderatedById String?
+  moderatedAt   DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model Document {
+  id           String   @id @default(cuid())
+  title        String
+  description  String?
+  fileUrl      String
+  fileName     String
+  fileSize     Int
+  mimeType     String
+  audience     Audience @default(GENERAL)
+  crewId       Int?
+  crew         Crew?    @relation(fields: [crewId], references: [id])
+  uploadedById String
+  uploadedBy   User     @relation(fields: [uploadedById], references: [id])
+  createdAt    DateTime @default(now())
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  actorId   String?
+  actor     User?    @relation(fields: [actorId], references: [id])
+  action    String
+  entity    String
+  entityId  String?
+  metadata  Json?
+  ipAddress String?
+  createdAt DateTime @default(now())
+
+  @@index([entity, entityId])
+  @@index([actorId])
+}
