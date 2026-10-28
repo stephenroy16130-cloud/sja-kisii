@@ -26,7 +26,7 @@ export default function ResetForm({ token }: { token: string }) {
 
   if (msg)
     return (
-      <div className="rounded-2xl bg-cream p-4 text-sm">
+      <div className="bg-neutral-100 p-4 text-sm">
         {msg} <Link href="/login" className="underline">Sign in</Link>
       </div>
     );

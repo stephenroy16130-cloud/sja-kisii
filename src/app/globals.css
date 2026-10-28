@@ -4,8 +4,35 @@
   --color-cream: #f4f4f4;
 }
 
+@theme inline {
+  --font-copy: var(--font-baskerville);
+}
+
+:root {
+  --accent: #b59a6a;
+}
+
 body {
   background: #ffffff;
   color: #0a0a0a;
-  letter-spacing: -0.01em;
+  font-family: var(--font-montserrat), system-ui, sans-serif;
+}
+
+.heading {
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  font-weight: 500;
+}
+
+.accent-bar {
+  border-left: 1px solid var(--accent);
+  padding-left: 1rem;
+}
+
+.vignette-dark {
+  background: radial-gradient(ellipse 85% 75% at 72% 25%, #3b3b3b 0%, #141414 55%, #000 100%);
+}
+
+.vignette-light {
+  background: radial-gradient(ellipse 85% 90% at 50% 45%, #ffffff 0%, #ececec 65%, #d4d4d4 100%);
 }

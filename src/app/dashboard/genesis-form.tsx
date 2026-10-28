@@ -29,7 +29,7 @@ export default function GenesisForm() {
     setBusy(false);
   }
 
-  if (msg) return <div className="rounded-2xl bg-cream p-4 text-sm">{msg}</div>;
+  if (msg) return <div className="bg-neutral-100 p-4 text-sm">{msg}</div>;
 
   return (
     <form onSubmit={onSubmit} className="grid gap-4 sm:grid-cols-2">

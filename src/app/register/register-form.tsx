@@ -31,7 +31,7 @@ export default function RegisterForm() {
     setBusy(false);
   }
 
-  if (done) return <div className="rounded-2xl bg-cream p-4 text-sm">{done}</div>;
+  if (done) return <div className="bg-neutral-100 p-4 text-sm">{done}</div>;
 
   return (
     <form onSubmit={onSubmit} className="space-y-4">

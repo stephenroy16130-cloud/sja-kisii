@@ -28,7 +28,7 @@ export default function ForgotPasswordPage() {
   return (
     <AuthShell title="Reset your password" subtitle="Enter your email and we will send a reset link.">
       {msg ? (
-        <div className="rounded-2xl bg-cream p-4 text-sm">
+        <div className="bg-neutral-100 p-4 text-sm">
           {msg}
           <p className="mt-2 text-xs text-neutral-500">In development the link is printed in the server terminal.</p>
         </div>
