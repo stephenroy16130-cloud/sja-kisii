@@ -1,3 +1,4 @@
+import { crewName } from "@/lib/crews";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
@@ -37,7 +38,7 @@ export default async function DashboardPage() {
             ))}
             {user.crewId && (
               <span className="bg-amber-400 px-3 py-1 text-xs font-medium uppercase tracking-wide text-black">
-                Crew {user.crewId}
+                {crewName(user.crewId)}
               </span>
             )}
           </div>

@@ -1,4 +1,5 @@
 "use client";
+import { crewName } from "@/lib/crews";
 
 import { useState, type FormEvent } from "react";
 import { api } from "@/lib/client";
@@ -30,7 +31,7 @@ export default function RegisterForm() {
     setBusy(false);
   }
 
-  if (done) return <div className="border border-black p-4 text-sm">{done}</div>;
+  if (done) return <div className="rounded-2xl bg-cream p-4 text-sm">{done}</div>;
 
   return (
     <form onSubmit={onSubmit} className="space-y-4">
@@ -54,7 +55,7 @@ export default function RegisterForm() {
         <label className={labelCls}>Crew</label>
         <select name="crewId" required defaultValue="1" className={inputCls}>
           {[1, 2, 3, 4].map((n) => (
-            <option key={n} value={n}>Crew {n}</option>
+            <option key={n} value={n}>{crewName(n)}</option>
           ))}
         </select>
       </div>

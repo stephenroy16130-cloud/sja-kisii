@@ -1,4 +1,3 @@
-import Link from "next/link";
 import type { ReactNode } from "react";
 
 export default function AuthShell({
@@ -11,40 +10,45 @@ export default function AuthShell({
   children: ReactNode;
 }) {
   return (
-    <main className="grid min-h-screen lg:grid-cols-2">
-      <section className="relative hidden flex-col justify-between overflow-hidden bg-black p-12 text-white lg:flex">
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(217,148,43,0.45),transparent_60%)]" />
-        <div className="relative flex items-center gap-3 text-sm">
-          <span className="text-2xl text-amber-400">✳</span>
-          <span>
-            St. John Ambulance
-            <br />
-            Kisii University
-          </span>
-        </div>
-        <div className="relative">
-          <h1 className="text-6xl font-light leading-[1.05] tracking-tight">
-            Take a step
-            <br />
-            toward the light
-          </h1>
-          <p className="mt-6 max-w-sm text-lg font-light text-neutral-300">
-            Service, training and fellowship, all in one place.
-          </p>
-        </div>
-        <p className="relative text-xs text-neutral-500">Kisii University Division</p>
-      </section>
+    <main className="relative min-h-screen overflow-hidden bg-ink text-white">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_60%_50%_at_75%_0%,rgba(227,163,59,0.55),transparent_70%),radial-gradient(ellipse_45%_40%_at_10%_100%,rgba(185,115,26,0.28),transparent_70%)]" />
+      <div className="pointer-events-none absolute -top-24 right-[28%] h-[150%] w-56 rotate-[18deg] bg-gradient-to-b from-amber-200/25 to-transparent blur-3xl" />
+      <div className="pointer-events-none absolute -top-24 right-[12%] h-[150%] w-32 rotate-[18deg] bg-gradient-to-b from-amber-100/20 to-transparent blur-3xl" />
 
-      <section className="flex items-center justify-center px-6 py-12">
-        <div className="w-full max-w-sm">
-          <Link href="/" className="mb-10 block text-sm text-neutral-500 lg:hidden">
-            ✳ St. John Ambulance · Kisii University
-          </Link>
+      <div className="relative mx-auto grid min-h-screen max-w-6xl items-center gap-10 px-6 py-10 lg:grid-cols-[1.15fr_0.85fr]">
+        <section className="flex flex-col gap-10 lg:gap-16">
+          <div className="flex items-center gap-3">
+            <span className="text-3xl leading-none text-glow">✳</span>
+            <span className="text-sm leading-tight text-white/80">
+              St. John Ambulance
+              <br />
+              Kisii University
+            </span>
+          </div>
+
+          <div>
+            <h1 className="text-5xl font-light leading-[1.05] tracking-tight sm:text-6xl lg:text-7xl">
+              Take a step
+              <br />
+              toward the light
+            </h1>
+            <p className="mt-6 max-w-md text-lg font-light text-white/70">
+              Service, training and fellowship, all in one place.
+            </p>
+          </div>
+
+          <div className="hidden max-w-sm rounded-2xl bg-white/10 p-5 text-sm leading-relaxed text-white/80 backdrop-blur lg:block">
+            <span className="mb-2 block text-2xl leading-none text-glow">“</span>
+            We want to be a family where people can connect, learn and grow through service.
+          </div>
+        </section>
+
+        <section className="rounded-[2rem] bg-white p-8 text-ink shadow-2xl sm:p-10">
           <h2 className="text-3xl font-light tracking-tight">{title}</h2>
           {subtitle && <p className="mt-2 text-sm text-neutral-500">{subtitle}</p>}
           <div className="mt-8">{children}</div>
-        </div>
-      </section>
+        </section>
+      </div>
     </main>
   );
 }

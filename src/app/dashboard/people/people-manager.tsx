@@ -1,4 +1,5 @@
 "use client";
+import { crewName } from "@/lib/crews";
 
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
@@ -49,11 +50,11 @@ function PersonRow({ person }: { person: Person }) {
   }
 
   return (
-    <div className="border border-neutral-200 bg-white p-5">
+    <div className="rounded-2xl bg-white shadow-sm ring-1 ring-black/5 p-5">
       <div className="mb-3 flex items-center justify-between">
         <p className="font-medium">
           {person.fullName} <span className="font-normal text-neutral-500">@{person.username}</span>
-          {person.crewId && <span className="ml-2 text-xs text-neutral-500">Crew {person.crewId}</span>}
+          {person.crewId && <span className="ml-2 text-xs text-neutral-500">{crewName(person.crewId)}</span>}
         </p>
         <div className="flex items-center gap-3">
           {msg && <span className="text-xs text-neutral-500">{msg}</span>}
@@ -104,7 +105,7 @@ function ProvisionForm() {
   }
 
   return (
-    <form onSubmit={onSubmit} className="grid gap-4 border border-neutral-200 bg-white p-6 sm:grid-cols-2">
+    <form onSubmit={onSubmit} className="grid gap-4 rounded-2xl bg-white shadow-sm ring-1 ring-black/5 p-6 sm:grid-cols-2">
       <div><label className={labelCls}>Full name</label><input name="fullName" required className={inputCls} /></div>
       <div><label className={labelCls}>Username</label><input name="username" required className={inputCls} /></div>
       <div><label className={labelCls}>Email</label><input name="email" type="email" required className={inputCls} /></div>
@@ -114,7 +115,7 @@ function ProvisionForm() {
         <label className={labelCls}>Crew (needed for Corporal / Sergeant)</label>
         <select name="crewId" defaultValue="" className={inputCls}>
           <option value="">None</option>
-          {[1, 2, 3, 4].map((n) => <option key={n} value={n}>Crew {n}</option>)}
+          {[1, 2, 3, 4].map((n) => <option key={n} value={n}>{crewName(n)}</option>)}
         </select>
       </div>
       <div className="sm:col-span-2">
@@ -138,7 +139,7 @@ export default function PeopleManager({ people }: { people: Person[] }) {
       <section>
         <h2 className="mb-4 text-xl font-light">Active members ({people.length})</h2>
         {people.length === 0 ? (
-          <div className="border border-neutral-200 bg-white p-6 text-sm text-neutral-500">No other active members yet.</div>
+          <div className="rounded-2xl bg-white shadow-sm ring-1 ring-black/5 p-6 text-sm text-neutral-500">No other active members yet.</div>
         ) : (
           <div className="space-y-3">
             {people.map((p) => <PersonRow key={p.id + p.titles.join()} person={p} />)}
