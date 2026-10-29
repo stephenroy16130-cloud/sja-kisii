@@ -1,4 +1,5 @@
 "use client";
+import Badge from "@/components/badge";
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -80,7 +81,7 @@ export default function NavShell({
   const renderTab = (t: Tab) => {
     const active = t.href ? isActive(t.href) : sheet;
     const cls = `flex flex-1 flex-col items-center gap-1 py-2.5 text-[11px] transition ${
-      active ? "text-white" : "text-white/45"
+      active ? "text-gold" : "text-white/45"
     }`;
     const inner = (
       <>
@@ -101,7 +102,7 @@ export default function NavShell({
 
   const brand = (
     <Link href="/dashboard" className="flex items-center gap-3">
-      <span className="text-2xl leading-none">✳</span>
+      <Badge size={40} />
       <span className="text-[11px] uppercase leading-tight tracking-[0.2em] text-white/80">
         St. John Ambulance
         <br />
@@ -184,10 +185,10 @@ export default function NavShell({
             onClick={() => setSheet(false)}
             aria-label="Home"
             className={`mx-2 -mt-8 flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-white text-3xl leading-none text-black ring-4 ring-black transition ${
-              homeActive ? "shadow-[0_0_28px_rgba(255,255,255,0.35)]" : ""
+              homeActive ? "shadow-[0_0_28px_rgba(212,175,90,0.5)]" : ""
             }`}
           >
-            ✳
+            <Badge size={44} bare />
           </Link>
           {right.map(renderTab)}
         </div>

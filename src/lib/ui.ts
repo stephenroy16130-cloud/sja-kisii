@@ -1,5 +1,5 @@
 export const inputCls =
-  "w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition placeholder:text-white/30 focus:border-white/60";
+  "w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition placeholder:text-white/30 focus:border-gold";
 export const btnCls =
   "w-full rounded-full bg-white px-5 py-3.5 text-sm font-medium text-black transition hover:bg-neutral-200 disabled:opacity-50";
 export const btnGhostCls =

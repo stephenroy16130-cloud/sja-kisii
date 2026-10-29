@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import Badge from "@/components/badge";
 
 export default function AuthShell({
   title,
@@ -16,7 +17,7 @@ export default function AuthShell({
         <div className="pointer-events-none absolute -right-24 top-[30%] h-[26rem] w-[26rem] rounded-full border border-white/10" />
 
         <div className="relative flex items-center gap-3">
-          <span className="text-3xl leading-none">✳</span>
+          <Badge size={64} />
           <span className="text-[11px] uppercase leading-tight tracking-[0.2em] text-white/80">
             St. John Ambulance
             <br />

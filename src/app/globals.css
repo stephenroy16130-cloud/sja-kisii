@@ -2,6 +2,10 @@
 
 @theme {
   --color-card: #121212;
+  --color-gold: #d4af5a;
+  --color-ok: #4ade80;
+  --color-warn: #fbbf24;
+  --color-bad: #f87171;
 }
 
 @theme inline {
@@ -9,7 +13,7 @@
 }
 
 :root {
-  --accent: #b59a6a;
+  --accent: #d4af5a;
   color-scheme: dark;
 }
 
@@ -31,5 +35,7 @@ body {
 }
 
 .vignette-dark {
-  background: radial-gradient(ellipse 85% 75% at 72% 25%, #3b3b3b 0%, #141414 55%, #000 100%);
+  background:
+    radial-gradient(ellipse 55% 45% at 85% 5%, rgba(212, 175, 90, 0.22), transparent 70%),
+    radial-gradient(ellipse 85% 75% at 72% 25%, #3b3b3b 0%, #141414 55%, #000 100%);
 }

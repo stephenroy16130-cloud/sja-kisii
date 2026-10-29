@@ -27,7 +27,8 @@ export default function RegistrationToggle({ initialOpen }: { initialOpen: boole
   return (
     <div>
       <p className="text-sm text-white/50">
-        Public registration is <span className="font-medium text-white">{open ? "OPEN" : "CLOSED"}</span>.
+        Public registration is{" "}
+        <span className={`font-medium ${open ? "text-ok" : "text-bad"}`}>{open ? "OPEN" : "CLOSED"}</span>.
       </p>
       <button onClick={toggle} disabled={busy} className={`${btnGhostCls} mt-3`}>
         {open ? "Close registration" : "Open registration"}

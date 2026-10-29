@@ -28,7 +28,7 @@ export default function ReviewButtons({ userId }: { userId: string }) {
         <button
           disabled={busy}
           onClick={() => decide("approve")}
-          className="rounded-full bg-white px-5 py-2.5 text-xs font-medium text-black transition hover:bg-neutral-200 disabled:opacity-50"
+          className="rounded-full bg-ok px-5 py-2.5 text-xs font-medium text-black transition hover:brightness-110 disabled:opacity-50"
         >
           Approve
         </button>
