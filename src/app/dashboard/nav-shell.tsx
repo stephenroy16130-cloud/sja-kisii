@@ -6,7 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import { api } from "@/lib/client";
 
-type IconName = "approvals" | "people" | "account";
+type IconName = "approvals" | "people" | "meetings" | "account";
 export type NavLink = { href: string; label: string; icon: IconName };
 type Tab = { key: string; label: string; icon: IconName; href?: string };
 
@@ -27,6 +27,20 @@ function Icon({ name }: { name: IconName }) {
         <rect x="6" y="4" width="12" height="17" rx="2" />
         <path d="M9 4h6v2H9z" />
         <path d="m9.5 13 2 2 3.5-4" />
+      </svg>
+    );
+  if (name === "meetings")
+    return (
+      <svg {...p}>
+        <rect x="4" y="5" width="16" height="16" rx="2" />
+        <path d="M8 3v4M16 3v4M4 10h16" />
+      </svg>
+    );
+  if (name === "meetings")
+    return (
+      <svg {...p}>
+        <rect x="4" y="5" width="16" height="16" rx="2" />
+        <path d="M8 3v4M16 3v4M4 10h16" />
       </svg>
     );
   if (name === "people")

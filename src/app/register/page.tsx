@@ -12,7 +12,7 @@ export default async function RegisterPage() {
   return (
     <AuthShell
       title="Create your account"
-      subtitle="Your DO Admin and then your Crew Leader will approve it."
+      subtitle="Your DO Admin and then your Crew Sgt or Corporal will approve it."
     >
       {open ? (
         <RegisterForm />

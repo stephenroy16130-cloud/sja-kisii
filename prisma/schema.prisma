@@ -107,22 +107,23 @@ enum RsvpResponse {
 }
 
 model User {
-  id               String     @id @default(cuid())
-  username         String     @unique
-  email            String     @unique
-  phone            String     @unique
+  weeklyWins       WeeklyResult[] @relation("WeeklyWins")
+  id               String         @id @default(cuid())
+  username         String         @unique
+  email            String         @unique
+  phone            String         @unique
   fullName         String
   passwordHash     String
-  status           UserStatus @default(PENDING_ADMIN)
-  titles           Title[]    @default([])
-  isSuperintendent Boolean    @default(false)
-  isDeveloper      Boolean    @default(false)
+  status           UserStatus     @default(PENDING_ADMIN)
+  titles           Title[]        @default([])
+  isSuperintendent Boolean        @default(false)
+  isDeveloper      Boolean        @default(false)
   crewId           Int?
-  crew             Crew?      @relation("CrewMembers", fields: [crewId], references: [id])
+  crew             Crew?          @relation("CrewMembers", fields: [crewId], references: [id])
   approvedById     String?
   crewApprovedById String?
-  createdAt        DateTime   @default(now())
-  updatedAt        DateTime   @updatedAt
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
 
   passwordResets     PasswordResetToken[]
   attendance         AttendanceRecord[]      @relation("AttendanceMember")
@@ -181,14 +182,16 @@ model PasswordResetToken {
 }
 
 model Meeting {
-  id          String   @id @default(cuid())
-  title       String
-  description String?
-  location    String?
-  startsAt    DateTime
-  createdById String
-  createdBy   User     @relation(fields: [createdById], references: [id])
-  createdAt   DateTime @default(now())
+  archivedAt   DateTime?
+  archivedById String?
+  id           String    @id @default(cuid())
+  title        String
+  description  String?
+  location     String?
+  startsAt     DateTime
+  createdById  String
+  createdBy    User      @relation(fields: [createdById], references: [id])
+  createdAt    DateTime  @default(now())
 
   apologies  Apology[]
   attendance AttendanceRecord[]
@@ -455,4 +458,19 @@ model AuditLog {
 
   @@index([entity, entityId])
   @@index([actorId])
+}
+
+model WeeklyResult {
+  id            String   @id @default(cuid())
+  weekStart     DateTime @unique
+  weekEnd       DateTime
+  winnerId      String?
+  winner        User?    @relation("WeeklyWins", fields: [winnerId], references: [id])
+  points        Int      @default(0)
+  optionalCount Int      @default(0)
+  perfectWeek   Boolean  @default(false)
+  topFive       Json?
+  createdAt     DateTime @default(now())
+
+  @@index([winnerId])
 }

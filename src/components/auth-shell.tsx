@@ -35,12 +35,12 @@ export default function AuthShell({
         <div>
           <p className="font-copy text-xl italic text-white/80">Take a step</p>
           <h1 className="heading mt-3 text-3xl leading-snug sm:text-4xl lg:text-5xl">
-            Toward the
+            Toward serving
             <br />
-            Light
+            Humanity
           </h1>
           <p className="font-copy mt-8 max-w-sm text-sm leading-relaxed text-white/60">
-            Service, training and fellowship, all in one place.
+            Service, volunteerism and devotion.
           </p>
         </div>
 

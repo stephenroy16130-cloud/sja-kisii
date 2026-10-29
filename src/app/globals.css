@@ -39,3 +39,9 @@ body {
     radial-gradient(ellipse 55% 45% at 85% 5%, rgba(212, 175, 90, 0.22), transparent 70%),
     radial-gradient(ellipse 85% 75% at 72% 25%, #3b3b3b 0%, #141414 55%, #000 100%);
 }
+
+select option,
+select optgroup {
+  background-color: #111111;
+  color: #ffffff;
+}

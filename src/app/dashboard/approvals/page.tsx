@@ -49,7 +49,7 @@ export default async function ApprovalsPage() {
                   {p.email} · {p.phone} · {crewName(p.crewId)}
                 </p>
                 <p className="mt-3 text-[11px] uppercase tracking-[0.2em] text-neutral-500">
-                  {p.status === "PENDING_ADMIN" ? "Awaiting DO Admin" : "Awaiting Crew Leader"}
+                  {p.status === "PENDING_ADMIN" ? "Awaiting DO Admin" : "Awaiting Crew Sgt or Corporal"}
                 </p>
               </div>
               <ReviewButtons userId={p.id} />

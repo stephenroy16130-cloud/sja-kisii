@@ -20,7 +20,7 @@ export const POST = route(async (req: Request) => {
     case "PENDING_ADMIN":
       throw new HttpError(403, "Your account is awaiting approval by the DO Admin.");
     case "PENDING_CREW":
-      throw new HttpError(403, "Your account is awaiting approval by your Crew Leader.");
+      throw new HttpError(403, "Your account is awaiting approval by your Crew Sergeant or Corporal.");
     case "REJECTED":
       throw new HttpError(403, "Your registration was not approved.");
     case "SUSPENDED":

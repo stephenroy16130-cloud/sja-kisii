@@ -2,9 +2,13 @@ import type { Prisma } from "@prisma/client";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import Badge from "@/components/badge";
+import HallOfFame from "@/components/hall-of-fame";
+import TrophyBadge from "@/components/trophy-badge";
+import TrophyCase from "@/components/trophy-case";
 import { getCurrentUser } from "@/lib/auth";
 import { crewColor, crewName } from "@/lib/crews";
 import { db } from "@/lib/db";
+import { loadMotw } from "@/lib/motw";
 import { can, permissionsFor } from "@/lib/rbac";
 import GenesisForm from "./genesis-form";
 import RegistrationToggle from "./registration-toggle";
@@ -33,7 +37,8 @@ export default async function DashboardPage() {
     filters.push({ status: "PENDING_CREW", crewId: user.crewId });
   }
 
-  const [setting, pending, members] = await Promise.all([
+  const [motw, setting, pending, members] = await Promise.all([
+    loadMotw(user.id),
     db.systemSetting.findUnique({ where: { key: "registrationOpen" } }),
     filters.length ? db.user.count({ where: { OR: filters } }) : Promise.resolve(0),
     canManage
@@ -61,8 +66,9 @@ export default async function DashboardPage() {
         </div>
         <div className="relative">
           <p className="font-copy text-base italic text-gold">Welcome back</p>
-          <h1 className="mt-2 max-w-[75%] text-3xl font-light leading-tight tracking-tight md:text-5xl">
+          <h1 className="mt-2 flex max-w-[75%] flex-wrap items-center gap-3 text-3xl font-light leading-tight tracking-tight md:text-5xl">
             {user.fullName}
+            <TrophyBadge count={motw.myWins} size={44} />
           </h1>
           <p className="mt-2 text-sm text-white/50">Small steps, big service.</p>
           <div className="mt-6 flex flex-wrap gap-2">
@@ -106,6 +112,9 @@ export default async function DashboardPage() {
           </div>
         </section>
       </div>
+
+      <HallOfFame data={motw.hall} meId={user.id} />
+      <TrophyCase wins={motw.myWins} history={motw.myHistory} week={motw.myWeek} />
 
       {user.isDeveloper && (
         <section className={card}>

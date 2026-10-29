@@ -23,7 +23,7 @@ export const POST = route(async (req: Request, ctx: { params: Promise<{ id: stri
   } else if (target.status === "PENDING_CREW") {
     // Tier 2: Crew Leader of the SAME crew only
     if (!can(actor, "crew:approve_members") || actor.crewId !== target.crewId) {
-      throw new HttpError(403, "Only a Crew Leader of this member's crew can do this");
+      throw new HttpError(403, "Only a Sergeant or Corporal of this member's crew can do this");
     }
     data = { status: approve ? "ACTIVE" : "REJECTED", crewApprovedById: actor.id };
   } else {
