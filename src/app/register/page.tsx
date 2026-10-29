@@ -17,12 +17,12 @@ export default async function RegisterPage() {
       {open ? (
         <RegisterForm />
       ) : (
-        <div className="border border-neutral-300 p-4 text-sm text-neutral-600">
+        <div className="rounded-xl border border-white/10 p-4 text-sm text-white/60">
           Registration is currently closed. Please check back when the DO Admin opens it.
         </div>
       )}
-      <p className="mt-6 text-sm text-neutral-500">
-        Already have an account? <Link href="/login" className="text-black underline">Sign in</Link>
+      <p className="mt-6 text-sm text-white/50">
+        Already have an account? <Link href="/login" className="text-white underline">Sign in</Link>
       </p>
     </AuthShell>
   );

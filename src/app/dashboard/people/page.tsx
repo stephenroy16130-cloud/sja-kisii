@@ -19,8 +19,8 @@ export default async function PeoplePage() {
 
   return (
     <div>
-      <h1 className="heading accent-bar text-xl md:text-2xl">People and titles</h1>
-      <p className="font-copy mb-8 mt-4 text-sm leading-relaxed text-neutral-600">
+      <h1 className="text-3xl font-light tracking-tight">People and titles</h1>
+      <p className="mb-8 mt-1 text-sm text-white/50">
         Promote or demote by ticking titles. Titles stack, and demotion never deletes a member&apos;s history.
       </p>
       <PeopleManager people={people} />

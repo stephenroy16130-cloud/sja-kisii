@@ -10,7 +10,7 @@ export default function AuthShell({
   children: ReactNode;
 }) {
   return (
-    <main className="grid min-h-screen lg:grid-cols-[1.1fr_0.9fr]">
+    <main className="grid min-h-screen bg-black lg:grid-cols-[1.1fr_0.9fr]">
       <section className="vignette-dark relative flex flex-col justify-between gap-16 overflow-hidden p-8 text-white lg:p-14">
         <div className="pointer-events-none absolute -right-40 top-1/4 h-[34rem] w-[34rem] rounded-full border border-white/10" />
         <div className="pointer-events-none absolute -right-24 top-[30%] h-[26rem] w-[26rem] rounded-full border border-white/10" />
@@ -41,10 +41,10 @@ export default function AuthShell({
         </p>
       </section>
 
-      <section className="vignette-light flex items-center justify-center px-6 py-12 lg:px-14">
-        <div className="w-full max-w-sm border border-neutral-300 bg-white p-8 sm:p-10">
+      <section className="flex items-center justify-center border-t border-white/10 bg-black px-6 py-12 lg:border-l lg:border-t-0 lg:px-14">
+        <div className="w-full max-w-sm">
           <h2 className="heading accent-bar text-xl">{title}</h2>
-          {subtitle && <p className="font-copy mt-4 text-sm leading-relaxed text-neutral-600">{subtitle}</p>}
+          {subtitle && <p className="font-copy mt-4 text-sm leading-relaxed text-white/60">{subtitle}</p>}
           <div className="mt-8">{children}</div>
         </div>
       </section>

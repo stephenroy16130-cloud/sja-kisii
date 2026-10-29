@@ -28,9 +28,9 @@ export default function ForgotPasswordPage() {
   return (
     <AuthShell title="Reset your password" subtitle="Enter your email and we will send a reset link.">
       {msg ? (
-        <div className="bg-neutral-100 p-4 text-sm">
+        <div className="bg-card/10 p-4 text-sm">
           {msg}
-          <p className="mt-2 text-xs text-neutral-500">In development the link is printed in the server terminal.</p>
+          <p className="mt-2 text-xs text-white/50">In development the link is printed in the server terminal.</p>
         </div>
       ) : (
         <form onSubmit={onSubmit} className="space-y-4">
@@ -38,12 +38,12 @@ export default function ForgotPasswordPage() {
             <label className={labelCls}>Email</label>
             <input name="email" type="email" required className={inputCls} />
           </div>
-          {error && <p className="text-sm text-red-600">{error}</p>}
+          {error && <p className="text-sm text-red-400">{error}</p>}
           <button disabled={busy} className={btnCls}>{busy ? "Sending..." : "Send reset link"}</button>
         </form>
       )}
-      <p className="mt-6 text-sm text-neutral-500">
-        <Link href="/login" className="text-black underline">Back to sign in</Link>
+      <p className="mt-6 text-sm text-white/50">
+        <Link href="/login" className="text-white underline">Back to sign in</Link>
       </p>
     </AuthShell>
   );

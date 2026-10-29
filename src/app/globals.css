@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 @theme {
-  --color-cream: #f4f4f4;
+  --color-card: #121212;
 }
 
 @theme inline {
@@ -10,11 +10,12 @@
 
 :root {
   --accent: #b59a6a;
+  color-scheme: dark;
 }
 
 body {
-  background: #ffffff;
-  color: #0a0a0a;
+  background: #000000;
+  color: #ffffff;
   font-family: var(--font-montserrat), system-ui, sans-serif;
 }
 
@@ -31,8 +32,4 @@ body {
 
 .vignette-dark {
   background: radial-gradient(ellipse 85% 75% at 72% 25%, #3b3b3b 0%, #141414 55%, #000 100%);
-}
-
-.vignette-light {
-  background: radial-gradient(ellipse 85% 90% at 50% 45%, #ffffff 0%, #ececec 65%, #d4d4d4 100%);
 }

@@ -12,7 +12,7 @@ export default async function ResetPasswordPage({
       {token ? (
         <ResetForm token={token} />
       ) : (
-        <p className="text-sm text-neutral-600">This reset link is missing its token. Request a new one.</p>
+        <p className="text-sm text-white/60">This reset link is missing its token. Request a new one.</p>
       )}
     </AuthShell>
   );

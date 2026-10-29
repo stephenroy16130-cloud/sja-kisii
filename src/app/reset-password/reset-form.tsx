@@ -26,7 +26,7 @@ export default function ResetForm({ token }: { token: string }) {
 
   if (msg)
     return (
-      <div className="bg-neutral-100 p-4 text-sm">
+      <div className="bg-card/10 p-4 text-sm">
         {msg} <Link href="/login" className="underline">Sign in</Link>
       </div>
     );
@@ -37,7 +37,7 @@ export default function ResetForm({ token }: { token: string }) {
         <label className={labelCls}>New password</label>
         <input name="password" type="password" required className={inputCls} />
       </div>
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && <p className="text-sm text-red-400">{error}</p>}
       <button disabled={busy} className={btnCls}>{busy ? "Saving..." : "Update password"}</button>
     </form>
   );

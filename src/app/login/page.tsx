@@ -41,14 +41,14 @@ export default function LoginPage() {
           <label className={labelCls}>Password</label>
           <input name="password" type="password" required autoComplete="current-password" className={inputCls} />
         </div>
-        {error && <p className="text-sm text-red-600">{error}</p>}
+        {error && <p className="text-sm text-red-400">{error}</p>}
         <button disabled={busy} className={btnCls}>
           {busy ? "Signing in..." : "Sign in"}
         </button>
       </form>
-      <div className="mt-6 flex justify-between text-sm text-neutral-500">
-        <Link href="/forgot-password" className="hover:text-black">Forgot password?</Link>
-        <Link href="/register" className="hover:text-black">Create account</Link>
+      <div className="mt-6 flex justify-between text-sm text-white/50">
+        <Link href="/forgot-password" className="hover:text-white">Forgot password?</Link>
+        <Link href="/register" className="hover:text-white">Create account</Link>
       </div>
     </AuthShell>
   );

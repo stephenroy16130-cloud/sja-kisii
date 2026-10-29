@@ -29,7 +29,7 @@ export default function GenesisForm() {
     setBusy(false);
   }
 
-  if (msg) return <div className="bg-neutral-100 p-4 text-sm">{msg}</div>;
+  if (msg) return <div className="bg-card/10 p-4 text-sm">{msg}</div>;
 
   return (
     <form onSubmit={onSubmit} className="grid gap-4 sm:grid-cols-2">
@@ -38,7 +38,7 @@ export default function GenesisForm() {
       <div><label className={labelCls}>Email</label><input name="email" type="email" required className={inputCls} /></div>
       <div><label className={labelCls}>Phone</label><input name="phone" required className={inputCls} /></div>
       <div className="sm:col-span-2"><label className={labelCls}>Password</label><input name="password" type="password" required className={inputCls} /></div>
-      {error && <p className="text-sm text-red-600 sm:col-span-2">{error}</p>}
+      {error && <p className="text-sm text-red-400 sm:col-span-2">{error}</p>}
       <div className="sm:col-span-2"><button disabled={busy} className={btnCls}>{busy ? "Creating..." : "Create Superintendent"}</button></div>
     </form>
   );

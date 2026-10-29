@@ -1,3 +1,4 @@
+import type { Prisma } from "@prisma/client";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
@@ -9,19 +10,35 @@ import RegistrationToggle from "./registration-toggle";
 
 export const dynamic = "force-dynamic";
 
+const TOTAL_PERMS = 20;
 const pretty = (t: string) => t.replace(/_/g, " ");
-const card = "border border-neutral-300 bg-white p-7";
-const cardTitle = "heading accent-bar mb-4 text-sm";
-const desc = "font-copy mb-5 text-sm leading-relaxed text-neutral-600";
+const card = "rounded-3xl border border-white/10 bg-card p-6";
+const label = "text-sm text-white/50";
+const bigNum = "mt-2 text-5xl font-light tracking-tight";
 const linkBtn =
-  "inline-block border border-black px-5 py-2.5 text-xs uppercase tracking-[0.18em] transition hover:bg-black hover:text-white";
+  "mt-5 inline-block rounded-full bg-white px-5 py-2.5 text-xs font-medium text-black transition hover:bg-neutral-200";
 
 export default async function DashboardPage() {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
 
   const perms = [...permissionsFor(user)];
-  const setting = await db.systemSetting.findUnique({ where: { key: "registrationOpen" } });
+  const canApprove = can(user, "user:approve_registration") || can(user, "crew:approve_members");
+  const canManage = can(user, "user:manage_titles");
+
+  const filters: Prisma.UserWhereInput[] = [];
+  if (can(user, "user:approve_registration")) filters.push({ status: "PENDING_ADMIN" });
+  if (can(user, "crew:approve_members") && user.crewId) {
+    filters.push({ status: "PENDING_CREW", crewId: user.crewId });
+  }
+
+  const [setting, pending, members] = await Promise.all([
+    db.systemSetting.findUnique({ where: { key: "registrationOpen" } }),
+    filters.length ? db.user.count({ where: { OR: filters } }) : Promise.resolve(0),
+    canManage
+      ? db.user.count({ where: { status: "ACTIVE", isSuperintendent: false, isDeveloper: false } })
+      : Promise.resolve(0),
+  ]);
   const registrationOpen = setting?.value === true;
 
   const badges: string[] = [];
@@ -30,69 +47,91 @@ export default async function DashboardPage() {
   user.titles.forEach((t) => badges.push(pretty(t)));
   if (badges.length === 0) badges.push("Member");
 
+  const pct = Math.min(100, Math.round((perms.length / TOTAL_PERMS) * 100));
+
   return (
-    <div className="space-y-8">
-      <section className="vignette-dark relative overflow-hidden p-8 text-white md:p-14">
-        <div className="pointer-events-none absolute -right-32 -top-24 h-[28rem] w-[28rem] rounded-full border border-white/10" />
-        <div className="pointer-events-none absolute -right-16 -top-8 h-80 w-80 rounded-full border border-white/10" />
+    <div className="space-y-4">
+      <section className="vignette-dark relative overflow-hidden rounded-3xl border border-white/10 p-7 md:p-10">
+        <div className="pointer-events-none absolute -right-24 -top-24 h-80 w-80 rounded-full border border-white/10" />
+        <div className="pointer-events-none absolute -right-10 -top-10 h-56 w-56 rounded-full border border-white/10" />
         <div className="relative">
-          <p className="font-copy text-lg italic text-white/70">Welcome back</p>
-          <h1 className="heading mt-3 text-2xl leading-snug md:text-4xl">{user.fullName}</h1>
-          <div className="mt-8 flex flex-wrap gap-2">
+          <p className="font-copy text-base italic text-white/60">Welcome back</p>
+          <h1 className="mt-2 text-3xl font-light leading-tight tracking-tight md:text-5xl">{user.fullName}</h1>
+          <p className="mt-2 text-sm text-white/50">Small steps, big service.</p>
+          <div className="mt-6 flex flex-wrap gap-2">
             {badges.map((b) => (
-              <span key={b} className="border border-white/40 px-3 py-1.5 text-[11px] uppercase tracking-[0.18em]">
+              <span key={b} className="rounded-full border border-white/30 px-3.5 py-1.5 text-[11px] uppercase tracking-[0.15em]">
                 {b}
               </span>
             ))}
-            {user.crewId && (
-              <span className="bg-white px-3 py-1.5 text-[11px] font-medium uppercase tracking-[0.18em] text-black">
-                {crewName(user.crewId)}
-              </span>
-            )}
           </div>
         </div>
       </section>
 
+      <div className="grid grid-cols-2 gap-4">
+        <section className={card}>
+          <p className={label}>Crew</p>
+          <p className="mt-2 text-xl font-light leading-snug">{user.crewId ? crewName(user.crewId) : "None"}</p>
+          <p className="mt-3 text-xs text-white/40">Your division crew</p>
+        </section>
+        <section className={card}>
+          <p className={label}>Permissions</p>
+          <p className={bigNum}>
+            {perms.length}
+            <span className="ml-1 text-sm text-white/40">of {TOTAL_PERMS}</span>
+          </p>
+          <div className="mt-4 h-1.5 w-full rounded-full bg-white/10">
+            <div className="h-1.5 rounded-full bg-white" style={{ width: `${pct}%` }} />
+          </div>
+        </section>
+      </div>
+
       {user.isDeveloper && (
         <section className={card}>
-          <h2 className={cardTitle}>System setup</h2>
-          <p className={desc}>Create the first Divisional Superintendent. This can only be done once.</p>
+          <h2 className="text-xl font-light">System setup</h2>
+          <p className="mb-6 mt-1 text-sm text-white/50">
+            Create the first Divisional Superintendent. This can only be done once.
+          </p>
           <GenesisForm />
         </section>
       )}
 
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid gap-4 md:grid-cols-2">
         {can(user, "user:manage_accounts") && (
           <section className={card}>
-            <h2 className={cardTitle}>Registration</h2>
-            <RegistrationToggle initialOpen={registrationOpen} />
+            <p className={label}>Registration</p>
+            <div className="mt-3">
+              <RegistrationToggle initialOpen={registrationOpen} />
+            </div>
           </section>
         )}
-        {(can(user, "user:approve_registration") || can(user, "crew:approve_members")) && (
+        {canApprove && (
           <section className={card}>
-            <h2 className={cardTitle}>Approvals</h2>
-            <p className={desc}>Review members waiting to join.</p>
-            <Link href="/dashboard/approvals" className={linkBtn}>Open ›</Link>
+            <p className={label}>Waiting for approval</p>
+            <p className={bigNum}>{pending}</p>
+            <p className="mt-1 text-xs text-white/40">{pending === 0 ? "All caught up" : "members need a decision"}</p>
+            <Link href="/dashboard/approvals" className={linkBtn}>Open approvals</Link>
           </section>
         )}
-        {can(user, "user:manage_titles") && (
+        {canManage && (
           <section className={card}>
-            <h2 className={cardTitle}>People and titles</h2>
-            <p className={desc}>Create leader accounts, promote and demote.</p>
-            <Link href="/dashboard/people" className={linkBtn}>Manage ›</Link>
+            <p className={label}>Active members</p>
+            <p className={bigNum}>{members}</p>
+            <p className="mt-1 text-xs text-white/40">promote or demote titles</p>
+            <Link href="/dashboard/people" className={linkBtn}>Manage people</Link>
           </section>
         )}
       </div>
 
-      <section className="bg-black p-7 text-white">
-        <h2 className="heading accent-bar mb-4 text-sm">Your permissions</h2>
-        <p className="font-copy mb-5 text-sm text-white/60">Calculated live from your titles.</p>
+      <section className={card}>
+        <h2 className="text-xl font-light">Your permissions</h2>
+        <p className="mb-5 mt-1 text-sm text-white/50">Calculated live from your titles.</p>
         {perms.length === 0 ? (
-          <p className="font-copy text-sm text-white/60">None. You have standard member access.</p>
+          <p className="text-sm text-white/50">None. You have standard member access.</p>
         ) : (
           <div className="flex flex-wrap gap-2">
             {perms.map((p) => (
-              <span key={p} className="border border-white/30 px-3 py-1 font-mono text-[11px]">{p}</span>
+              <span key={p} className="rounded-full bg-white/10 px-3 py-1 font-mono text-[11px]">{p}</span>
             ))}
           </div>
         )}

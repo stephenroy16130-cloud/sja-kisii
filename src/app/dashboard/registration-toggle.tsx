@@ -26,13 +26,13 @@ export default function RegistrationToggle({ initialOpen }: { initialOpen: boole
 
   return (
     <div>
-      <p className="text-sm text-neutral-500">
-        Public registration is <span className="font-medium text-black">{open ? "OPEN" : "CLOSED"}</span>.
+      <p className="text-sm text-white/50">
+        Public registration is <span className="font-medium text-white">{open ? "OPEN" : "CLOSED"}</span>.
       </p>
       <button onClick={toggle} disabled={busy} className={`${btnGhostCls} mt-3`}>
         {open ? "Close registration" : "Open registration"}
       </button>
-      {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
+      {error && <p className="mt-2 text-sm text-red-400">{error}</p>}
     </div>
   );
 }

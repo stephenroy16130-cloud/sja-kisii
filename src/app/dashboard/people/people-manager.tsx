@@ -19,7 +19,7 @@ function TitleChecks({ value, onToggle }: { value: string[]; onToggle: (t: strin
     <div className="flex flex-wrap gap-x-4 gap-y-2">
       {TITLES.map((t) => (
         <label key={t} className="flex items-center gap-2 text-sm">
-          <input type="checkbox" checked={value.includes(t)} onChange={() => onToggle(t)} className="accent-black" />
+          <input type="checkbox" checked={value.includes(t)} onChange={() => onToggle(t)} className="accent-white" />
           {pretty(t)}
         </label>
       ))}
@@ -50,14 +50,14 @@ function PersonRow({ person }: { person: Person }) {
   }
 
   return (
-    <div className="bg-white border border-neutral-300 p-5">
+    <div className="bg-card border border-white/10 p-5">
       <div className="mb-3 flex items-center justify-between">
         <p className="font-medium">
-          {person.fullName} <span className="font-normal text-neutral-500">@{person.username}</span>
-          {person.crewId && <span className="ml-2 text-xs text-neutral-500">{crewName(person.crewId)}</span>}
+          {person.fullName} <span className="font-normal text-white/50">@{person.username}</span>
+          {person.crewId && <span className="ml-2 text-xs text-white/50">{crewName(person.crewId)}</span>}
         </p>
         <div className="flex items-center gap-3">
-          {msg && <span className="text-xs text-neutral-500">{msg}</span>}
+          {msg && <span className="text-xs text-white/50">{msg}</span>}
           <button onClick={save} disabled={busy} className={btnGhostCls}>Save titles</button>
         </div>
       </div>
@@ -105,7 +105,7 @@ function ProvisionForm() {
   }
 
   return (
-    <form onSubmit={onSubmit} className="grid gap-4 bg-white border border-neutral-300 p-6 sm:grid-cols-2">
+    <form onSubmit={onSubmit} className="grid gap-4 bg-card border border-white/10 p-6 sm:grid-cols-2">
       <div><label className={labelCls}>Full name</label><input name="fullName" required className={inputCls} /></div>
       <div><label className={labelCls}>Username</label><input name="username" required className={inputCls} /></div>
       <div><label className={labelCls}>Email</label><input name="email" type="email" required className={inputCls} /></div>
@@ -122,7 +122,7 @@ function ProvisionForm() {
         <label className={labelCls}>Titles</label>
         <TitleChecks value={titles} onToggle={toggle} />
       </div>
-      {error && <p className="text-sm text-red-600 sm:col-span-2">{error}</p>}
+      {error && <p className="text-sm text-red-400 sm:col-span-2">{error}</p>}
       {msg && <p className="text-sm sm:col-span-2">{msg}</p>}
       <div className="sm:col-span-2"><button disabled={busy} className={btnCls}>{busy ? "Creating..." : "Create account"}</button></div>
     </form>
@@ -139,7 +139,7 @@ export default function PeopleManager({ people }: { people: Person[] }) {
       <section>
         <h2 className="mb-4 heading accent-bar text-sm">Active members ({people.length})</h2>
         {people.length === 0 ? (
-          <div className="bg-white border border-neutral-300 p-6 text-sm text-neutral-500">No other active members yet.</div>
+          <div className="bg-card border border-white/10 p-6 text-sm text-white/50">No other active members yet.</div>
         ) : (
           <div className="space-y-3">
             {people.map((p) => <PersonRow key={p.id + p.titles.join()} person={p} />)}

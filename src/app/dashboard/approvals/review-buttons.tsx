@@ -23,12 +23,20 @@ export default function ReviewButtons({ userId }: { userId: string }) {
   }
 
   return (
-    <div className="text-right">
+    <div className="shrink-0">
       <div className="flex gap-2">
-        <button disabled={busy} onClick={() => decide("approve")} className="rounded-lg bg-black px-5 py-2 text-sm text-white hover:bg-neutral-800 disabled:opacity-50">Approve</button>
-        <button disabled={busy} onClick={() => decide("reject")} className={btnGhostCls}>Reject</button>
+        <button
+          disabled={busy}
+          onClick={() => decide("approve")}
+          className="rounded-full bg-white px-5 py-2.5 text-xs font-medium text-black transition hover:bg-neutral-200 disabled:opacity-50"
+        >
+          Approve
+        </button>
+        <button disabled={busy} onClick={() => decide("reject")} className={btnGhostCls}>
+          Reject
+        </button>
       </div>
-      {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
+      {error && <p className="mt-2 text-xs text-red-400">{error}</p>}
     </div>
   );
 }
