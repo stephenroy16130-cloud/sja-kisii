@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "seed:test": "node --env-file=.env prisma/seed-test.js"
   },
   "dependencies": {
     "@prisma/client": "^6.19.3",

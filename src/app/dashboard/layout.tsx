@@ -20,7 +20,11 @@ export default async function DashboardLayout({ children }: { children: ReactNod
   const user = await getCurrentUser();
   if (!user) redirect("/login");
 
-  const links: NavLink[] = [{ href: "/dashboard/meetings", label: "Meetings", icon: "meetings" }];
+  const links: NavLink[] = [
+    { href: "/dashboard/meetings", label: "Meetings", icon: "meetings" },
+    { href: "/dashboard/fieldops", label: "Field Ops", icon: "fieldops" },
+    { href: "/dashboard/training", label: "Training", icon: "training" },
+  ];
   if (can(user, "user:approve_registration") || can(user, "crew:approve_members")) {
     links.push({ href: "/dashboard/approvals", label: "Approvals", icon: "approvals" });
   }
