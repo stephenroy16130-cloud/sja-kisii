@@ -31,6 +31,7 @@ function PersonRow({ person }: { person: Person }) {
   const router = useRouter();
   const [titles, setTitles] = useState<string[]>(person.titles);
   const [msg, setMsg] = useState("");
+  const [crew, setCrew] = useState("");
   const [busy, setBusy] = useState(false);
 
   const toggle = (t: string) =>
@@ -40,7 +41,7 @@ function PersonRow({ person }: { person: Person }) {
     setBusy(true);
     setMsg("");
     try {
-      await api(`/api/admin/users/${person.id}/titles`, "PUT", { titles });
+      await api(`/api/admin/users/${person.id}/titles`, "PUT", { titles, ...(crew ? { crewId: Number(crew) } : {}) });
       setMsg("Saved");
       router.refresh();
     } catch (e) {
@@ -61,6 +62,17 @@ function PersonRow({ person }: { person: Person }) {
           <button onClick={save} disabled={busy} className={btnGhostCls}>Save titles</button>
         </div>
       </div>
+      {!person.crewId && (
+        <div className="mb-4 max-w-xs">
+          <label className={labelCls}>Choose this leader&apos;s crew</label>
+          <select value={crew} onChange={(e) => setCrew(e.target.value)} className={inputCls}>
+            <option value="">No crew yet</option>
+            {[1, 2, 3, 4].map((n) => (
+              <option key={n} value={n}>{crewName(n)}</option>
+            ))}
+          </select>
+        </div>
+      )}
       <TitleChecks value={titles} onToggle={toggle} />
     </div>
   );
@@ -112,9 +124,9 @@ function ProvisionForm() {
       <div><label className={labelCls}>Phone</label><input name="phone" required className={inputCls} /></div>
       <div><label className={labelCls}>Password</label><input name="password" type="password" required className={inputCls} /></div>
       <div>
-        <label className={labelCls}>Crew (needed for Corporal / Sergeant)</label>
-        <select name="crewId" defaultValue="" className={inputCls}>
-          <option value="">None</option>
+        <label className={labelCls}>Crew (required for every leader)</label>
+        <select name="crewId" defaultValue="" required={titles.length > 0} className={inputCls}>
+          <option value="">Choose a crew</option>
           {[1, 2, 3, 4].map((n) => <option key={n} value={n}>{crewName(n)}</option>)}
         </select>
       </div>

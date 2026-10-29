@@ -2,12 +2,14 @@ import type { Prisma } from "@prisma/client";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import Badge from "@/components/badge";
+import CrewLeaderboard from "@/components/crew-leaderboard";
 import HallOfFame from "@/components/hall-of-fame";
 import TrophyBadge from "@/components/trophy-badge";
 import TrophyCase from "@/components/trophy-case";
 import { getCurrentUser } from "@/lib/auth";
 import { crewColor, crewName } from "@/lib/crews";
 import { db } from "@/lib/db";
+import { crewLeaderboard } from "@/lib/leaderboard";
 import { loadMotw } from "@/lib/motw";
 import { can, permissionsFor } from "@/lib/rbac";
 import GenesisForm from "./genesis-form";
@@ -37,7 +39,8 @@ export default async function DashboardPage() {
     filters.push({ status: "PENDING_CREW", crewId: user.crewId });
   }
 
-  const [motw, setting, pending, members] = await Promise.all([
+  const [board, motw, setting, pending, members] = await Promise.all([
+    crewLeaderboard(),
     loadMotw(user.id),
     db.systemSetting.findUnique({ where: { key: "registrationOpen" } }),
     filters.length ? db.user.count({ where: { OR: filters } }) : Promise.resolve(0),
@@ -70,7 +73,7 @@ export default async function DashboardPage() {
             {user.fullName}
             <TrophyBadge count={motw.myWins} size={44} />
           </h1>
-          <p className="mt-2 text-sm text-white/50">Small steps, big service.</p>
+          <p className="mt-2 text-sm text-white/50">In service of humanity.</p>
           <div className="mt-6 flex flex-wrap gap-2">
             {badges.map((b) => (
               <span key={b} className="rounded-full border border-gold/50 px-3.5 py-1.5 text-[11px] uppercase tracking-[0.15em]">
@@ -114,6 +117,7 @@ export default async function DashboardPage() {
       </div>
 
       <HallOfFame data={motw.hall} meId={user.id} />
+      <CrewLeaderboard rows={board} />
       <TrophyCase wins={motw.myWins} history={motw.myHistory} week={motw.myWeek} />
 
       {user.isDeveloper && (

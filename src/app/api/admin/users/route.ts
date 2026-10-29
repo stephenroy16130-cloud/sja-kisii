@@ -17,7 +17,7 @@ export const POST = route(async (req: Request) => {
   const titles = [...new Set(data.titles)];
 
   if (titles.includes("CORPORAL") && titles.includes("SERGEANT")) throw new HttpError(400, "Cannot be both Corporal and Sergeant");
-  if ((titles.includes("CORPORAL") || titles.includes("SERGEANT")) && !data.crewId) throw new HttpError(400, "A Crew Leader needs a crewId");
+  if (titles.length > 0 && !data.crewId) throw new HttpError(400, "Every leader must belong to a crew. Choose a crew.");
 
   const user = await db.user.create({
     data: {

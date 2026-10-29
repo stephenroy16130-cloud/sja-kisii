@@ -6,7 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import { api } from "@/lib/client";
 
-type IconName = "approvals" | "people" | "meetings" | "fieldops" | "training" | "account";
+type IconName = "approvals" | "people" | "meetings" | "fieldops" | "training" | "store" | "account";
 export type NavLink = { href: string; label: string; icon: IconName };
 type Tab = { key: string; label: string; icon: IconName; href?: string };
 
@@ -48,6 +48,13 @@ function Icon({ name }: { name: IconName }) {
       <svg {...p}>
         <path d="M4 5.5C4 4.7 4.7 4 5.5 4H11v16H5.5C4.7 20 4 19.3 4 18.5z" />
         <path d="M20 5.5c0-.8-.7-1.5-1.5-1.5H13v16h5.5c.8 0 1.5-.7 1.5-1.5z" />
+      </svg>
+    );
+  if (name === "store")
+    return (
+      <svg {...p}>
+        <path d="M5 8h14l-1 12H6z" />
+        <path d="M9 8V6a3 3 0 0 1 6 0v2" />
       </svg>
     );
   if (name === "people")
@@ -101,7 +108,7 @@ export default function NavShell({
 
   const renderTab = (t: Tab) => {
     const active = t.href ? isActive(t.href) : sheet;
-    const cls = `flex flex-1 flex-col items-center gap-1 py-2.5 text-[11px] transition ${
+    const cls = `flex flex-1 flex-col items-center gap-1 px-0.5 py-2.5 text-[10px] transition ${
       active ? "text-gold" : "text-white/45"
     }`;
     const inner = (
