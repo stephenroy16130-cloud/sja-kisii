@@ -107,6 +107,14 @@ enum RsvpResponse {
 }
 
 model User {
+  dateOfBirth      DateTime?
+  gender           Gender?
+  idType           IdType?
+  idNumber         String?
+  preferredName    String?
+  officialPhotoAt  DateTime?
+  socialPhotoAt    DateTime?
+  photos           UserPhoto[]
   weeklyWins       WeeklyResult[] @relation("WeeklyWins")
   id               String         @id @default(cuid())
   username         String         @unique
@@ -146,6 +154,7 @@ model User {
   requestsMade       MembershipRequest[]     @relation("RequestedBy")
   requestsAboutMe    MembershipRequest[]     @relation("RequestTarget")
 
+  @@unique([idType, idNumber])
   @@index([status])
   @@index([crewId])
 }
@@ -473,4 +482,30 @@ model WeeklyResult {
   createdAt     DateTime @default(now())
 
   @@index([winnerId])
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+enum IdType {
+  NATIONAL_ID
+  BIRTH_CERTIFICATE
+}
+
+enum PhotoKind {
+  OFFICIAL
+  SOCIAL
+}
+
+model UserPhoto {
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  kind      PhotoKind
+  data      Bytes
+  updatedAt DateTime  @updatedAt
+
+  @@id([userId, kind])
 }

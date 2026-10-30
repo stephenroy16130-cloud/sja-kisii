@@ -4,6 +4,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { canSeeBand } from "@/lib/band";
 import { crewName } from "@/lib/crews";
 import { db } from "@/lib/db";
+import { socialPhoto } from "@/lib/profile";
 import { can } from "@/lib/rbac";
 import DevSwitcher, { type DevUser } from "./dev-switcher";
 import NavShell, { type NavLink } from "./nav-shell";
@@ -21,23 +22,22 @@ export default async function DashboardLayout({ children }: { children: ReactNod
   const user = await getCurrentUser();
   if (!user) redirect("/login");
 
-  const links: NavLink[] = [
-    { href: "/dashboard/meetings", label: "Meetings", icon: "meetings" },
-    ...(user.crewId || can(user, "crew:approve_membership_change")
-      ? [{ href: "/dashboard/crew", label: "Crew", icon: "crew" as const }]
-      : []),
+  const links: NavLink[] = [{ href: "/dashboard/meetings", label: "Meetings", icon: "meetings" }];
+  if (user.crewId || can(user, "crew:approve_membership_change")) {
+    links.push({ href: "/dashboard/crew", label: "Crew", icon: "crew" });
+  }
+  links.push(
     { href: "/dashboard/fieldops", label: "Field Ops", icon: "fieldops" },
     { href: "/dashboard/training", label: "Training", icon: "training" },
-    { href: "/dashboard/store", label: "Store", icon: "store" },
-  ];
+    { href: "/dashboard/store", label: "Store", icon: "store" }
+  );
   if (can(user, "user:approve_registration") || can(user, "crew:approve_members")) {
     links.push({ href: "/dashboard/approvals", label: "Approvals", icon: "approvals" });
   }
-  if (can(user, "user:manage_titles")) {
-    links.push({ href: "/dashboard/people", label: "People", icon: "people" });
-  }
-
+  if (can(user, "user:manage_titles")) links.push({ href: "/dashboard/people", label: "People", icon: "people" });
+  if (can(user, "user:manage_accounts")) links.push({ href: "/dashboard/members", label: "Members", icon: "members" });
   if (canSeeBand(user)) links.push({ href: "/dashboard/band", label: "Band", icon: "band" });
+  links.push({ href: "/dashboard/profile", label: "My profile", icon: "profile" });
 
   // Developer Quick Switch: development only
   let devUsers: DevUser[] = [];
@@ -57,6 +57,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
         name={user.fullName}
         role={roleLabel(user)}
         crew={user.crewId ? crewName(user.crewId) : ""}
+        photo={socialPhoto(user)}
       />
       <main className="lg:pr-72">
         <div className="mx-auto max-w-4xl px-4 pb-36 pt-4 lg:px-10 lg:pb-12 lg:pt-12">{children}</div>

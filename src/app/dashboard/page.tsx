@@ -12,6 +12,7 @@ import { db } from "@/lib/db";
 import { crewLeaderboard } from "@/lib/leaderboard";
 import { loadMotw } from "@/lib/motw";
 import { can, permissionsFor } from "@/lib/rbac";
+import ReportButton from "@/components/report-button";
 import GenesisForm from "./genesis-form";
 import RegistrationToggle from "./registration-toggle";
 
@@ -116,6 +117,15 @@ export default async function DashboardPage() {
         </section>
       </div>
 
+      {!user.profileComplete && !user.isDeveloper && (
+        <Link href="/dashboard/profile" className="block rounded-3xl border border-gold/40 bg-card p-5 transition hover:border-gold">
+          <p className="text-sm text-gold">Complete your official profile</p>
+          <p className="mt-1 text-sm text-white/60">
+            Add your date of birth, gender and ID so the DO Admin has your records. Only you and the DO Admin can see them.
+          </p>
+        </Link>
+      )}
+
       <HallOfFame data={motw.hall} meId={user.id} />
       <CrewLeaderboard rows={board} />
       <TrophyCase wins={motw.myWins} history={motw.myHistory} week={motw.myWeek} />
@@ -139,6 +149,21 @@ export default async function DashboardPage() {
             </p>
             <div className="mt-3">
               <RegistrationToggle initialOpen={registrationOpen} />
+            </div>
+          </section>
+        )}
+        {can(user, "user:manage_accounts") && (
+          <section className={card}>
+            <p className={label}>
+              <span className="h-2 w-2 rounded-full bg-gold" />
+              Member records
+            </p>
+            <p className="mt-2 text-sm text-white/60">Official details, activity and exports.</p>
+            <div className="mt-4 flex flex-wrap items-center gap-3">
+              <Link href="/dashboard/members" className="rounded-full bg-white px-5 py-2.5 text-xs font-medium text-black transition hover:bg-neutral-200">
+                Open master list
+              </Link>
+              <ReportButton />
             </div>
           </section>
         )}

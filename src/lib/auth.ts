@@ -9,14 +9,18 @@ import { readSessionUserId } from "./session";
 export const getCurrentUser = cache(async () => {
   const id = await readSessionUserId();
   if (!id) return null;
-  const user = await db.user.findUnique({
+  const u = await db.user.findUnique({
     where: { id },
     select: {
       id: true, username: true, fullName: true, email: true, status: true,
       titles: true, isSuperintendent: true, isDeveloper: true, crewId: true,
+      preferredName: true, socialPhotoAt: true,
+      dateOfBirth: true, gender: true, idType: true, idNumber: true,
     },
   });
-  return user && user.status === "ACTIVE" ? user : null;
+  if (!u || u.status !== "ACTIVE") return null;
+  const { dateOfBirth, gender, idType, idNumber, ...rest } = u;
+  return { ...rest, profileComplete: Boolean(dateOfBirth && gender && idType && idNumber) };
 });
 
 export async function requireUser() {

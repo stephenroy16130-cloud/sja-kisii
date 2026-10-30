@@ -41,6 +41,17 @@ const PLAN = {
 };
 const ROSTER = ["m1", "m2", "m3", "m4", "m5", "s1", "s2"];
 
+const NICK = { m1: "Amy", m3: "Cindy", m4: "Denno" };
+function profileFor(u, i) {
+  return {
+    dateOfBirth: new Date(Date.UTC(1996 + (i % 8), i % 12, 3 + i)),
+    gender: i % 2 === 0 ? "MALE" : "FEMALE",
+    idType: "NATIONAL_ID",
+    idNumber: String(30000100 + i),
+    preferredName: NICK[u.key] || null,
+  };
+}
+
 async function main() {
   if (process.env.NODE_ENV === "production") throw new Error("Refusing to seed test data in production");
 
@@ -62,6 +73,7 @@ async function main() {
       titles: u.titles || [],
       crewId: u.crewId || null,
       isSuperintendent: !!u.isSuperintendent,
+      ...profileFor(u, USERS.indexOf(u)),
     };
     ids[u.key] = await db.user.upsert({ where: { email: u.email }, update: data, create: { email: u.email, ...data } });
   }

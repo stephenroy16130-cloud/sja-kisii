@@ -3,6 +3,9 @@ import { getCurrentUser } from "@/lib/auth";
 import { crewColor, crewName } from "@/lib/crews";
 import { db } from "@/lib/db";
 import { fmt } from "@/lib/meetings";
+import Avatar from "@/components/avatar";
+import TrophyBadge from "@/components/trophy-badge";
+import { displayName, socialPhoto } from "@/lib/profile";
 import { can } from "@/lib/rbac";
 import { kes } from "@/lib/store";
 import AnnouncementForm from "./announcement-form";
@@ -40,19 +43,28 @@ export default async function CrewPage() {
           db.user.findMany({
             where: { crewId, status: "ACTIVE", isDeveloper: false },
             orderBy: { fullName: "asc" },
-            select: { id: true, fullName: true, titles: true },
+            select: { id: true, fullName: true, preferredName: true, socialPhotoAt: true, titles: true },
           }),
           db.announcement.findMany({
             where: { crewId },
             orderBy: { createdAt: "desc" },
             take: 20,
             include: {
-              createdBy: { select: { fullName: true } },
+              createdBy: { select: { fullName: true, preferredName: true } },
               rsvps: { select: { userId: true, response: true, user: { select: { fullName: true } } } },
             },
           }),
         ])
       : [[], []];
+
+  const winRows = members.length
+    ? await db.weeklyResult.groupBy({
+        by: ["winnerId"],
+        where: { winnerId: { in: members.map((m) => m.id) } },
+        _count: { _all: true },
+      })
+    : [];
+  const winsOf = new Map(winRows.map((w) => [w.winnerId, w._count._all]));
 
   const addable = leader
     ? await db.user.findMany({
@@ -168,7 +180,7 @@ export default async function CrewPage() {
                       <div>
                         <p className="text-lg font-light">{a.title}</p>
                         <p className="mt-1 text-xs text-white/40">
-                          {a.createdBy.fullName} · {fmt(a.createdAt)}
+                          {displayName(a.createdBy)} · {fmt(a.createdAt)}
                         </p>
                       </div>
                       {a.eventDate && (
@@ -252,7 +264,11 @@ export default async function CrewPage() {
             <div className="grid gap-2 sm:grid-cols-2">
               {members.map((m) => (
                 <div key={m.id} className={`${box} flex items-center justify-between gap-3 !py-3`}>
-                  <span className="text-sm uppercase tracking-wide">{m.fullName}</span>
+                  <span className="flex items-center gap-3 text-sm uppercase tracking-wide">
+                    <Avatar name={displayName(m)} src={socialPhoto(m)} size={32} />
+                    {displayName(m)}
+                    <TrophyBadge count={winsOf.get(m.id) ?? 0} size={22} />
+                  </span>
                   {m.titles.length > 0 && (
                     <span className={`${chip} border-gold/50 text-gold`}>
                       {m.titles[0].replace(/_/g, " ")}

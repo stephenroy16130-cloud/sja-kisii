@@ -1,9 +1,11 @@
 import { crewColor, crewName } from "@/lib/crews";
+import Avatar from "./avatar";
 import TrophyBadge from "./trophy-badge";
 
 export type HallEntry = {
   userId: string;
-  fullName: string;
+  name: string;
+  photo: string | null;
   crewId: number | null;
   points: number;
   wins: number;
@@ -41,11 +43,12 @@ export default function HallOfFame({ data, meId }: { data: HallData; meId: strin
           <p className="text-xs text-white/50">Leading this week</p>
           {first ? (
             <div className="mt-3 flex items-center gap-4">
-              <TrophyBadge count={first.wins} size={48} />
+              <Avatar name={first.name} src={first.photo} size={56} />
               <div>
-                <p className="text-xl font-light">
-                  {first.fullName}
-                  {first.userId === meId && <span className="ml-2 text-xs text-gold">You</span>}
+                <p className="flex items-center gap-3 text-xl font-light">
+                  {first.name}
+                  <TrophyBadge count={first.wins} size={34} />
+                  {first.userId === meId && <span className="text-xs text-gold">You</span>}
                 </p>
                 <div className="mt-1 flex flex-wrap items-center gap-3">
                   <span className="text-sm text-gold">{first.points} pts</span>
@@ -63,7 +66,8 @@ export default function HallOfFame({ data, meId }: { data: HallData; meId: strin
                 <li key={r.userId} className="flex items-center justify-between gap-3 text-sm text-white/70">
                   <span className="flex items-center gap-3">
                     <span className="w-4 text-white/40">{i + 2}</span>
-                    {r.fullName}
+                    <Avatar name={r.name} src={r.photo} size={28} />
+                    {r.name}
                     {r.userId === meId && <span className="text-xs text-gold">You</span>}
                     <TrophyBadge count={r.wins} size={22} />
                   </span>
@@ -78,11 +82,12 @@ export default function HallOfFame({ data, meId }: { data: HallData; meId: strin
           <p className="text-xs text-white/50">Last crowned</p>
           {data.last ? (
             <div className="mt-3 flex items-center gap-4">
-              <TrophyBadge count={data.last.wins} size={48} />
+              <Avatar name={data.last.name} src={data.last.photo} size={56} />
               <div>
-                <p className="text-lg font-light">
-                  {data.last.fullName}
-                  {data.last.userId === meId && <span className="ml-2 text-xs text-gold">You</span>}
+                <p className="flex items-center gap-3 text-lg font-light">
+                  {data.last.name}
+                  <TrophyBadge count={data.last.wins} size={30} />
+                  {data.last.userId === meId && <span className="text-xs text-gold">You</span>}
                 </p>
                 <p className="mt-1 text-sm text-white/50">
                   {data.last.points} pts · {data.last.weekLabel}

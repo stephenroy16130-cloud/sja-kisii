@@ -1,5 +1,6 @@
 import type { AttendanceStatus, EventType } from "@prisma/client";
 import { db } from "./db";
+import { displayName, socialPhoto } from "./profile";
 import { currentWeek, lastFinalizableWeekStart, weekEndOf, weekLabel, weekStartOf, WEEK_MS } from "./weeks";
 
 export const POINTS: Record<EventType, number> = { MEETING: 10, FIELD_OP: 15, TRAINING: 10 };
@@ -9,6 +10,8 @@ const MAX_LOOKBACK_WEEKS = 52;
 export type Standing = {
   userId: string;
   fullName: string;
+  name: string;
+  photo: string | null;
   crewId: number | null;
   points: number;
   optional: number; // Field Ops + Training attended
@@ -55,7 +58,7 @@ export async function computeStandings(start: Date, end: Date): Promise<Standing
 
   const users = await db.user.findMany({
     where: { id: { in: [...byUser.keys()] }, status: "ACTIVE", isDeveloper: false },
-    select: { id: true, fullName: true, crewId: true, createdAt: true },
+    select: { id: true, fullName: true, preferredName: true, socialPhotoAt: true, crewId: true, createdAt: true },
   });
 
   const out: Standing[] = [];
@@ -85,7 +88,7 @@ export async function computeStandings(start: Date, end: Date): Promise<Standing
     if (perfect) points += PERFECT_WEEK_BONUS;
 
     out.push({
-      userId: u.id, fullName: u.fullName, crewId: u.crewId,
+      userId: u.id, fullName: u.fullName, name: displayName(u), photo: socialPhoto(u), crewId: u.crewId,
       points, optional, perfect, joinedAt: u.createdAt.getTime(),
     });
   }
@@ -151,7 +154,7 @@ export async function loadMotw(userId: string) {
     db.weeklyResult.findFirst({
       where: { winnerId: { not: null } },
       orderBy: { weekStart: "desc" },
-      include: { winner: { select: { id: true, fullName: true, crewId: true } } },
+      include: { winner: { select: { id: true, fullName: true, preferredName: true, socialPhotoAt: true, crewId: true } } },
     }),
     db.weeklyResult.groupBy({ by: ["winnerId"], where: { winnerId: { not: null } }, _count: { _all: true } }),
     db.weeklyResult.findMany({
@@ -171,12 +174,13 @@ export async function loadMotw(userId: string) {
     hall: {
       weekLabel: weekLabel(start),
       leaders: standings.slice(0, 3).map((s) => ({
-        userId: s.userId, fullName: s.fullName, crewId: s.crewId, points: s.points, wins: wins.get(s.userId) ?? 0,
+        userId: s.userId, name: s.name, photo: s.photo, crewId: s.crewId, points: s.points, wins: wins.get(s.userId) ?? 0,
       })),
       last: lastResult?.winner
         ? {
             userId: lastResult.winner.id,
-            fullName: lastResult.winner.fullName,
+            name: displayName(lastResult.winner),
+            photo: socialPhoto(lastResult.winner),
             crewId: lastResult.winner.crewId,
             points: lastResult.points,
             wins: wins.get(lastResult.winner.id) ?? 0,
