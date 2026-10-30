@@ -30,3 +30,7 @@ export async function crewLeaderboard(days = 30): Promise<CrewRate[]> {
 
   return out.sort((a, b) => (b.rate ?? -1) - (a.rate ?? -1));
 }
+
+// A leader holds any title other than plain Band Member, or is the Superintendent
+export const isLeader = (u: { titles: string[]; isSuperintendent: boolean }) =>
+  u.isSuperintendent || u.titles.some((t) => t !== "BAND_MEMBER");

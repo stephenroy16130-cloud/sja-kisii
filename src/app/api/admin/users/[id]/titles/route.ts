@@ -3,6 +3,7 @@ import { z } from "zod";
 import { audit, requirePermission } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { HttpError, route } from "@/lib/http";
+import { leadershipLocked } from "@/lib/leadership";
 
 const schema = z.object({
   titles: z.array(z.nativeEnum(Title)).max(9),
@@ -21,6 +22,11 @@ export const PUT = route(async (req: Request, ctx: { params: Promise<{ id: strin
   if (target.status !== "ACTIVE") throw new HttpError(409, "Only active members can hold titles");
   if (next.includes("CORPORAL") && next.includes("SERGEANT")) {
     throw new HttpError(400, "A member cannot be both Corporal and Sergeant");
+  }
+
+  // Promotions are shut once leadership setup is finished. Removing titles (demotion) still works.
+  if (next.some((t) => !target.titles.includes(t)) && (await leadershipLocked())) {
+    throw new HttpError(409, "Promotions are locked. Reopen them on the People page to promote.");
   }
 
   // Every leader belongs to a crew. A crew can only be set here when the member has none yet.

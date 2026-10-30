@@ -509,3 +509,17 @@ model UserPhoto {
 
   @@id([userId, kind])
 }
+
+model StoredFile {
+  id           String   @id @default(cuid())
+  name         String
+  mimeType     String
+  size         Int
+  data         Bytes
+  audience     Audience @default(GENERAL)
+  crewId       Int?
+  uploadedById String
+  createdAt    DateTime @default(now())
+
+  @@index([uploadedById])
+}

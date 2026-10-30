@@ -4,21 +4,21 @@ import { redirect } from "next/navigation";
 import Badge from "@/components/badge";
 import CrewLeaderboard from "@/components/crew-leaderboard";
 import HallOfFame from "@/components/hall-of-fame";
+import ReportButton from "@/components/report-button";
 import TrophyBadge from "@/components/trophy-badge";
 import TrophyCase from "@/components/trophy-case";
 import { getCurrentUser } from "@/lib/auth";
 import { crewColor, crewName } from "@/lib/crews";
 import { db } from "@/lib/db";
-import { crewLeaderboard } from "@/lib/leaderboard";
+import { leadershipLocked } from "@/lib/leadership";
+import { crewLeaderboard, isLeader } from "@/lib/leaderboard";
 import { loadMotw } from "@/lib/motw";
-import { can, permissionsFor } from "@/lib/rbac";
-import ReportButton from "@/components/report-button";
+import { can } from "@/lib/rbac";
 import GenesisForm from "./genesis-form";
 import RegistrationToggle from "./registration-toggle";
 
 export const dynamic = "force-dynamic";
 
-const TOTAL_PERMS = 20;
 const pretty = (t: string) => t.replace(/_/g, " ");
 const card = "rounded-3xl border border-white/10 bg-card p-6";
 const label = "flex items-center gap-2 text-sm text-white/50";
@@ -30,9 +30,9 @@ export default async function DashboardPage() {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
 
-  const perms = [...permissionsFor(user)];
   const canApprove = can(user, "user:approve_registration") || can(user, "crew:approve_members");
   const canManage = can(user, "user:manage_titles");
+  const leader = isLeader(user);
 
   const filters: Prisma.UserWhereInput[] = [];
   if (can(user, "user:approve_registration")) filters.push({ status: "PENDING_ADMIN" });
@@ -40,14 +40,15 @@ export default async function DashboardPage() {
     filters.push({ status: "PENDING_CREW", crewId: user.crewId });
   }
 
-  const [board, motw, setting, pending, members] = await Promise.all([
-    crewLeaderboard(),
+  const [board, motw, setting, pending, members, locked] = await Promise.all([
+    leader ? crewLeaderboard() : Promise.resolve(null),
     loadMotw(user.id),
     db.systemSetting.findUnique({ where: { key: "registrationOpen" } }),
     filters.length ? db.user.count({ where: { OR: filters } }) : Promise.resolve(0),
     canManage
       ? db.user.count({ where: { status: "ACTIVE", isSuperintendent: false, isDeveloper: false } })
       : Promise.resolve(0),
+    canManage ? leadershipLocked() : Promise.resolve(false),
   ]);
   const registrationOpen = setting?.value === true;
 
@@ -57,7 +58,6 @@ export default async function DashboardPage() {
   user.titles.forEach((t) => badges.push(pretty(t)));
   if (badges.length === 0) badges.push("Member");
 
-  const pct = Math.min(100, Math.round((perms.length / TOTAL_PERMS) * 100));
   const color = crewColor(user.crewId);
 
   return (
@@ -70,7 +70,7 @@ export default async function DashboardPage() {
         </div>
         <div className="relative">
           <p className="font-copy text-base italic text-gold">Welcome back</p>
-          <h1 className="mt-2 flex max-w-[75%] flex-wrap items-center gap-3 text-3xl font-light leading-tight tracking-tight md:text-5xl">
+          <h1 className="mt-2 flex max-w-[75%] flex-wrap items-center gap-3 text-3xl font-light uppercase leading-tight tracking-tight md:text-5xl">
             {user.fullName}
             <TrophyBadge count={motw.myWins} size={44} />
           </h1>
@@ -93,30 +93,6 @@ export default async function DashboardPage() {
         </div>
       </section>
 
-      <div className="grid grid-cols-2 gap-4">
-        <section className={card} style={{ borderColor: user.crewId ? `${color}66` : undefined }}>
-          <p className={label}>
-            <span className="h-2 w-2 rounded-full" style={{ backgroundColor: color }} />
-            Crew
-          </p>
-          <p className="mt-2 text-xl font-light leading-snug">{user.crewId ? crewName(user.crewId) : "None"}</p>
-          <p className="mt-3 text-xs text-white/40">Your division crew</p>
-        </section>
-        <section className={card}>
-          <p className={label}>
-            <span className="h-2 w-2 rounded-full bg-gold" />
-            Permissions
-          </p>
-          <p className={bigNum}>
-            {perms.length}
-            <span className="ml-1 text-sm text-white/40">of {TOTAL_PERMS}</span>
-          </p>
-          <div className="mt-4 h-1.5 w-full rounded-full bg-white/10">
-            <div className="h-1.5 rounded-full bg-gold" style={{ width: `${pct}%` }} />
-          </div>
-        </section>
-      </div>
-
       {!user.profileComplete && !user.isDeveloper && (
         <Link href="/dashboard/profile" className="block rounded-3xl border border-gold/40 bg-card p-5 transition hover:border-gold">
           <p className="text-sm text-gold">Complete your official profile</p>
@@ -127,7 +103,7 @@ export default async function DashboardPage() {
       )}
 
       <HallOfFame data={motw.hall} meId={user.id} />
-      <CrewLeaderboard rows={board} />
+      {board && <CrewLeaderboard rows={board} />}
       <TrophyCase wins={motw.myWins} history={motw.myHistory} week={motw.myWeek} />
 
       {user.isDeveloper && (
@@ -181,29 +157,17 @@ export default async function DashboardPage() {
         {canManage && (
           <section className={card}>
             <p className={label}>
-              <span className="h-2 w-2 rounded-full bg-ok" />
+              <span className={`h-2 w-2 rounded-full ${locked ? "bg-bad" : "bg-ok"}`} />
               Active members
             </p>
             <p className={bigNum}>{members}</p>
-            <p className="mt-1 text-xs text-white/40">promote or demote titles</p>
+            <p className="mt-1 text-xs text-white/40">
+              {locked ? "Promotions are locked. Demotion still works." : "Promotions are open."}
+            </p>
             <Link href="/dashboard/people" className={linkBtn}>Manage people</Link>
           </section>
         )}
       </div>
-
-      <section className={card}>
-        <h2 className="text-xl font-light">Your permissions</h2>
-        <p className="mb-5 mt-1 text-sm text-white/50">Calculated live from your titles.</p>
-        {perms.length === 0 ? (
-          <p className="text-sm text-white/50">None. You have standard member access.</p>
-        ) : (
-          <div className="flex flex-wrap gap-2">
-            {perms.map((p) => (
-              <span key={p} className="rounded-full bg-white/10 px-3 py-1 font-mono text-[11px]">{p}</span>
-            ))}
-          </div>
-        )}
-      </section>
     </div>
   );
 }

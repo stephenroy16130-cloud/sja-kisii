@@ -2,7 +2,8 @@
 
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
-import { api } from "@/lib/client";
+import { api, postForm } from "@/lib/client";
+import { shrinkJpeg } from "@/lib/image-client";
 import { btnCls, inputCls, labelCls } from "@/lib/ui";
 
 export default function CreateItemForm() {
@@ -26,8 +27,9 @@ export default function CreateItemForm() {
       .split(",")
       .map((s) => s.trim())
       .filter(Boolean);
+    const photo = f.get("photo");
     try {
-      await api("/api/store/items", "POST", {
+      const created = await api("/api/store/items", "POST", {
         name: f.get("name"),
         price: Number(f.get("price")),
         stockType: mto ? "MADE_TO_ORDER" : "READY_STOCK",
@@ -40,7 +42,19 @@ export default function CreateItemForm() {
             }
           : { quantity: Number(f.get("quantity")) }),
       });
-      setMsg("Item created");
+
+      let photoNote = "";
+      if (photo instanceof File && photo.size > 0) {
+        try {
+          const out = new FormData();
+          out.append("photo", await shrinkJpeg(photo, 1000), "photo.jpg");
+          await postForm(`/api/store/items/${created.id}/photo`, out);
+        } catch (err) {
+          photoNote = `The item was created, but its photo failed (${err instanceof Error ? err.message : "error"}). Add it from the item list below.`;
+        }
+      }
+      if (photoNote) setError(photoNote);
+      else setMsg("Item created");
       form.reset();
       router.refresh();
     } catch (err) {
@@ -92,6 +106,15 @@ export default function CreateItemForm() {
           </div>
         </>
       )}
+      <div className="sm:col-span-2">
+        <label className={labelCls}>Photo (optional)</label>
+        <input
+          name="photo"
+          type="file"
+          accept="image/*"
+          className="block w-full text-sm text-white/60 file:mr-4 file:rounded-full file:border-0 file:bg-white file:px-4 file:py-2 file:text-xs file:font-medium file:text-black"
+        />
+      </div>
       <div className="sm:col-span-2">
         <label className={labelCls}>Description (optional)</label>
         <textarea name="description" rows={2} className={inputCls} />

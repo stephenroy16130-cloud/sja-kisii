@@ -2,6 +2,7 @@ import { Title } from "@prisma/client";
 import { z } from "zod";
 import { audit, requirePermission } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { leadershipLocked } from "@/lib/leadership";
 import { HttpError, route } from "@/lib/http";
 import { hashPassword } from "@/lib/password";
 import { registerSchema } from "@/lib/validation";
@@ -13,6 +14,9 @@ const schema = registerSchema.extend({
 
 export const POST = route(async (req: Request) => {
   const actor = await requirePermission("user:provision");
+  if (await leadershipLocked()) {
+    throw new HttpError(409, "Leadership is locked. Reopen promotions on the People page first.");
+  }
   const data = schema.parse(await req.json());
   const titles = [...new Set(data.titles)];
 

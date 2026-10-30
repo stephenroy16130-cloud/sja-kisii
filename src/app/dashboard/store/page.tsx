@@ -70,6 +70,10 @@ export default async function StorePage() {
                   : `${item.quantity} in stock`;
               return (
                 <div key={item.id} className="rounded-3xl border border-white/10 bg-card p-6">
+                  {item.imageUrl && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={item.imageUrl} alt="" loading="lazy" className="mb-4 aspect-[4/3] w-full rounded-2xl object-cover" />
+                  )}
                   <div className="flex items-start justify-between gap-3">
                     <p className="text-lg font-light">{item.name}</p>
                     <p className="whitespace-nowrap text-gold">{kes(item.price)}</p>

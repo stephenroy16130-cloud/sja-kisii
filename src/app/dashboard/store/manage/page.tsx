@@ -142,7 +142,7 @@ export default async function ManageStorePage() {
                     </span>
                   </div>
                   <div className="mt-4">
-                    <ItemControls id={i.id} isActive={i.isActive} ready={ready} quantity={i.quantity} />
+                    <ItemControls id={i.id} isActive={i.isActive} ready={ready} quantity={i.quantity} imageUrl={i.imageUrl} />
                   </div>
                 </div>
               );
