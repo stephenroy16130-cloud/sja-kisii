@@ -23,6 +23,9 @@ export default async function DashboardLayout({ children }: { children: ReactNod
 
   const links: NavLink[] = [
     { href: "/dashboard/meetings", label: "Meetings", icon: "meetings" },
+    ...(user.crewId || can(user, "crew:approve_membership_change")
+      ? [{ href: "/dashboard/crew", label: "Crew", icon: "crew" as const }]
+      : []),
     { href: "/dashboard/fieldops", label: "Field Ops", icon: "fieldops" },
     { href: "/dashboard/training", label: "Training", icon: "training" },
     { href: "/dashboard/store", label: "Store", icon: "store" },

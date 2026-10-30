@@ -6,7 +6,7 @@ import { useState } from "react";
 import Badge from "@/components/badge";
 import { api } from "@/lib/client";
 
-type IconName = "approvals" | "people" | "meetings" | "fieldops" | "training" | "store" | "band" | "more";
+type IconName = "approvals" | "people" | "meetings" | "fieldops" | "training" | "store" | "band" | "crew" | "more";
 export type NavLink = { href: string; label: string; icon: IconName };
 
 function Icon({ name }: { name: IconName }) {
@@ -72,6 +72,13 @@ function Icon({ name }: { name: IconName }) {
           <ellipse cx="12" cy="10" rx="7" ry="3" />
           <path d="M5 10v6c0 1.7 3.1 3 7 3s7-1.3 7-3v-6" />
           <path d="M9 3l3 6M15 3l-3 6" />
+        </svg>
+      );
+    case "crew":
+      return (
+        <svg {...p}>
+          <path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6z" />
+          <path d="M9 12l2 2 4-4" />
         </svg>
       );
     default:
