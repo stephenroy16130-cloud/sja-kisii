@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
 import { getCurrentUser } from "@/lib/auth";
+import { canSeeBand } from "@/lib/band";
 import { crewName } from "@/lib/crews";
 import { db } from "@/lib/db";
 import { can } from "@/lib/rbac";
@@ -32,6 +33,8 @@ export default async function DashboardLayout({ children }: { children: ReactNod
   if (can(user, "user:manage_titles")) {
     links.push({ href: "/dashboard/people", label: "People", icon: "people" });
   }
+
+  if (canSeeBand(user)) links.push({ href: "/dashboard/band", label: "Band", icon: "band" });
 
   // Developer Quick Switch: development only
   let devUsers: DevUser[] = [];

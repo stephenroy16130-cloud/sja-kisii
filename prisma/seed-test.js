@@ -21,13 +21,14 @@ const USERS = [
   { key: "ops", email: "ops@test.com", username: "test_ops", fullName: "Test DO Operations", phone: "254700100011", crewId: 3, titles: ["DO_OPERATIONS"] },
   { key: "dsm", email: "dsm@test.com", username: "test_dsm", fullName: "Test DSM", phone: "254700100012", crewId: 4, titles: ["DSM"] },
   { key: "trn", email: "training@test.com", username: "test_training", fullName: "Test DO Training", phone: "254700100013", crewId: 1, titles: ["DO_TRAINING"] },
+  { key: "band", email: "band@test.com", username: "test_band", fullName: "Test Band Lead", phone: "254700100014", crewId: 2, titles: ["BAND_LEAD"] },
   { key: "s1", email: "sgt1@test.com", username: "test_sgt1", fullName: "Sgt Kevin Mwangi", phone: "254700100004", crewId: 1, titles: ["SERGEANT"] },
   { key: "s2", email: "sgt2@test.com", username: "test_sgt2", fullName: "Sgt Faith Njeri", phone: "254700100005", crewId: 2, titles: ["SERGEANT"] },
   { key: "m1", email: "member1@test.com", username: "test_member1", fullName: "Amina Wanjiru", phone: "254700100006", crewId: 1 },
   { key: "m2", email: "member2@test.com", username: "test_member2", fullName: "Brian Otieno", phone: "254700100007", crewId: 2 },
   { key: "m3", email: "member3@test.com", username: "test_member3", fullName: "Cynthia Achieng", phone: "254700100008", crewId: 3 },
-  { key: "m4", email: "member4@test.com", username: "test_member4", fullName: "Dennis Kiprop", phone: "254700100009", crewId: 4 },
-  { key: "m5", email: "member5@test.com", username: "test_member5", fullName: "Esther Nyaboke", phone: "254700100010", crewId: 1 },
+  { key: "m4", email: "member4@test.com", username: "test_member4", fullName: "Dennis Kiprop", phone: "254700100009", crewId: 4, titles: ["BAND_MEMBER"] },
+  { key: "m5", email: "member5@test.com", username: "test_member5", fullName: "Esther Nyaboke", phone: "254700100010", crewId: 1, titles: ["BAND_MEMBER"] },
 ];
 
 // M = general meeting, F = field op, T = training. Who was present each week.
