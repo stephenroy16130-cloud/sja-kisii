@@ -15,6 +15,7 @@ import { crewLeaderboard, isLeader } from "@/lib/leaderboard";
 import { loadMotw } from "@/lib/motw";
 import { can } from "@/lib/rbac";
 import FeeCard from "@/components/fee-card";
+import AppAccess from "@/components/app-access";
 import GenesisForm from "./genesis-form";
 import RegistrationToggle from "./registration-toggle";
 
@@ -104,6 +105,8 @@ export default async function DashboardPage() {
       )}
 
       {!user.isDeveloper && <FeeCard userId={user.id} />}
+
+      <AppAccess mode="nudge" />
 
       <HallOfFame data={motw.hall} meId={user.id} />
       {board && <CrewLeaderboard rows={board} />}

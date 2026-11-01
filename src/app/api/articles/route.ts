@@ -2,7 +2,9 @@ import { z } from "zod";
 import { audit, requirePermission } from "@/lib/auth";
 import { checkTarget, cleanHtml, MAX_IMAGE_BYTES, MAX_IMAGES, plainText, safeName, sniff } from "@/lib/content";
 import { db } from "@/lib/db";
+import { after } from "next/server";
 import { HttpError, route } from "@/lib/http";
+import { notifyAudience } from "@/lib/push";
 import { TX_OPTS } from "@/lib/store";
 
 export const POST = route(async (req: Request) => {
@@ -47,5 +49,10 @@ export const POST = route(async (req: Request) => {
   }, TX_OPTS);
 
   await audit(actor.id, "ARTICLE_POSTED", "Article", article.id, { title: article.title, audience, crewId });
+  if (notifyMembers) {
+    after(() =>
+      notifyAudience(audience, crewId, { title: article.title, body: plainText(html).slice(0, 120), url: "/dashboard/articles", tag: "article" }, actor.id)
+    );
+  }
   return Response.json(article, { status: 201 });
 });

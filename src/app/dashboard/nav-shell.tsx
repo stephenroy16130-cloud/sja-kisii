@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import Avatar from "@/components/avatar";
 import Badge from "@/components/badge";
 import { api } from "@/lib/client";
+import { detachPushFromServer } from "@/lib/push-client";
 
 type IconName =
   | "approvals" | "people" | "meetings" | "fieldops" | "training" | "store"
@@ -83,6 +84,7 @@ export default function NavShell({
   }, [sheet]);
 
   async function logout() {
+    await detachPushFromServer();
     await api("/api/auth/logout", "POST");
     router.push("/login");
     router.refresh();

@@ -1,7 +1,9 @@
 import { z } from "zod";
 import { audit, requireUser } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { after } from "next/server";
 import { HttpError, route } from "@/lib/http";
+import { notifyUsers } from "@/lib/push";
 import { can } from "@/lib/rbac";
 
 export const POST = route(async (req: Request, ctx: { params: Promise<{ id: string }> }) => {
@@ -34,5 +36,13 @@ export const POST = route(async (req: Request, ctx: { params: Promise<{ id: stri
     eventType: r.eventType,
     memberId: r.userId,
   });
+  after(() =>
+    notifyUsers([r.userId], {
+      title: approve ? "Attendance dispute approved" : "Attendance dispute declined",
+      body: approve ? "You have been marked present." : "Your absence stands.",
+      url: "/dashboard/attendance",
+      tag: "dispute",
+    })
+  );
   return Response.json({ id, decision });
 });

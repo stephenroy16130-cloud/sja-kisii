@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { officialPhoto, socialPhoto } from "@/lib/profile";
+import AppAccess from "@/components/app-access";
 import ProfileForms from "./profile-forms";
 
 export const dynamic = "force-dynamic";
@@ -29,6 +30,7 @@ export default async function ProfilePage() {
         <h1 className="text-3xl font-light tracking-tight">My profile</h1>
         <p className="mt-1 text-sm text-white/50">Your official records and how other members see you.</p>
       </div>
+      <AppAccess mode="full" />
       <ProfileForms
         official={{
           fullName: u.fullName,

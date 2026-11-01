@@ -97,7 +97,7 @@ export default function ArticleForm({ crews, band }: { crews: number[]; band: bo
         <span>
           Notify members
           <span className="block text-xs text-white/40">
-            Saved with the article. Push notifications switch on with the notifications update.
+            Sends a push notification to the people who can see this article.
           </span>
         </span>
       </label>

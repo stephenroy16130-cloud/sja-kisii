@@ -1,6 +1,7 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 import { Libre_Baskerville, Montserrat } from "next/font/google";
+import PwaRegister from "@/components/pwa-register";
 import "./globals.css";
 
 const head = Montserrat({
@@ -16,14 +17,26 @@ const copy = Libre_Baskerville({
 });
 
 export const metadata: Metadata = {
-  title: "St. John Ambulance - Kisii University",
+  title: { default: "St. John Ambulance · Kisii University", template: "%s · SJA Kisii" },
   description: "Division management system",
+  applicationName: "SJA Kisii",
+  appleWebApp: { capable: true, title: "SJA Kisii", statusBarStyle: "black" },
+  formatDetection: { telephone: false },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#000000",
+  width: "device-width",
+  initialScale: 1,
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
-      <body className={`${head.variable} ${copy.variable}`}>{children}</body>
+      <body className={`${head.variable} ${copy.variable}`}>
+        <PwaRegister />
+        {children}
+      </body>
     </html>
   );
 }
