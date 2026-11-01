@@ -8,7 +8,7 @@ const schema = z.object({
   body: z.string().trim().min(3, "Write a message").max(2000),
   eventDate: z.string().datetime().optional(),
   requiresRsvp: z.boolean().default(false),
-  paymentAmount: z.number().positive("Enter an amount").max(1_000_000).optional(),
+  paymentAmount: z.number().int("Use whole shillings").positive("Enter an amount").max(1_000_000).optional(),
   paymentLabel: z.string().trim().max(80).optional(),
 });
 

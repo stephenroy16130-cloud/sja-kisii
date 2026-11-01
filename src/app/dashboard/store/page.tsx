@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { fmt } from "@/lib/meetings";
+import PayButton from "@/components/pay-button";
 import { can } from "@/lib/rbac";
 import { kes, orderTone, orderWord, windowState } from "@/lib/store";
 import CancelOrderButton from "./cancel-order-button";
@@ -26,6 +27,7 @@ export default async function StorePage() {
     }),
   ]);
   const canManage = can(user, "finance:manage");
+  const me = await db.user.findUnique({ where: { id: user.id }, select: { phone: true } });
 
   return (
     <div className="space-y-10">
@@ -106,7 +108,7 @@ export default async function StorePage() {
       <section>
         <h2 className="mb-2 text-xl font-light">My orders</h2>
         <p className="mb-4 text-sm text-white/50">
-          After you order, pay by M-Pesa. DO Finance marks the order paid once the payment is confirmed.
+          Pay with M-Pesa from here and your order is marked paid automatically.
         </p>
         {orders.length === 0 ? (
           <div className="rounded-2xl border border-white/10 bg-card p-6 text-sm text-white/50">No orders yet.</div>
@@ -129,7 +131,12 @@ export default async function StorePage() {
                   </div>
                   <div className="flex flex-wrap items-center gap-3">
                     <span className={`${chip} ${orderTone[o.status]}`}>{orderWord[o.status]}</span>
-                    {o.status === "PENDING_PAYMENT" && <CancelOrderButton orderId={o.id} />}
+                    {o.status === "PENDING_PAYMENT" && (
+                      <>
+                        <PayButton target={{ kind: "order", orderId: o.id }} amount={kes(o.total)} phone={me?.phone ?? ""} />
+                        <CancelOrderButton orderId={o.id} />
+                      </>
+                    )}
                   </div>
                 </div>
               </div>

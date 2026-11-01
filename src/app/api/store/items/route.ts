@@ -8,7 +8,7 @@ const schema = z
     name: z.string().trim().min(2, "Name is too short").max(100),
     description: z.string().trim().max(500).optional(),
     stockType: z.enum(["READY_STOCK", "MADE_TO_ORDER"]),
-    price: z.number().positive("Enter a price").max(1_000_000),
+    price: z.number().int("Use whole shillings").positive("Enter a price").max(1_000_000),
     quantity: z.number().int().min(0).max(100000).optional(),
     sizes: z.array(z.string().trim().min(1).max(20)).max(15).default([]),
     orderOpensAt: z.string().datetime().optional(),

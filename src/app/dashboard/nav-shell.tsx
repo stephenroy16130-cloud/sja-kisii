@@ -9,7 +9,7 @@ import { api } from "@/lib/client";
 
 type IconName =
   | "approvals" | "people" | "meetings" | "fieldops" | "training" | "store"
-  | "band" | "crew" | "profile" | "members" | "articles" | "documents" | "more";
+  | "band" | "crew" | "profile" | "members" | "articles" | "documents" | "finance" | "more";
 export type NavLink = { href: string; label: string; icon: IconName };
 
 // Phone bar order: Meetings, Crew and Store first. Everything else lives under "More".
@@ -45,6 +45,8 @@ function Icon({ name }: { name: IconName }) {
       return (<svg {...p}><path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3z" /><path d="M9 9h6M9 13h6" /></svg>);
     case "documents":
       return (<svg {...p}><path d="M7 3h7l5 5v13H7z" /><path d="M14 3v5h5" /><path d="M10 13h6M10 17h6" /></svg>);
+    case "finance":
+      return (<svg {...p}><rect x="3" y="6" width="18" height="12" rx="2" /><circle cx="12" cy="12" r="2.5" /><path d="M6 9v.01M18 15v.01" /></svg>);
     default:
       return (<svg {...p}><circle cx="5.5" cy="12" r="1.3" /><circle cx="12" cy="12" r="1.3" /><circle cx="18.5" cy="12" r="1.3" /></svg>);
   }

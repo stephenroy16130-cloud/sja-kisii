@@ -6,6 +6,7 @@ import { fmt } from "@/lib/meetings";
 import Avatar from "@/components/avatar";
 import TrophyBadge from "@/components/trophy-badge";
 import { displayName, socialPhoto } from "@/lib/profile";
+import PayButton from "@/components/pay-button";
 import { can } from "@/lib/rbac";
 import { kes } from "@/lib/store";
 import AnnouncementForm from "./announcement-form";
@@ -65,6 +66,24 @@ export default async function CrewPage() {
       })
     : [];
   const winsOf = new Map(winRows.map((w) => [w.winnerId, w._count._all]));
+
+  const annIds = announcements.map((a) => a.id);
+  const me = await db.user.findUnique({ where: { id: user.id }, select: { phone: true } });
+  const paidRows = annIds.length
+    ? await db.transaction.groupBy({
+        by: ["announcementId"],
+        where: { announcementId: { in: annIds }, status: "SUCCESS" },
+        _count: { _all: true },
+      })
+    : [];
+  const paidCount = new Map(paidRows.map((p) => [p.announcementId, p._count._all]));
+  const myPaidRows = annIds.length
+    ? await db.transaction.findMany({
+        where: { announcementId: { in: annIds }, userId: user.id, status: "SUCCESS" },
+        select: { announcementId: true },
+      })
+    : [];
+  const myPaid = new Set(myPaidRows.map((r) => r.announcementId));
 
   const addable = leader
     ? await db.user.findMany({
@@ -193,8 +212,18 @@ export default async function CrewPage() {
                         <span className="text-gold">{kes(a.paymentAmount)}</span>
                         {a.paymentLabel ? ` · ${a.paymentLabel}` : ""}
                         <p className="mt-1 text-xs text-white/40">
-                          Pay by M-Pesa. Online payment arrives with the M-Pesa update, so confirm with your leader for now.
+                          Pay by M-Pesa using the button below.
                         </p>
+                      </div>
+                    )}
+                    {a.paymentAmount && (
+                      <div className="mt-3">
+                        {myPaid.has(a.id) ? (
+                          <p className="text-sm text-ok">You have paid. Thank you.</p>
+                        ) : (
+                          <PayButton target={{ kind: "announcement", announcementId: a.id }} amount={kes(a.paymentAmount)} phone={me?.phone ?? ""} />
+                        )}
+                        {leader && <p className="mt-2 text-xs text-white/40">{paidCount.get(a.id) ?? 0} paid</p>}
                       </div>
                     )}
                     {a.requiresRsvp && (

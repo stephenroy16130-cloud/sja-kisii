@@ -35,6 +35,10 @@ export const POST = route(async (req: Request, ctx: { params: Promise<{ id: stri
   const isOwner = order.userId === actor.id;
 
   if (action === "cancel") {
+    const inProgress = await db.transaction.count({
+      where: { orderId: id, status: "PENDING", createdAt: { gte: new Date(Date.now() - 120_000) } },
+    });
+    if (inProgress > 0) throw new HttpError(409, "A payment is in progress for this order. Wait for it to finish.");
     const allowed =
       (isOwner && order.status === "PENDING_PAYMENT") ||
       (finance && (order.status === "PENDING_PAYMENT" || order.status === "PAID"));

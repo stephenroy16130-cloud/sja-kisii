@@ -69,7 +69,7 @@ export default function AnnouncementForm() {
         <>
           <div>
             <label className={labelCls}>Amount (KES)</label>
-            <input name="paymentAmount" type="number" min="1" step="0.01" required className={inputCls} />
+            <input name="paymentAmount" type="number" min="1" step="1" required className={inputCls} />
           </div>
           <div>
             <label className={labelCls}>What it is for</label>

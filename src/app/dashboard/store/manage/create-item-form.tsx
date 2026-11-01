@@ -83,7 +83,7 @@ export default function CreateItemForm() {
       </div>
       <div>
         <label className={labelCls}>Price (KES)</label>
-        <input name="price" type="number" step="0.01" min="1" required className={inputCls} />
+        <input name="price" type="number" step="1" min="1" required className={inputCls} />
       </div>
       {!mto ? (
         <div>
