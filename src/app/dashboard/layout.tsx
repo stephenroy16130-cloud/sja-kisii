@@ -42,6 +42,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
     { href: "/dashboard/articles", label: "Articles", icon: "articles" },
     { href: "/dashboard/documents", label: "Documents", icon: "documents" }
   );
+  links.push({ href: "/dashboard/attendance", label: "Attendance", icon: "attendance" });
   links.push({ href: "/dashboard/profile", label: "My profile", icon: "profile" });
 
   // Developer Quick Switch: development only
