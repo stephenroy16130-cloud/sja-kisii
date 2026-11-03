@@ -1,3 +1,5 @@
+import PendingCheckins from "@/components/pending-checkins";
+import QrPanel from "@/components/qr-panel";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import CrewTargets from "@/components/crew-targets";
@@ -124,6 +126,9 @@ export default async function FieldOpPage({ params }: { params: Promise<{ id: st
           <CrewTargets allCrews={op.allCrews} crewIds={targets} />
         </div>
       </section>
+
+      <QrPanel kind="fieldop" id={id} />
+      <PendingCheckins kind="fieldop" id={id} />
 
       {showMine && (
         <section className={card}>

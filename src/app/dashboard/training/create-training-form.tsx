@@ -23,6 +23,7 @@ export default function CreateTrainingForm({
   const [error, setError] = useState("");
   const [msg, setMsg] = useState("");
   const [busy, setBusy] = useState(false);
+  const [qr, setQr] = useState(false);
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -34,7 +35,7 @@ export default function CreateTrainingForm({
     const description = String(f.get("description") || "").trim();
     const crew = String(f.get("crewId") || "");
     try {
-      await api("/api/training", "POST", {
+      const created = await api("/api/training", "POST", {
         type,
         title: f.get("title"),
         heldAt: new Date(String(f.get("heldAt"))).toISOString(),
@@ -42,7 +43,15 @@ export default function CreateTrainingForm({
         ...(type === "FIRST_AID" && canPickCrew ? { crewId: crew ? Number(crew) : null } : {}),
       });
       setMsg(autoVerified ? "Record created and verified" : "Record created. It is pending until DO Training verifies it.");
+      if (qr) {
+        try {
+          await api("/api/qr/training/" + created.id, "PUT", { action: "enable" });
+        } catch {
+          setError("Created, but QR check-in could not be turned on. Turn it on from the event page.");
+        }
+      }
       form.reset();
+      setQr(false);
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
@@ -106,6 +115,13 @@ export default function CreateTrainingForm({
           Your record starts as Pending. Points only count after DO Training verifies it.
         </p>
       )}
+      <label className="flex items-start gap-3 text-sm sm:col-span-2">
+        <input type="checkbox" checked={qr} onChange={(ev) => setQr(ev.target.checked)} className="mt-1 accent-white" />
+        <span>
+          Enable QR code check-in
+          <span className="block text-xs text-white/40">A printable QR code is created instantly. You set when it opens and closes afterwards.</span>
+        </span>
+      </label>
       {error && <p className="text-sm text-bad sm:col-span-2">{error}</p>}
       {msg && <p className="text-sm text-ok sm:col-span-2">{msg}</p>}
       <div className="sm:col-span-2">

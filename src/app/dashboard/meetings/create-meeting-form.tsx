@@ -10,6 +10,7 @@ export default function CreateMeetingForm() {
   const [error, setError] = useState("");
   const [msg, setMsg] = useState("");
   const [busy, setBusy] = useState(false);
+  const [qr, setQr] = useState(false);
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -21,14 +22,22 @@ export default function CreateMeetingForm() {
     const location = String(f.get("location") || "").trim();
     const description = String(f.get("description") || "").trim();
     try {
-      await api("/api/meetings", "POST", {
+      const created = await api("/api/meetings", "POST", {
         title: f.get("title"),
         startsAt: new Date(String(f.get("startsAt"))).toISOString(),
         ...(location ? { location } : {}),
         ...(description ? { description } : {}),
       });
       setMsg("Meeting created");
+      if (qr) {
+        try {
+          await api("/api/qr/meeting/" + created.id, "PUT", { action: "enable" });
+        } catch {
+          setError("Created, but QR check-in could not be turned on. Turn it on from the event page.");
+        }
+      }
       form.reset();
+      setQr(false);
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
@@ -54,6 +63,13 @@ export default function CreateMeetingForm() {
         <label className={labelCls}>Notes (optional)</label>
         <textarea name="description" rows={3} className={inputCls} />
       </div>
+      <label className="flex items-start gap-3 text-sm sm:col-span-2">
+        <input type="checkbox" checked={qr} onChange={(ev) => setQr(ev.target.checked)} className="mt-1 accent-white" />
+        <span>
+          Enable QR code check-in
+          <span className="block text-xs text-white/40">A printable QR code is created instantly. You set when it opens and closes afterwards.</span>
+        </span>
+      </label>
       {error && <p className="text-sm text-bad sm:col-span-2">{error}</p>}
       {msg && <p className="text-sm text-ok sm:col-span-2">{msg}</p>}
       <div className="sm:col-span-2">

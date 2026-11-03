@@ -107,6 +107,7 @@ enum RsvpResponse {
 }
 
 model User {
+  checkIns          CheckIn[]
   passkeys          Passkey[]
   pushSubscriptions PushSubscription[]
   dateOfBirth       DateTime?
@@ -193,16 +194,19 @@ model PasswordResetToken {
 }
 
 model Meeting {
-  archivedAt   DateTime?
-  archivedById String?
-  id           String    @id @default(cuid())
-  title        String
-  description  String?
-  location     String?
-  startsAt     DateTime
-  createdById  String
-  createdBy    User      @relation(fields: [createdById], references: [id])
-  createdAt    DateTime  @default(now())
+  qrToken       String?   @unique
+  qrActivatesAt DateTime?
+  qrExpiresAt   DateTime?
+  archivedAt    DateTime?
+  archivedById  String?
+  id            String    @id @default(cuid())
+  title         String
+  description   String?
+  location      String?
+  startsAt      DateTime
+  createdById   String
+  createdBy     User      @relation(fields: [createdById], references: [id])
+  createdAt     DateTime  @default(now())
 
   apologies  Apology[]
   attendance AttendanceRecord[]
@@ -223,36 +227,42 @@ model Apology {
 }
 
 model FieldOp {
-  id          String    @id @default(cuid())
-  title       String
-  description String?
-  location    String?
-  startsAt    DateTime
-  endsAt      DateTime?
-  allCrews    Boolean   @default(true)
-  crews       Crew[]
-  createdById String
-  createdBy   User      @relation(fields: [createdById], references: [id])
-  createdAt   DateTime  @default(now())
+  qrToken       String?   @unique
+  qrActivatesAt DateTime?
+  qrExpiresAt   DateTime?
+  id            String    @id @default(cuid())
+  title         String
+  description   String?
+  location      String?
+  startsAt      DateTime
+  endsAt        DateTime?
+  allCrews      Boolean   @default(true)
+  crews         Crew[]
+  createdById   String
+  createdBy     User      @relation(fields: [createdById], references: [id])
+  createdAt     DateTime  @default(now())
 
   attendance AttendanceRecord[]
 }
 
 model Training {
-  id           String             @id @default(cuid())
-  type         TrainingType
-  title        String
-  description  String?
-  heldAt       DateTime
-  crewId       Int?
-  crew         Crew?              @relation(fields: [crewId], references: [id])
-  createdById  String
-  createdBy    User               @relation("TrainingCreator", fields: [createdById], references: [id])
-  status       VerificationStatus @default(PENDING)
-  verifiedById String?
-  verifiedBy   User?              @relation("TrainingVerifier", fields: [verifiedById], references: [id])
-  verifiedAt   DateTime?
-  createdAt    DateTime           @default(now())
+  qrToken       String?            @unique
+  qrActivatesAt DateTime?
+  qrExpiresAt   DateTime?
+  id            String             @id @default(cuid())
+  type          TrainingType
+  title         String
+  description   String?
+  heldAt        DateTime
+  crewId        Int?
+  crew          Crew?              @relation(fields: [crewId], references: [id])
+  createdById   String
+  createdBy     User               @relation("TrainingCreator", fields: [createdById], references: [id])
+  status        VerificationStatus @default(PENDING)
+  verifiedById  String?
+  verifiedBy    User?              @relation("TrainingVerifier", fields: [verifiedById], references: [id])
+  verifiedAt    DateTime?
+  createdAt     DateTime           @default(now())
 
   attendance AttendanceRecord[]
 }
@@ -551,4 +561,26 @@ model Passkey {
   lastUsedAt DateTime?
 
   @@index([userId])
+}
+
+enum CheckInStatus {
+  PENDING
+  CONFIRMED
+  REJECTED
+}
+
+model CheckIn {
+  id          String        @id @default(cuid())
+  kind        EventType
+  eventId     String
+  userId      String
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  crewId      Int?
+  status      CheckInStatus @default(PENDING)
+  scannedAt   DateTime      @default(now())
+  decidedById String?
+  decidedAt   DateTime?
+
+  @@unique([kind, eventId, userId])
+  @@index([kind, eventId, status])
 }

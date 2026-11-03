@@ -1,3 +1,5 @@
+import PendingCheckins from "@/components/pending-checkins";
+import QrPanel from "@/components/qr-panel";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
@@ -95,6 +97,9 @@ export default async function MeetingPage({ params }: { params: Promise<{ id: st
         {meeting.location && <p className="mt-1 text-sm text-white/50">{meeting.location}</p>}
         {meeting.description && <p className="font-copy mt-5 text-sm leading-relaxed text-white/70">{meeting.description}</p>}
       </section>
+
+      <QrPanel kind="meeting" id={id} />
+      <PendingCheckins kind="meeting" id={id} />
 
       <section className={card}>
         <h2 className={h2}>Your apology</h2>

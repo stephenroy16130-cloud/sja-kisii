@@ -1,3 +1,5 @@
+import PendingCheckins from "@/components/pending-checkins";
+import QrPanel from "@/components/qr-panel";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import CrewTargets from "@/components/crew-targets";
@@ -94,6 +96,9 @@ export default async function TrainingDetailPage({ params }: { params: Promise<{
           <CrewTargets allCrews={t.crewId === null} crewIds={t.crewId ? [t.crewId] : []} />
         </div>
       </section>
+
+      <QrPanel kind="training" id={id} />
+      <PendingCheckins kind="training" id={id} />
 
       {verifier && t.status === "PENDING" && (
         <section className={card}>

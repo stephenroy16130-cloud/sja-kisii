@@ -13,6 +13,7 @@ export default function CreateFieldOpForm() {
   const [error, setError] = useState("");
   const [msg, setMsg] = useState("");
   const [busy, setBusy] = useState(false);
+  const [qr, setQr] = useState(false);
 
   const toggle = (id: number) =>
     setSelected((cur) => (cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id]));
@@ -28,7 +29,7 @@ export default function CreateFieldOpForm() {
     const location = String(f.get("location") || "").trim();
     const description = String(f.get("description") || "").trim();
     try {
-      await api("/api/fieldops", "POST", {
+      const created = await api("/api/fieldops", "POST", {
         title: f.get("title"),
         startsAt: new Date(String(f.get("startsAt"))).toISOString(),
         ...(endsAt ? { endsAt: new Date(endsAt).toISOString() } : {}),
@@ -38,7 +39,15 @@ export default function CreateFieldOpForm() {
         crewIds: allCrews ? [] : selected,
       });
       setMsg("Operation created");
+      if (qr) {
+        try {
+          await api("/api/qr/fieldop/" + created.id, "PUT", { action: "enable" });
+        } catch {
+          setError("Created, but QR check-in could not be turned on. Turn it on from the event page.");
+        }
+      }
       form.reset();
+      setQr(false);
       setSelected([]);
       setAllCrews(true);
       router.refresh();
@@ -104,6 +113,13 @@ export default function CreateFieldOpForm() {
         <label className={labelCls}>Notes (optional)</label>
         <textarea name="description" rows={3} className={inputCls} />
       </div>
+      <label className="flex items-start gap-3 text-sm sm:col-span-2">
+        <input type="checkbox" checked={qr} onChange={(ev) => setQr(ev.target.checked)} className="mt-1 accent-white" />
+        <span>
+          Enable QR code check-in
+          <span className="block text-xs text-white/40">A printable QR code is created instantly. You set when it opens and closes afterwards.</span>
+        </span>
+      </label>
       {error && <p className="text-sm text-bad sm:col-span-2">{error}</p>}
       {msg && <p className="text-sm text-ok sm:col-span-2">{msg}</p>}
       <div className="sm:col-span-2">

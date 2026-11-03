@@ -9,6 +9,12 @@ import PasswordInput from "@/components/password-input";
 import { api } from "@/lib/client";
 import { btnCls, inputCls, labelCls } from "@/lib/ui";
 
+// After signing in, go back to the page the member was trying to reach (for example a QR check-in)
+function nextUrl() {
+  const n = new URLSearchParams(window.location.search).get("next");
+  return n && n.startsWith("/") && !n.startsWith("//") ? n : "/dashboard";
+}
+
 export default function LoginPage() {
   const router = useRouter();
   const [error, setError] = useState("");
@@ -26,7 +32,7 @@ export default function LoginPage() {
     const f = new FormData(e.currentTarget);
     try {
       await api("/api/auth/login", "POST", { identifier: f.get("identifier"), password: f.get("password") });
-      router.push("/dashboard");
+      router.push(nextUrl());
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
@@ -41,7 +47,7 @@ export default function LoginPage() {
       const options = await api("/api/passkeys/login/options", "POST");
       const response = await startAuthentication({ optionsJSON: options });
       await api("/api/passkeys/login/verify", "POST", { response });
-      router.push("/dashboard");
+      router.push(nextUrl());
       router.refresh();
     } catch (err) {
       const n = (err as { name?: string }).name;

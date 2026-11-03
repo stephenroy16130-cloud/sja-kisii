@@ -10,7 +10,7 @@ import { detachPushFromServer } from "@/lib/push-client";
 
 type IconName =
   | "approvals" | "people" | "meetings" | "fieldops" | "training" | "store"
-  | "band" | "crew" | "profile" | "members" | "articles" | "documents" | "finance" | "attendance" | "analytics" | "more";
+  | "band" | "crew" | "profile" | "members" | "articles" | "documents" | "finance" | "attendance" | "analytics" | "scan" | "more";
 export type NavLink = { href: string; label: string; icon: IconName };
 
 // Phone bar order: Meetings, Crew and Store first. Everything else lives under "More".
@@ -52,6 +52,8 @@ function Icon({ name }: { name: IconName }) {
       return (<svg {...p}><path d="M9 6h11M9 12h11M9 18h11" /><path d="m3.5 6 1.5 1.5L7.5 5M3.5 12l1.5 1.5L7.5 11M3.5 18l1.5 1.5L7.5 17" /></svg>);
     case "analytics":
       return (<svg {...p}><path d="M5 20V10M12 20V4M19 20v-7" /></svg>);
+    case "scan":
+      return (<svg {...p}><path d="M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2M7 12h10" /></svg>);
     default:
       return (<svg {...p}><circle cx="5.5" cy="12" r="1.3" /><circle cx="12" cy="12" r="1.3" /><circle cx="18.5" cy="12" r="1.3" /></svg>);
   }
