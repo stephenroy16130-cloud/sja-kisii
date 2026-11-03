@@ -5,6 +5,7 @@ import { canSeeBand } from "@/lib/band";
 import { crewName } from "@/lib/crews";
 import { db } from "@/lib/db";
 import { socialPhoto } from "@/lib/profile";
+import { isLeader } from "@/lib/leaderboard";
 import { can } from "@/lib/rbac";
 import DevSwitcher, { type DevUser } from "./dev-switcher";
 import NavShell, { type NavLink } from "./nav-shell";
@@ -42,6 +43,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
     { href: "/dashboard/articles", label: "Articles", icon: "articles" },
     { href: "/dashboard/documents", label: "Documents", icon: "documents" }
   );
+  if (isLeader(user)) links.push({ href: "/dashboard/analytics", label: "Analytics", icon: "analytics" });
   links.push({ href: "/dashboard/attendance", label: "Attendance", icon: "attendance" });
   links.push({ href: "/dashboard/profile", label: "My profile", icon: "profile" });
 
