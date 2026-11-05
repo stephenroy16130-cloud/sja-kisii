@@ -40,7 +40,7 @@ export default async function DocumentsPage() {
       {canPost && (
         <section>
           <h2 className="mb-4 text-xl font-light">Upload a document</h2>
-          <DocumentForm crews={target.crews} band={target.band} />
+          <DocumentForm crews={target.crews} band={target.band} userId={user.id} />
         </section>
       )}
 
@@ -68,7 +68,7 @@ export default async function DocumentsPage() {
                 </div>
                 <div className="mt-4 flex flex-wrap items-center gap-3">
                   <a
-                    href={d.fileUrl}
+                    href={`/api/documents/${d.id}/file`}
                     download={d.fileName}
                     className="rounded-full bg-white px-5 py-2.5 text-xs font-medium text-black transition hover:bg-neutral-200"
                   >

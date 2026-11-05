@@ -11,7 +11,7 @@ export const IN_PROGRESS_MS = 120_000;
 
 export const PURPOSE_WORD: Record<TransactionPurpose, string> = {
   REGISTRATION_FEE: "Registration fee",
-  STORE_ORDER: "Store order",
+  STORE_ORDER: "Shop order",
   CREW_EVENT: "Crew event",
 };
 export const TX_WORD: Record<TransactionStatus, string> = {

@@ -2,6 +2,7 @@ import type { Prisma, TrainingType, VerificationStatus } from "@prisma/client";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import CrewTargets from "@/components/crew-targets";
+import EventArchiveButton from "@/components/event-archive-button";
 import { getCurrentUser } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { fmt } from "@/lib/meetings";
@@ -19,14 +20,30 @@ type Row = {
   heldAt: Date;
   crewId: number | null;
   status: VerificationStatus;
+  createdById: string;
   createdBy: { fullName: string };
 };
 
+const select = {
+  id: true, type: true, title: true, heldAt: true, crewId: true, status: true, createdById: true,
+  createdBy: { select: { fullName: true } },
+} as const;
+
 const chip = "rounded-full border px-3 py-1 text-[11px] uppercase tracking-[0.12em]";
 
-function Item({ t, verify }: { t: Row; verify?: boolean }) {
+function Item({
+  t,
+  verify,
+  canDelete,
+  archived,
+}: {
+  t: Row;
+  verify?: boolean;
+  canDelete?: boolean;
+  archived?: boolean;
+}) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-card p-5 transition hover:border-white/30">
+    <div className={`rounded-2xl border border-white/10 bg-card p-5 transition hover:border-white/30 ${archived ? "opacity-70" : ""}`}>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <Link href={`/dashboard/training/${t.id}`} className="min-w-0 flex-1">
           <p className="text-lg font-light">{t.title}</p>
@@ -43,7 +60,14 @@ function Item({ t, verify }: { t: Row; verify?: boolean }) {
         <div className="flex flex-wrap gap-2">
           <CrewTargets allCrews={t.crewId === null} crewIds={t.crewId ? [t.crewId] : []} />
         </div>
-        {verify && <VerifyButtons id={t.id} />}
+        <div className="flex flex-wrap items-center gap-2">
+          {verify && <VerifyButtons id={t.id} />}
+          {archived ? (
+            <EventArchiveButton kind="training" id={t.id} title={t.title} archived />
+          ) : canDelete ? (
+            <EventArchiveButton kind="training" id={t.id} title={t.title} archived={false} />
+          ) : null}
+        </div>
       </div>
     </div>
   );
@@ -57,29 +81,24 @@ export default async function TrainingPage() {
   const types = allowedTypes(user);
 
   // Members see verified sessions for their audience. Creators also see their own. DO Training sees all.
-  const where: Prisma.TrainingWhereInput = verifier
+  const visible: Prisma.TrainingWhereInput = verifier
     ? {}
     : {
         OR: [
           { createdById: user.id },
-          {
-            status: "VERIFIED",
-            OR: [{ crewId: null }, ...(user.crewId ? [{ crewId: user.crewId }] : [])],
-          },
+          { status: "VERIFIED", OR: [{ crewId: null }, ...(user.crewId ? [{ crewId: user.crewId }] : [])] },
         ],
       };
 
-  const all = await db.training.findMany({
-    where,
-    orderBy: { heldAt: "desc" },
-    take: 100,
-    select: {
-      id: true, type: true, title: true, heldAt: true, crewId: true, status: true,
-      createdBy: { select: { fullName: true } },
-    },
-  });
+  const [all, archivedRows] = await Promise.all([
+    db.training.findMany({ where: { AND: [visible, { archivedAt: null }] }, orderBy: { heldAt: "desc" }, take: 100, select }),
+    verifier
+      ? db.training.findMany({ where: { archivedAt: { not: null } }, orderBy: { heldAt: "desc" }, take: 50, select })
+      : Promise.resolve([] as Row[]),
+  ]);
 
   const now = new Date();
+  const canDelete = (t: Row) => t.heldAt < now && (verifier || (t.createdById === user.id && t.status !== "VERIFIED"));
   const waiting = verifier ? all.filter((t) => t.status === "PENDING") : [];
   const rest = verifier ? all.filter((t) => t.status !== "PENDING") : all;
   const upcoming = rest.filter((t) => t.heldAt >= now).reverse();
@@ -109,7 +128,7 @@ export default async function TrainingPage() {
           ) : (
             <div className="space-y-3">
               {waiting.map((t) => (
-                <Item key={t.id} t={t} verify />
+                <Item key={t.id} t={t} verify canDelete={canDelete(t)} />
               ))}
             </div>
           )}
@@ -119,9 +138,7 @@ export default async function TrainingPage() {
       <section>
         <h2 className="mb-4 text-xl font-light">Upcoming</h2>
         {upcoming.length === 0 ? (
-          <div className="rounded-2xl border border-white/10 bg-card p-6 text-sm text-white/50">
-            No upcoming sessions.
-          </div>
+          <div className="rounded-2xl border border-white/10 bg-card p-6 text-sm text-white/50">No upcoming sessions.</div>
         ) : (
           <div className="space-y-3">
             {upcoming.map((t) => (
@@ -136,10 +153,23 @@ export default async function TrainingPage() {
           <h2 className="mb-4 text-xl font-light">Past</h2>
           <div className="space-y-3">
             {past.map((t) => (
-              <Item key={t.id} t={t} />
+              <Item key={t.id} t={t} canDelete={canDelete(t)} />
             ))}
           </div>
         </section>
+      )}
+
+      {verifier && archivedRows.length > 0 && (
+        <details>
+          <summary className="cursor-pointer text-xl font-light text-white/60 hover:text-white">
+            Archived ({archivedRows.length})
+          </summary>
+          <div className="mt-4 space-y-3">
+            {archivedRows.map((t) => (
+              <Item key={t.id} t={t} archived />
+            ))}
+          </div>
+        </details>
       )}
     </div>
   );

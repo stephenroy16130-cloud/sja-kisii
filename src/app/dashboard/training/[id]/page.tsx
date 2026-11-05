@@ -28,6 +28,7 @@ export default async function TrainingDetailPage({ params }: { params: Promise<{
     include: { createdBy: { select: { fullName: true } }, verifiedBy: { select: { fullName: true } } },
   });
   if (!t) notFound();
+  if (t.archivedAt && !can(user, "training:verify")) notFound();
 
   const verifier = can(user, "training:verify");
   const isCreator = t.createdById === user.id;

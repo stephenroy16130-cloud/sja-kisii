@@ -51,7 +51,7 @@ export const TITLE_PERMISSIONS: Record<Title, Permission[]> = {
 };
 
 // Superintendent = HR authority only. No operational permissions.
-const SUPERINTENDENT: Permission[] = ["user:manage_titles", "user:provision"];
+const SUPERINTENDENT: Permission[] = ["user:manage_titles", "user:provision", "content:create"];
 
 export type AuthUser = {
   id: string;

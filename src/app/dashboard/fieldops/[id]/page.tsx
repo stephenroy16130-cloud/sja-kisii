@@ -29,6 +29,7 @@ export default async function FieldOpPage({ params }: { params: Promise<{ id: st
 
   const op = await db.fieldOp.findUnique({ where: { id }, include: { crews: { select: { id: true } } } });
   if (!op) notFound();
+  if (op.archivedAt && !can(user, "fieldop:manage")) notFound();
 
   const canManage = can(user, "fieldop:manage");
   const targets = targetCrewIds(op);

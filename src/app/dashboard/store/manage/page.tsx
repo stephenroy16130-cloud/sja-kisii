@@ -72,9 +72,9 @@ export default async function ManageStorePage() {
     <div className="space-y-10">
       <div>
         <Link href="/dashboard/store" className="text-sm text-white/50 hover:text-white">
-          ← Store
+          ← Shop
         </Link>
-        <h1 className="mt-3 text-3xl font-light tracking-tight">Manage store</h1>
+        <h1 className="mt-3 text-3xl font-light tracking-tight">Manage shop</h1>
         <p className="mt-1 text-sm text-white/50">Items, stock and payment confirmations.</p>
       </div>
 

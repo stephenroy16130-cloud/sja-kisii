@@ -227,6 +227,8 @@ model Apology {
 }
 
 model FieldOp {
+  archivedAt    DateTime?
+  archivedById  String?
   qrToken       String?   @unique
   qrActivatesAt DateTime?
   qrExpiresAt   DateTime?
@@ -246,6 +248,8 @@ model FieldOp {
 }
 
 model Training {
+  archivedAt    DateTime?
+  archivedById  String?
   qrToken       String?            @unique
   qrActivatesAt DateTime?
   qrExpiresAt   DateTime?

@@ -53,3 +53,17 @@ select optgroup {
 .rich ol { list-style: decimal; padding-left: 1.4rem; margin: 0 0 0.75rem; }
 .rich blockquote { border-left: 2px solid var(--accent); padding-left: 1rem; margin: 0 0 0.75rem; font-style: italic; color: rgba(255, 255, 255, 0.7); }
 .rich a { color: var(--accent); text-decoration: underline; }
+
+@keyframes sja-slide {
+  0% { transform: translateX(-120%); }
+  100% { transform: translateX(320%); }
+}
+@keyframes sja-pulse {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(212, 175, 90, 0.35); }
+  50% { transform: scale(1.04); box-shadow: 0 0 0 14px rgba(212, 175, 90, 0); }
+}
+.sja-bar { animation: sja-slide 1.2s ease-in-out infinite; }
+.sja-pulse { animation: sja-pulse 1.8s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .sja-bar, .sja-pulse { animation: none; }
+}

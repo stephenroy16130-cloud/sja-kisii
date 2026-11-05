@@ -59,7 +59,7 @@ export async function loadEvent(kind: QrKind, key: Key): Promise<QrEvent | null>
     return {
       kind, id: o.id, title: o.title, startsAt: o.startsAt,
       qrToken: o.qrToken, qrActivatesAt: o.qrActivatesAt, qrExpiresAt: o.qrExpiresAt,
-      createdById: o.createdById, crewIds: o.allCrews ? null : o.crews.map((c) => c.id), blocked: null,
+      createdById: o.createdById, crewIds: o.allCrews ? null : o.crews.map((c) => c.id), blocked: o.archivedAt ? "This operation has been archived." : null,
     };
   }
   const t = await db.training.findUnique({ where: "id" in key ? { id: key.id } : { qrToken: key.token } });
@@ -68,7 +68,7 @@ export async function loadEvent(kind: QrKind, key: Key): Promise<QrEvent | null>
     kind, id: t.id, title: t.title, startsAt: t.heldAt,
     qrToken: t.qrToken, qrActivatesAt: t.qrActivatesAt, qrExpiresAt: t.qrExpiresAt,
     createdById: t.createdById, crewIds: t.crewId === null ? null : [t.crewId],
-    blocked: t.status === "REJECTED" ? "This training record was rejected." : null,
+    blocked: t.status === "REJECTED" ? "This training record was rejected." : t.archivedAt ? "This session has been archived." : null,
   };
 }
 

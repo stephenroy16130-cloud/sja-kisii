@@ -9,12 +9,13 @@ export const MAX_IMAGE_BYTES = 600_000;
 export const MAX_DOC_BYTES = 4_000_000;
 
 export const canModerate = (u: AuthUser) => can(u, "content:moderate");
-export const seesBand = (u: AuthUser) => inBand(u) || canManageInventory(u) || canModerate(u);
+export const seesBand = (u: AuthUser) => inBand(u) || canManageInventory(u) || canModerate(u) || u.isSuperintendent;
 
 // Where this person may post: General always, their own crew (any crew for the DO Admin), the Band for band leaders
 export function postable(u: AuthUser) {
-  const crews = canModerate(u) ? [1, 2, 3, 4] : u.crewId ? [u.crewId] : [];
-  const band = u.titles.includes("BAND_LEAD") || can(u, "band:oversee") || canModerate(u);
+  const wide = canModerate(u) || u.isSuperintendent;
+  const crews = wide ? [1, 2, 3, 4] : u.crewId ? [u.crewId] : [];
+  const band = u.titles.includes("BAND_LEAD") || can(u, "band:oversee") || wide;
   return { crews, band };
 }
 

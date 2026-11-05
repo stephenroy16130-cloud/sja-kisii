@@ -1,18 +1,19 @@
 "use client";
 
+import { upload } from "@vercel/blob/client";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
-import { postForm } from "@/lib/client";
+import { api } from "@/lib/client";
 import { crewName } from "@/lib/crews";
+import { DOC_MIME, docExt, MAX_DOC_BYTES } from "@/lib/doc-files";
 import { btnCls, inputCls, labelCls } from "@/lib/ui";
 
-const MAX = 4_000_000;
-
-export default function DocumentForm({ crews, band }: { crews: number[]; band: boolean }) {
+export default function DocumentForm({ crews, band, userId }: { crews: number[]; band: boolean; userId: string }) {
   const router = useRouter();
   const [audience, setAudience] = useState<"GENERAL" | "CREW" | "BAND">("GENERAL");
   const [crew, setCrew] = useState(String(crews[0] ?? ""));
   const [reset, setReset] = useState(0);
+  const [progress, setProgress] = useState(0);
   const [error, setError] = useState("");
   const [msg, setMsg] = useState("");
   const [busy, setBusy] = useState(false);
@@ -24,23 +25,39 @@ export default function DocumentForm({ crews, band }: { crews: number[]; band: b
     const f = new FormData(e.currentTarget);
     const file = f.get("file");
     if (!(file instanceof File) || file.size === 0) return setError("Choose a file");
-    if (!/\.(pdf|docx?)$/i.test(file.name)) return setError("Upload a PDF or Word document (.pdf, .doc, .docx)");
-    if (file.size > MAX) return setError("That file is too large (4 MB maximum)");
+    const ext = docExt(file.name);
+    if (!ext) return setError("Upload a PDF or Word document (.pdf, .doc, .docx)");
+    if (file.size > MAX_DOC_BYTES) {
+      return setError(`That file is too large (${Math.round(MAX_DOC_BYTES / 1048576)} MB maximum)`);
+    }
 
     setBusy(true);
+    setProgress(0);
+    const crewId = audience === "CREW" ? Number(crew) : null;
     try {
-      const out = new FormData();
-      out.append("title", String(f.get("title") ?? ""));
-      out.append("description", String(f.get("description") ?? ""));
-      out.append("audience", audience);
-      if (audience === "CREW") out.append("crewId", crew);
-      out.append("file", file);
-      await postForm("/api/documents", out);
-      setMsg("Document uploaded");
+      const safe = file.name.replace(/[^\w.\-]+/g, "_");
+      const blob = await upload(`documents/${userId}/${safe}`, file, {
+        access: "private",
+        handleUploadUrl: "/api/documents/upload",
+        contentType: DOC_MIME[ext],
+        clientPayload: JSON.stringify({ audience, crewId }),
+        onUploadProgress: (p) => setProgress(Math.round(p.percentage)),
+      });
+      await api("/api/documents", "POST", {
+        title: f.get("title"),
+        description: String(f.get("description") ?? ""),
+        audience,
+        crewId,
+        pathname: blob.pathname,
+        fileName: file.name,
+        size: file.size,
+      });
+      setMsg("Document published");
       setReset((n) => n + 1);
       router.refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong");
+      const m = err instanceof Error ? err.message : "Something went wrong";
+      setError(/token/i.test(m) ? "The upload was refused. Check that you may publish to that audience." : m);
     }
     setBusy(false);
   }
@@ -74,7 +91,7 @@ export default function DocumentForm({ crews, band }: { crews: number[]; band: b
         </div>
       )}
       <div className="sm:col-span-2">
-        <label className={labelCls}>File (PDF or Word, up to 4 MB)</label>
+        <label className={labelCls}>File (PDF or Word, up to 100 MB)</label>
         <input
           name="file"
           type="file"
@@ -83,6 +100,14 @@ export default function DocumentForm({ crews, band }: { crews: number[]; band: b
           className="block w-full text-sm text-white/60 file:mr-4 file:rounded-full file:border-0 file:bg-white file:px-4 file:py-2 file:text-xs file:font-medium file:text-black"
         />
       </div>
+      {busy && (
+        <div className="sm:col-span-2">
+          <div className="h-2 w-full overflow-hidden rounded-full bg-white/10">
+            <div className="h-2 rounded-full bg-gold transition-all" style={{ width: `${progress}%` }} />
+          </div>
+          <p className="mt-2 text-xs text-white/50">Uploading {progress}%. Keep this page open until it finishes.</p>
+        </div>
+      )}
       {error && <p className="text-sm text-bad sm:col-span-2">{error}</p>}
       {msg && <p className="text-sm text-ok sm:col-span-2">{msg}</p>}
       <div className="sm:col-span-2">

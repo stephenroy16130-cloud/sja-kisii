@@ -112,7 +112,7 @@ export default async function AnalyticsPage() {
             labels={fin.weeks.map(shortDate)}
             series={[
               { name: "Registration fees", color: "#d4af5a", values: fin.byWeek.map((w) => w.REGISTRATION_FEE) },
-              { name: "Store orders", color: "#3fb5e8", values: fin.byWeek.map((w) => w.STORE_ORDER) },
+              { name: "Shop orders", color: "#3fb5e8", values: fin.byWeek.map((w) => w.STORE_ORDER) },
               { name: "Crew events", color: "#a78bfa", values: fin.byWeek.map((w) => w.CREW_EVENT) },
             ]}
           />

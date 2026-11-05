@@ -42,7 +42,7 @@ export const POST = route(async (req: Request) => {
     purpose = "STORE_ORDER";
     amount = whole(order.total);
     reference = "ORD" + order.id.slice(-6).toUpperCase();
-    desc = "Store order";
+    desc = "Shop order";
     orderId = order.id;
   } else if (d.kind === "announcement") {
     const a = await db.announcement.findUnique({ where: { id: d.announcementId } });

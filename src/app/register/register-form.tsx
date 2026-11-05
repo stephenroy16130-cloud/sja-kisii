@@ -1,8 +1,9 @@
 "use client";
-import { crewName } from "@/lib/crews";
 
 import { useState, type FormEvent } from "react";
+import PasswordInput from "@/components/password-input";
 import { api } from "@/lib/client";
+import { crewName } from "@/lib/crews";
 import { btnCls, inputCls, labelCls } from "@/lib/ui";
 
 export default function RegisterForm() {
@@ -31,7 +32,7 @@ export default function RegisterForm() {
     setBusy(false);
   }
 
-  if (done) return <div className="bg-card/10 p-4 text-sm">{done}</div>;
+  if (done) return <div className="rounded-2xl border border-white/10 bg-card p-4 text-sm">{done}</div>;
 
   return (
     <form onSubmit={onSubmit} className="space-y-4">
@@ -61,8 +62,10 @@ export default function RegisterForm() {
       </div>
       <div>
         <label className={labelCls}>Password</label>
-        <input name="password" type="password" required className={inputCls} />
-        <p className="mt-1 text-xs text-white/50">At least 8 characters with an uppercase letter, a lowercase letter and a number.</p>
+        <PasswordInput name="password" autoComplete="new-password" />
+        <p className="mt-1 text-xs text-white/50">
+          At least 8 characters with an uppercase letter, a lowercase letter and a number.
+        </p>
       </div>
       {error && <p className="text-sm text-red-400">{error}</p>}
       <button disabled={busy} className={btnCls}>{busy ? "Submitting..." : "Register"}</button>

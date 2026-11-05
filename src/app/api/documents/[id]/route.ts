@@ -1,3 +1,4 @@
+import { del } from "@vercel/blob";
 import { audit, requireUser } from "@/lib/auth";
 import { canModerate } from "@/lib/content";
 import { db } from "@/lib/db";
@@ -14,11 +15,20 @@ export const DELETE = route(async (_req: Request, ctx: { params: Promise<{ id: s
     throw new HttpError(403, "Only the uploader or the DO Admin can delete this document");
   }
 
-  const fileId = /^\/api\/files\/(.+)$/.exec(doc.fileUrl)?.[1];
+  const blobPath = doc.fileUrl.startsWith("blob:") ? doc.fileUrl.slice(5) : null;
+  const legacyId = /^\/api\/files\/(.+)$/.exec(doc.fileUrl)?.[1];
   await db.$transaction(async (tx) => {
-    if (fileId) await tx.storedFile.deleteMany({ where: { id: fileId } });
+    if (legacyId) await tx.storedFile.deleteMany({ where: { id: legacyId } });
     await tx.document.delete({ where: { id } });
   }, TX_OPTS);
+
+  if (blobPath) {
+    try {
+      await del(blobPath);
+    } catch (e) {
+      console.error("Could not delete the stored file", e);
+    }
+  }
 
   await audit(actor.id, "DOCUMENT_DELETED", "Document", id, { title: doc.title });
   return Response.json({ id });

@@ -46,14 +46,14 @@ export default async function FinancePage() {
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="text-3xl font-light tracking-tight">Finance</h1>
-          <p className="mt-1 text-sm text-white/50">M-Pesa payments, fees and the store.</p>
+          <p className="mt-1 text-sm text-white/50">M-Pesa payments, fees and the shop.</p>
         </div>
         <div className="flex flex-wrap gap-3">
           <Link
             href="/dashboard/store/manage"
             className="rounded-full border border-gold/60 px-5 py-2.5 text-xs uppercase tracking-[0.15em] text-gold transition hover:bg-gold hover:text-black"
           >
-            Store orders
+            Shop orders
           </Link>
           <a
             href="/api/finance/transactions/export"

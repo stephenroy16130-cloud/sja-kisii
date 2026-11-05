@@ -9,12 +9,13 @@ import { api } from "@/lib/client";
 import { detachPushFromServer } from "@/lib/push-client";
 
 type IconName =
-  | "approvals" | "people" | "meetings" | "fieldops" | "training" | "store"
-  | "band" | "crew" | "profile" | "members" | "articles" | "documents" | "finance" | "attendance" | "analytics" | "scan" | "more";
+  | "approvals" | "people" | "meetings" | "fieldops" | "training" | "store" | "band" | "crew"
+  | "profile" | "members" | "articles" | "documents" | "finance" | "attendance" | "analytics"
+  | "scan" | "more";
 export type NavLink = { href: string; label: string; icon: IconName };
 
-// Phone bar order: Meetings, Crew and Store first. Everything else lives under "More".
-const BAR_PRIORITY = ["/dashboard/meetings", "/dashboard/crew", "/dashboard/store"];
+// Phone bar: Attendance, Meetings, Home (badge), Shop, More
+const BAR = ["/dashboard/attendance", "/dashboard/meetings", "/dashboard/store"];
 
 function Icon({ name }: { name: IconName }) {
   const p = {
@@ -95,21 +96,15 @@ export default function NavShell({
   }
 
   const isActive = (href: string) => (href === "/dashboard" ? path === href : path.startsWith(href));
-
-  const bar: NavLink[] = BAR_PRIORITY.map((h) => links.find((l) => l.href === h)).filter((l): l is NavLink => Boolean(l));
-  for (const l of links) {
-    if (bar.length >= 3) break;
-    if (!bar.includes(l)) bar.push(l);
-  }
-  const extra = links.filter((l) => !bar.includes(l));
-  const left = bar.slice(0, 2);
-  const right = bar.slice(2);
+  const [att, meet, shop] = BAR.map((h) => links.find((l) => l.href === h));
+  const barLinks = [att, meet, shop].filter((l): l is NavLink => Boolean(l));
+  const extra = links.filter((l) => !barLinks.includes(l));
   const moreActive = sheet || extra.some((l) => isActive(l.href));
+  const homeActive = path === "/dashboard";
 
   const tabCls = (active: boolean) =>
     `flex flex-1 flex-col items-center gap-1 px-0.5 py-2.5 text-[10px] ${active ? "text-gold" : "text-white/45"}`;
-
-  const renderTab = (l: NavLink) => (
+  const tab = (l: NavLink) => (
     <Link key={l.href} href={l.href} className={tabCls(isActive(l.href))}>
       <Icon name={l.icon} />
       <span>{l.label}</span>
@@ -209,20 +204,18 @@ export default function NavShell({
         </div>
       )}
 
-      {/* Phones: bottom bar with a small badge pinned in the centre */}
+      {/* Phones: Attendance, Meetings, Home (badge), Shop, More */}
       <nav className="fixed inset-x-3 bottom-3 z-30 rounded-[1.75rem] border border-white/10 bg-[#0d0d0d] lg:hidden">
         <div className="flex items-center px-2">
-          {left.map(renderTab)}
-          <Link
-            href="/dashboard"
-            aria-label="Home"
-            className={`mx-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${
-              path === "/dashboard" ? "ring-2 ring-gold" : ""
-            }`}
-          >
-            <Badge size={30} />
+          {att && tab(att)}
+          {meet && tab(meet)}
+          <Link href="/dashboard" className={tabCls(homeActive)}>
+            <span className={`rounded-full ${homeActive ? "ring-2 ring-gold" : ""}`}>
+              <Badge size={26} />
+            </span>
+            <span>Home</span>
           </Link>
-          {right.map(renderTab)}
+          {shop && tab(shop)}
           <button onClick={() => setSheet((s) => !s)} className={tabCls(moreActive)}>
             <Icon name="more" />
             <span>More</span>

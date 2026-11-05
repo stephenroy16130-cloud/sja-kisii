@@ -33,7 +33,7 @@ export default async function StorePage() {
     <div className="space-y-10">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-light tracking-tight">Store</h1>
+          <h1 className="text-3xl font-light tracking-tight">Shop</h1>
           <p className="mt-1 text-sm text-white/50">Division wear and supplies.</p>
         </div>
         {canManage && (
@@ -41,7 +41,7 @@ export default async function StorePage() {
             href="/dashboard/store/manage"
             className="rounded-full border border-gold/60 px-5 py-2.5 text-xs uppercase tracking-[0.15em] text-gold transition hover:bg-gold hover:text-black"
           >
-            Manage store
+            Manage shop
           </Link>
         )}
       </div>
@@ -50,7 +50,7 @@ export default async function StorePage() {
         <h2 className="mb-4 text-xl font-light">Available</h2>
         {items.length === 0 ? (
           <div className="rounded-2xl border border-white/10 bg-card p-6 text-sm text-white/50">
-            Nothing in the store yet.
+            Nothing in the shop yet.
           </div>
         ) : (
           <div className="grid gap-4 sm:grid-cols-2">
