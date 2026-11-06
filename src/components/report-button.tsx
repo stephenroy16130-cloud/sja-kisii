@@ -84,7 +84,24 @@ export default function ReportButton() {
             <div className="mt-5 space-y-5">
               {groups.map((g) => (
                 <div key={g}>
-                  <p className="mb-2 text-[11px] uppercase tracking-[0.2em] text-gold">{g}</p>
+                  <div className="mb-2 flex items-center justify-between">
+                    <p className="text-[11px] uppercase tracking-[0.2em] text-gold">{g}</p>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setSel((cur) => {
+                          const keys = REPORT_FIELDS.filter((f) => f.group === g).map((f) => f.key);
+                          const next = new Set(cur);
+                          const all = keys.every((k) => next.has(k));
+                          keys.forEach((k) => (all ? next.delete(k) : next.add(k)));
+                          return next;
+                        })
+                      }
+                      className="text-xs text-white/50 underline hover:text-white"
+                    >
+                      Toggle all
+                    </button>
+                  </div>
                   <div className="space-y-2">
                     {REPORT_FIELDS.filter((f) => f.group === g).map((f) => (
                       <label key={f.key} className="flex cursor-pointer items-center gap-3 text-sm">

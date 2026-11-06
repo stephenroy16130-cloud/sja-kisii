@@ -113,8 +113,8 @@ export default function QrControls({
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={`${base}/image?format=svg&v=${version}`} alt="QR code" className="w-full rounded-2xl bg-white p-2" />
             <div className="mt-3 flex flex-wrap gap-2 text-xs">
-              <a href={`${base}/image?format=png&download=1`} className={btnGhostCls}>PNG</a>
-              <a href={`${base}/image?format=svg&download=1`} className={btnGhostCls}>SVG</a>
+              <a href={`${base}/poster?download=1`} className={btnGhostCls}>Poster (PNG)</a>
+              <a href={`${base}/image?format=svg&download=1`} className={btnGhostCls}>QR only (SVG)</a>
               <Link href={`/qr/${kind}/${id}`} target="_blank" className={btnGhostCls}>Print</Link>
             </div>
           </div>

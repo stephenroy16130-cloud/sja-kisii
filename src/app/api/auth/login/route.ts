@@ -1,3 +1,4 @@
+import { createHash } from "crypto";
 import { audit } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { HttpError, route } from "@/lib/http";
@@ -5,16 +6,26 @@ import { DUMMY_HASH, verifyPassword } from "@/lib/password";
 import { createSession } from "@/lib/session";
 import { loginSchema } from "@/lib/validation";
 
+const WINDOW_MS = 15 * 60_000;
+const MAX_FAILS = 5;
+
 export const POST = route(async (req: Request) => {
   const { identifier, password } = loginSchema.parse(await req.json());
   const id = identifier.trim().toLowerCase();
+  const key = createHash("sha256").update(id).digest("hex").slice(0, 32);
+
+  const fails = await db.auditLog.count({
+    where: { action: "LOGIN_FAILED", entity: "Login", entityId: key, createdAt: { gte: new Date(Date.now() - WINDOW_MS) } },
+  });
+  if (fails >= MAX_FAILS) throw new HttpError(429, "Too many failed attempts. Try again in 15 minutes.");
 
   const user = await db.user.findFirst({ where: { OR: [{ username: id }, { email: id }] } });
   const ok = await verifyPassword(password, user?.passwordHash ?? DUMMY_HASH);
-  if (!user || !ok) throw new HttpError(401, "Invalid credentials");
-
   // A disabled developer account looks like any wrong login
-  if (user.isDeveloper && user.status !== "ACTIVE") throw new HttpError(401, "Invalid credentials");
+  if (!user || !ok || (user.isDeveloper && user.status !== "ACTIVE")) {
+    await audit(null, "LOGIN_FAILED", "Login", key);
+    throw new HttpError(401, "Invalid credentials");
+  }
 
   switch (user.status) {
     case "PENDING_ADMIN":

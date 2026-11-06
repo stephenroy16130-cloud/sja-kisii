@@ -1,3 +1,6 @@
+import { after } from "next/server";
+import { fmt } from "@/lib/meetings";
+import { notifyAudience } from "@/lib/push";
 import { z } from "zod";
 import { audit, requirePermission } from "@/lib/auth";
 import { db } from "@/lib/db";
@@ -41,6 +44,16 @@ export const POST = route(async (req: Request) => {
     title: op.title,
     allCrews: data.allCrews,
     crewIds: data.allCrews ? [] : crewIds,
+  });
+  after(async () => {
+    const payload = {
+      title: "New field operation: " + op.title,
+      body: fmt(new Date(data.startsAt)),
+      url: "/dashboard/fieldops/" + op.id,
+      tag: "event-" + op.id,
+    };
+    if (data.allCrews) await notifyAudience("GENERAL", null, payload, actor.id);
+    else for (const c of crewIds) await notifyAudience("CREW", c, payload, actor.id);
   });
   return Response.json(op, { status: 201 });
 });

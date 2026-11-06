@@ -1,18 +1,20 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, type FormEvent } from "react";
+import { useRef, useState, type FormEvent } from "react";
 import MultiPhotoPicker from "@/components/multi-photo-picker";
 import RichEditor from "@/components/rich-editor";
 import { api, postForm } from "@/lib/client";
 import { crewName } from "@/lib/crews";
 import { shrinkJpeg } from "@/lib/image-client";
-import { btnCls, inputCls, labelCls } from "@/lib/ui";
+import { btnCls, btnGhostCls, inputCls, labelCls } from "@/lib/ui";
 
 const MAX_PHOTOS = 10;
+const PUBLISHING = "Publishing...";
 
 export default function ArticleForm({ crews, band }: { crews: number[]; band: boolean }) {
   const router = useRouter();
+  const cancelled = useRef(false);
   const [html, setHtml] = useState("");
   const [audience, setAudience] = useState<"GENERAL" | "CREW" | "BAND">("GENERAL");
   const [crew, setCrew] = useState(String(crews[0] ?? ""));
@@ -29,17 +31,20 @@ export default function ArticleForm({ crews, band }: { crews: number[]; band: bo
     setError("");
     setMsg("");
     setBusy(true);
+    cancelled.current = false;
     const f = new FormData(e.currentTarget);
+    const ids: string[] = [];
     try {
-      const ids: string[] = [];
       for (let i = 0; i < photos.length; i++) {
+        if (cancelled.current) throw new Error("Cancelled");
         setStatus(`Uploading photo ${i + 1} of ${photos.length}...`);
         const out = new FormData();
         out.append("image", await shrinkJpeg(photos[i]), `photo-${i + 1}.jpg`);
         const r = await postForm("/api/articles/images", out);
         ids.push(r.id);
       }
-      setStatus("Publishing...");
+      if (cancelled.current) throw new Error("Cancelled");
+      setStatus(PUBLISHING);
       await api("/api/articles", "POST", {
         title: f.get("title"),
         content: html,
@@ -55,7 +60,15 @@ export default function ArticleForm({ crews, band }: { crews: number[]; band: bo
       setReset((n) => n + 1);
       router.refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong");
+      // Throw away photos that were uploaded but never used (the server keeps any that an article uses)
+      if (ids.length) await api("/api/articles/images", "DELETE", { ids }).catch(() => undefined);
+      setError(
+        cancelled.current
+          ? "Cancelled. Any uploaded photos were removed."
+          : err instanceof Error
+            ? err.message
+            : "Something went wrong"
+      );
     }
     setStatus("");
     setBusy(false);
@@ -103,8 +116,20 @@ export default function ArticleForm({ crews, band }: { crews: number[]; band: bo
       {busy && status && <p className="text-sm text-gold sm:col-span-2">{status}</p>}
       {error && <p className="text-sm text-bad sm:col-span-2">{error}</p>}
       {msg && <p className="text-sm text-ok sm:col-span-2">{msg}</p>}
-      <div className="sm:col-span-2">
+      <div className="flex gap-3 sm:col-span-2">
         <button disabled={busy} className={btnCls}>{busy ? "Please wait..." : "Post article"}</button>
+        {busy && status !== PUBLISHING && (
+          <button
+            type="button"
+            onClick={() => {
+              cancelled.current = true;
+              setStatus("Cancelling...");
+            }}
+            className={`${btnGhostCls} shrink-0`}
+          >
+            Cancel
+          </button>
+        )}
       </div>
     </form>
   );

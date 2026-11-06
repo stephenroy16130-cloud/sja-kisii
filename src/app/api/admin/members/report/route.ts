@@ -32,6 +32,15 @@ function value(u: Row, k: ReportKey): string {
     case "idType": return u.idType ? ID_LABEL[u.idType] : "";
     case "idNumber": return u.idNumber ?? "";
     case "crew": return u.crewId ? crewName(u.crewId) : "";
+    case "profileStatus": {
+      const missing = [
+        !u.dateOfBirth && "Date of birth",
+        !u.gender && "Gender",
+        !u.idType && "ID type",
+        !u.idNumber && "ID number",
+      ].filter(Boolean) as string[];
+      return missing.length ? "Incomplete: " + missing.join(", ") : "Complete";
+    }
     case "titles":
       return [...(u.isSuperintendent ? ["Superintendent"] : []), ...u.titles.map((t) => t.replace(/_/g, " "))].join("; ");
   }

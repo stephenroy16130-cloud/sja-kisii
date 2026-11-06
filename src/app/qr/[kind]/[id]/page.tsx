@@ -24,7 +24,7 @@ export default async function PosterPage({ params }: { params: Promise<{ kind: s
       <div className="mx-auto max-w-xl text-center">
         <div className="mb-8 flex flex-wrap items-center justify-center gap-3 print:hidden">
           <PrintButton />
-          <a href={`${base}?format=png&download=1`} className="rounded-full border border-black px-6 py-2.5 text-sm">Download PNG</a>
+          <a href={`/api/qr/${kind}/${e.id}/poster?download=1`} className="rounded-full border border-black px-6 py-2.5 text-sm">Download poster (PNG)</a>
           <Link href={`/dashboard/${kind === "meeting" ? "meetings" : kind === "fieldop" ? "fieldops" : "training"}/${e.id}`} className="rounded-full border border-black px-6 py-2.5 text-sm">
             Back to event
           </Link>

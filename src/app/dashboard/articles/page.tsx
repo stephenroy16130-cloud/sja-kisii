@@ -87,7 +87,7 @@ export default async function ArticlesPage() {
 
               {(mod || a.authorId === user.id) && (
                 <div className="mt-5 border-t border-white/10 pt-4">
-                  <ArticleActions id={a.id} published={a.isPublished} moderator={mod} author={a.authorId === user.id} />
+                  <ArticleActions id={a.id} title={a.title} content={cleanHtml(a.content)} published={a.isPublished} moderator={mod} author={a.authorId === user.id} />
                 </div>
               )}
             </article>

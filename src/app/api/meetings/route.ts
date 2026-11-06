@@ -1,3 +1,6 @@
+import { after } from "next/server";
+import { fmt } from "@/lib/meetings";
+import { notifyAudience } from "@/lib/push";
 import { z } from "zod";
 import { audit, requirePermission, requireUser } from "@/lib/auth";
 import { db } from "@/lib/db";
@@ -30,5 +33,18 @@ export const POST = route(async (req: Request) => {
     select: { id: true, title: true },
   });
   await audit(actor.id, "MEETING_CREATED", "Meeting", meeting.id, { title: meeting.title });
+  after(() =>
+    notifyAudience(
+      "GENERAL",
+      null,
+      {
+        title: "New meeting: " + meeting.title,
+        body: fmt(new Date(data.startsAt)),
+        url: "/dashboard/meetings/" + meeting.id,
+        tag: "event-" + meeting.id,
+      },
+      actor.id
+    )
+  );
   return Response.json(meeting, { status: 201 });
 });

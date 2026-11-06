@@ -7,9 +7,11 @@ const BTN = "rounded-lg px-3 py-1.5 text-xs text-white/70 transition hover:bg-wh
 export default function RichEditor({
   onChange,
   resetKey,
+  initial = "",
 }: {
   onChange: (html: string) => void;
   resetKey: number;
+  initial?: string;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const emit = () => onChange(ref.current?.innerHTML ?? "");
@@ -53,6 +55,7 @@ export default function RichEditor({
           document.execCommand("insertText", false, e.clipboardData.getData("text/plain"));
           emit();
         }}
+        dangerouslySetInnerHTML={{ __html: initial }}
         className="rich min-h-44 px-4 py-3 text-sm outline-none"
       />
     </div>

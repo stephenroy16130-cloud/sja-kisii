@@ -1,3 +1,6 @@
+import { after } from "next/server";
+import { fmt } from "@/lib/meetings";
+import { notifyAudience } from "@/lib/push";
 import { z } from "zod";
 import { audit, requireUser } from "@/lib/auth";
 import { db } from "@/lib/db";
@@ -52,5 +55,20 @@ export const POST = route(async (req: Request) => {
     title: training.title,
     status: training.status,
   });
+  if (training.status === "VERIFIED") {
+    after(() =>
+      notifyAudience(
+        crewId === null ? "GENERAL" : "CREW",
+        crewId,
+        {
+          title: "New training: " + training.title,
+          body: fmt(new Date(data.heldAt)),
+          url: "/dashboard/training/" + training.id,
+          tag: "event-" + training.id,
+        },
+        actor.id
+      )
+    );
+  }
   return Response.json(training, { status: 201 });
 });
