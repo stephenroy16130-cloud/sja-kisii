@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useRef, useState, type ChangeEvent } from "react";
 import { api, postForm } from "@/lib/client";
 import { shrinkJpeg } from "@/lib/image-client";
+import { MAX_ITEM_PHOTOS } from "@/lib/shop-images";
 import { btnGhostCls, inputCls } from "@/lib/ui";
 
 export default function ItemControls({
@@ -11,13 +12,13 @@ export default function ItemControls({
   isActive,
   ready,
   quantity,
-  imageUrl,
+  images,
 }: {
   id: string;
   isActive: boolean;
   ready: boolean;
   quantity: number | null;
-  imageUrl: string | null;
+  images: string[];
 }) {
   const router = useRouter();
   const input = useRef<HTMLInputElement>(null);
@@ -40,22 +41,41 @@ export default function ItemControls({
   const send = (body: { isActive?: boolean; quantity?: number }) =>
     run(() => api(`/api/store/items/${id}`, "PUT", body));
 
-  async function onPhoto(e: ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
+  async function onPhotos(e: ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(e.target.files ?? []).filter((f) => f.type.startsWith("image/"));
     e.target.value = "";
-    if (!file) return;
+    if (files.length === 0) return;
+    const room = MAX_ITEM_PHOTOS - images.length;
+    if (room <= 0) return setMsg(`An item can have up to ${MAX_ITEM_PHOTOS} photos`);
     await run(async () => {
-      const out = new FormData();
-      out.append("photo", await shrinkJpeg(file, 1000), "photo.jpg");
-      await postForm(`/api/store/items/${id}/photo`, out);
+      for (const file of files.slice(0, room)) {
+        const out = new FormData();
+        out.append("photo", await shrinkJpeg(file, 1000), "photo.jpg");
+        await postForm(`/api/store/items/${id}/photo`, out);
+      }
     });
   }
 
   return (
     <div className="space-y-3">
-      {imageUrl && (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={imageUrl} alt="" className="h-24 w-24 rounded-2xl object-cover" />
+      {images.length > 0 && (
+        <div className="flex flex-wrap gap-3">
+          {images.map((src) => (
+            <div key={src} className="relative h-20 w-20 overflow-hidden rounded-xl border border-white/10">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={src} alt="" className="h-full w-full object-cover" />
+              <button
+                type="button"
+                disabled={busy}
+                aria-label="Remove photo"
+                onClick={() => window.confirm("Remove this photo?") && run(() => api(`/api/store/items/${id}/photo`, "DELETE", { url: src }))}
+                className="absolute right-1 top-1 flex h-6 w-6 items-center justify-center rounded-full bg-black/70 text-sm leading-none text-white disabled:opacity-50"
+              >
+                ×
+              </button>
+            </div>
+          ))}
+        </div>
       )}
       <div className="flex flex-wrap items-center gap-2">
         {ready && (
@@ -76,19 +96,15 @@ export default function ItemControls({
         <button disabled={busy} onClick={() => send({ isActive: !isActive })} className={btnGhostCls}>
           {isActive ? "Hide" : "Show"}
         </button>
-        <input ref={input} type="file" accept="image/*" onChange={onPhoto} className="hidden" />
-        <button disabled={busy} onClick={() => input.current?.click()} className={btnGhostCls}>
-          {imageUrl ? "Change photo" : "Add photo"}
-        </button>
-        {imageUrl && (
-          <button
-            disabled={busy}
-            onClick={() => run(() => api(`/api/store/items/${id}/photo`, "DELETE"))}
-            className="rounded-full border border-bad/50 px-4 py-2 text-xs text-bad transition hover:bg-bad hover:text-black disabled:opacity-50"
-          >
-            Remove photo
+        <input ref={input} type="file" accept="image/*" multiple onChange={onPhotos} className="hidden" />
+        {images.length < MAX_ITEM_PHOTOS && (
+          <button disabled={busy} onClick={() => input.current?.click()} className={btnGhostCls}>
+            {busy ? "Working..." : images.length ? "Add photos" : "Add photos"}
           </button>
         )}
+        <span className="text-xs text-white/40">
+          {images.length} of {MAX_ITEM_PHOTOS} photos
+        </span>
       </div>
       {msg && <p className="text-xs text-bad">{msg}</p>}
     </div>

@@ -1,3 +1,4 @@
+import EventLinks from "@/components/event-links";
 import PendingCheckins from "@/components/pending-checkins";
 import QrPanel from "@/components/qr-panel";
 import Link from "next/link";
@@ -100,6 +101,7 @@ export default async function TrainingDetailPage({ params }: { params: Promise<{
 
       <QrPanel kind="training" id={id} />
       <PendingCheckins kind="training" id={id} />
+      <EventLinks kind="training" id={id} />
 
       {verifier && t.status === "PENDING" && (
         <section className={card}>

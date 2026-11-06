@@ -10,6 +10,7 @@ import { btnCls, inputCls, labelCls } from "@/lib/ui";
 
 export default function DocumentForm({ crews, band, userId }: { crews: number[]; band: boolean; userId: string }) {
   const router = useRouter();
+  const [mode, setMode] = useState<"file" | "link">("file");
   const [audience, setAudience] = useState<"GENERAL" | "CREW" | "BAND">("GENERAL");
   const [crew, setCrew] = useState(String(crews[0] ?? ""));
   const [reset, setReset] = useState(0);
@@ -18,11 +19,38 @@ export default function DocumentForm({ crews, band, userId }: { crews: number[];
   const [msg, setMsg] = useState("");
   const [busy, setBusy] = useState(false);
 
+  const pill = (active: boolean) =>
+    `rounded-full border px-4 py-2 text-xs transition ${
+      active ? "border-white bg-white text-black" : "border-white/20 text-white/60 hover:border-white/50"
+    }`;
+
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError("");
     setMsg("");
     const f = new FormData(e.currentTarget);
+    const crewId = audience === "CREW" ? Number(crew) : null;
+
+    if (mode === "link") {
+      setBusy(true);
+      try {
+        await api("/api/documents/link", "POST", {
+          title: f.get("title"),
+          description: String(f.get("description") ?? ""),
+          audience,
+          crewId,
+          url: f.get("url"),
+        });
+        setMsg("Link added");
+        setReset((n) => n + 1);
+        router.refresh();
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Something went wrong");
+      }
+      setBusy(false);
+      return;
+    }
+
     const file = f.get("file");
     if (!(file instanceof File) || file.size === 0) return setError("Choose a file");
     const ext = docExt(file.name);
@@ -33,7 +61,6 @@ export default function DocumentForm({ crews, band, userId }: { crews: number[];
 
     setBusy(true);
     setProgress(0);
-    const crewId = audience === "CREW" ? Number(crew) : null;
     try {
       const safe = file.name.replace(/[^\w.\-]+/g, "_");
       const blob = await upload(`documents/${userId}/${safe}`, file, {
@@ -64,6 +91,10 @@ export default function DocumentForm({ crews, band, userId }: { crews: number[];
 
   return (
     <form key={reset} onSubmit={onSubmit} className="grid gap-4 rounded-3xl border border-white/10 bg-card p-6 sm:grid-cols-2">
+      <div className="flex gap-2 sm:col-span-2">
+        <button type="button" onClick={() => setMode("file")} className={pill(mode === "file")}>Upload a file</button>
+        <button type="button" onClick={() => setMode("link")} className={pill(mode === "link")}>Google Doc link</button>
+      </div>
       <div className="sm:col-span-2">
         <label className={labelCls}>Title</label>
         <input name="title" required className={inputCls} placeholder="Division constitution" />
@@ -90,17 +121,30 @@ export default function DocumentForm({ crews, band, userId }: { crews: number[];
           </select>
         </div>
       )}
-      <div className="sm:col-span-2">
-        <label className={labelCls}>File (PDF or Word, up to 100 MB)</label>
-        <input
-          name="file"
-          type="file"
-          required
-          accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-          className="block w-full text-sm text-white/60 file:mr-4 file:rounded-full file:border-0 file:bg-white file:px-4 file:py-2 file:text-xs file:font-medium file:text-black"
-        />
-      </div>
-      {busy && (
+
+      {mode === "file" ? (
+        <div className="sm:col-span-2">
+          <label className={labelCls}>File (PDF or Word, up to 100 MB)</label>
+          <input
+            name="file"
+            type="file"
+            required
+            accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+            className="block w-full text-sm text-white/60 file:mr-4 file:rounded-full file:border-0 file:bg-white file:px-4 file:py-2 file:text-xs file:font-medium file:text-black"
+          />
+        </div>
+      ) : (
+        <div className="sm:col-span-2">
+          <label className={labelCls}>Google link</label>
+          <input name="url" type="url" required placeholder="https://docs.google.com/document/d/..." className={inputCls} />
+          <p className="mt-2 text-xs text-white/40">
+            Docs, Sheets, Slides, Forms and Drive links work. Set the Google file to &ldquo;Anyone with the link can
+            view&rdquo;, or members will be asked to sign in to Google.
+          </p>
+        </div>
+      )}
+
+      {busy && mode === "file" && (
         <div className="sm:col-span-2">
           <div className="h-2 w-full overflow-hidden rounded-full bg-white/10">
             <div className="h-2 rounded-full bg-gold transition-all" style={{ width: `${progress}%` }} />
@@ -111,7 +155,9 @@ export default function DocumentForm({ crews, band, userId }: { crews: number[];
       {error && <p className="text-sm text-bad sm:col-span-2">{error}</p>}
       {msg && <p className="text-sm text-ok sm:col-span-2">{msg}</p>}
       <div className="sm:col-span-2">
-        <button disabled={busy} className={btnCls}>{busy ? "Uploading..." : "Upload document"}</button>
+        <button disabled={busy} className={btnCls}>
+          {busy ? (mode === "file" ? "Uploading..." : "Adding...") : mode === "file" ? "Upload document" : "Add link"}
+        </button>
       </div>
     </form>
   );

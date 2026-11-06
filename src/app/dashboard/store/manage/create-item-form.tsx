@@ -2,13 +2,17 @@
 
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
+import MultiPhotoPicker from "@/components/multi-photo-picker";
 import { api, postForm } from "@/lib/client";
 import { shrinkJpeg } from "@/lib/image-client";
+import { MAX_ITEM_PHOTOS } from "@/lib/shop-images";
 import { btnCls, inputCls, labelCls } from "@/lib/ui";
 
 export default function CreateItemForm() {
   const router = useRouter();
   const [mto, setMto] = useState(false);
+  const [photos, setPhotos] = useState<File[]>([]);
+  const [status, setStatus] = useState("");
   const [error, setError] = useState("");
   const [msg, setMsg] = useState("");
   const [busy, setBusy] = useState(false);
@@ -27,7 +31,6 @@ export default function CreateItemForm() {
       .split(",")
       .map((s) => s.trim())
       .filter(Boolean);
-    const photo = f.get("photo");
     try {
       const created = await api("/api/store/items", "POST", {
         name: f.get("name"),
@@ -43,23 +46,27 @@ export default function CreateItemForm() {
           : { quantity: Number(f.get("quantity")) }),
       });
 
-      let photoNote = "";
-      if (photo instanceof File && photo.size > 0) {
+      let failed = 0;
+      for (let i = 0; i < photos.length; i++) {
+        setStatus(`Uploading photo ${i + 1} of ${photos.length}...`);
         try {
           const out = new FormData();
-          out.append("photo", await shrinkJpeg(photo, 1000), "photo.jpg");
+          out.append("photo", await shrinkJpeg(photos[i], 1000), "photo.jpg");
           await postForm(`/api/store/items/${created.id}/photo`, out);
-        } catch (err) {
-          photoNote = `The item was created, but its photo failed (${err instanceof Error ? err.message : "error"}). Add it from the item list below.`;
+        } catch {
+          failed++;
         }
       }
-      if (photoNote) setError(photoNote);
+      setStatus("");
+      if (failed) setError(`The item was created, but ${failed} photo(s) failed. Add them from the item list below.`);
       else setMsg("Item created");
       form.reset();
+      setPhotos([]);
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
     }
+    setStatus("");
     setBusy(false);
   }
 
@@ -107,22 +114,18 @@ export default function CreateItemForm() {
         </>
       )}
       <div className="sm:col-span-2">
-        <label className={labelCls}>Photo (optional)</label>
-        <input
-          name="photo"
-          type="file"
-          accept="image/*"
-          className="block w-full text-sm text-white/60 file:mr-4 file:rounded-full file:border-0 file:bg-white file:px-4 file:py-2 file:text-xs file:font-medium file:text-black"
-        />
+        <label className={labelCls}>Photos (optional, up to {MAX_ITEM_PHOTOS})</label>
+        <MultiPhotoPicker files={photos} onChange={setPhotos} max={MAX_ITEM_PHOTOS} />
       </div>
       <div className="sm:col-span-2">
         <label className={labelCls}>Description (optional)</label>
         <textarea name="description" rows={2} className={inputCls} />
       </div>
+      {busy && status && <p className="text-sm text-gold sm:col-span-2">{status}</p>}
       {error && <p className="text-sm text-bad sm:col-span-2">{error}</p>}
       {msg && <p className="text-sm text-ok sm:col-span-2">{msg}</p>}
       <div className="sm:col-span-2">
-        <button disabled={busy} className={btnCls}>{busy ? "Creating..." : "Create item"}</button>
+        <button disabled={busy} className={btnCls}>{busy ? "Please wait..." : "Create item"}</button>
       </div>
     </form>
   );

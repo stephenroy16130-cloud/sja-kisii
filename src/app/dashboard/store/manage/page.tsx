@@ -5,6 +5,7 @@ import { crewName } from "@/lib/crews";
 import { db } from "@/lib/db";
 import { fmt } from "@/lib/meetings";
 import { can } from "@/lib/rbac";
+import { itemImages } from "@/lib/shop-images";
 import { kes, orderTone, orderWord } from "@/lib/store";
 import CreateItemForm from "./create-item-form";
 import ItemControls from "./item-controls";
@@ -142,7 +143,7 @@ export default async function ManageStorePage() {
                     </span>
                   </div>
                   <div className="mt-4">
-                    <ItemControls id={i.id} isActive={i.isActive} ready={ready} quantity={i.quantity} imageUrl={i.imageUrl} />
+                    <ItemControls id={i.id} isActive={i.isActive} ready={ready} quantity={i.quantity} images={itemImages(i)} />
                   </div>
                 </div>
               );

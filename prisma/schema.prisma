@@ -299,6 +299,7 @@ model AttendanceRecord {
 }
 
 model Item {
+  images        String[]  @default([])
   id            String    @id @default(cuid())
   name          String
   description   String?
@@ -587,4 +588,16 @@ model CheckIn {
 
   @@unique([kind, eventId, userId])
   @@index([kind, eventId, status])
+}
+
+model EventLink {
+  id        String    @id @default(cuid())
+  kind      EventType
+  eventId   String
+  title     String
+  url       String
+  addedById String
+  createdAt DateTime  @default(now())
+
+  @@index([kind, eventId])
 }

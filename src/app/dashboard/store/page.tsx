@@ -1,10 +1,12 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import PayButton from "@/components/pay-button";
+import PhotoGallery from "@/components/photo-gallery";
 import { getCurrentUser } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { fmt } from "@/lib/meetings";
-import PayButton from "@/components/pay-button";
 import { can } from "@/lib/rbac";
+import { itemImages } from "@/lib/shop-images";
 import { kes, orderTone, orderWord, windowState } from "@/lib/store";
 import CancelOrderButton from "./cancel-order-button";
 import OrderForm from "./order-form";
@@ -17,7 +19,7 @@ export default async function StorePage() {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
 
-  const [items, orders] = await Promise.all([
+  const [items, orders, me] = await Promise.all([
     db.item.findMany({ where: { isActive: true }, orderBy: { createdAt: "desc" } }),
     db.order.findMany({
       where: { userId: user.id },
@@ -25,9 +27,9 @@ export default async function StorePage() {
       take: 30,
       include: { items: { include: { item: { select: { name: true } } } } },
     }),
+    db.user.findUnique({ where: { id: user.id }, select: { phone: true } }),
   ]);
   const canManage = can(user, "finance:manage");
-  const me = await db.user.findUnique({ where: { id: user.id }, select: { phone: true } });
 
   return (
     <div className="space-y-10">
@@ -72,10 +74,7 @@ export default async function StorePage() {
                   : `${item.quantity} in stock`;
               return (
                 <div key={item.id} className="rounded-3xl border border-white/10 bg-card p-6">
-                  {item.imageUrl && (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={item.imageUrl} alt="" loading="lazy" className="mb-4 aspect-[4/3] w-full rounded-2xl object-cover" />
-                  )}
+                  <PhotoGallery images={itemImages(item)} />
                   <div className="flex items-start justify-between gap-3">
                     <p className="text-lg font-light">{item.name}</p>
                     <p className="whitespace-nowrap text-gold">{kes(item.price)}</p>

@@ -12,6 +12,7 @@ import DocumentForm from "./document-form";
 export const dynamic = "force-dynamic";
 
 const chip = "rounded-full border px-3 py-1 text-[11px] uppercase tracking-[0.12em]";
+const btn = "rounded-full bg-white px-5 py-2.5 text-xs font-medium text-black transition hover:bg-neutral-200";
 
 export default async function DocumentsPage() {
   const user = await getCurrentUser();
@@ -39,7 +40,7 @@ export default async function DocumentsPage() {
 
       {canPost && (
         <section>
-          <h2 className="mb-4 text-xl font-light">Upload a document</h2>
+          <h2 className="mb-4 text-xl font-light">Add a document</h2>
           <DocumentForm crews={target.crews} band={target.band} userId={user.id} />
         </section>
       )}
@@ -47,37 +48,42 @@ export default async function DocumentsPage() {
       <section>
         <h2 className="mb-4 text-xl font-light">Library ({docs.length})</h2>
         {docs.length === 0 ? (
-          <div className="rounded-2xl border border-white/10 bg-card p-6 text-sm text-white/50">
-            No documents yet.
-          </div>
+          <div className="rounded-2xl border border-white/10 bg-card p-6 text-sm text-white/50">No documents yet.</div>
         ) : (
           <div className="space-y-3">
-            {docs.map((d) => (
-              <div key={d.id} className="rounded-2xl border border-white/10 bg-card p-5">
-                <div className="flex flex-wrap items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <p className="font-light">{d.title}</p>
-                    {d.description && <p className="font-copy mt-1 text-sm text-white/60">{d.description}</p>}
-                    <p className="mt-2 text-xs text-white/40">
-                      {d.fileName} · {fmtSize(d.fileSize)} · uploaded {fmt(d.createdAt)} by {displayName(d.uploadedBy)}
-                    </p>
+            {docs.map((d) => {
+              const isLink = d.fileUrl.startsWith("https://");
+              return (
+                <div key={d.id} className="rounded-2xl border border-white/10 bg-card p-5">
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="font-light">{d.title}</p>
+                      {d.description && <p className="font-copy mt-1 text-sm text-white/60">{d.description}</p>}
+                      <p className="mt-2 text-xs text-white/40">
+                        {isLink
+                          ? `${d.fileName} · added ${fmt(d.createdAt)} by ${displayName(d.uploadedBy)}`
+                          : `${d.fileName} · ${fmtSize(d.fileSize)} · uploaded ${fmt(d.createdAt)} by ${displayName(d.uploadedBy)}`}
+                      </p>
+                    </div>
+                    <span className={`${chip} ${d.audience === "GENERAL" ? "border-white/20 text-white/60" : "border-gold/50 text-gold"}`}>
+                      {audienceText(d.audience, d.crewId)}
+                    </span>
                   </div>
-                  <span className={`${chip} ${d.audience === "GENERAL" ? "border-white/20 text-white/60" : "border-gold/50 text-gold"}`}>
-                    {audienceText(d.audience, d.crewId)}
-                  </span>
+                  <div className="mt-4 flex flex-wrap items-center gap-3">
+                    {isLink ? (
+                      <a href={d.fileUrl} target="_blank" rel="noopener noreferrer" className={btn}>
+                        Open in Google
+                      </a>
+                    ) : (
+                      <a href={`/api/documents/${d.id}/file`} download={d.fileName} className={btn}>
+                        Download
+                      </a>
+                    )}
+                    {(mod || d.uploadedById === user.id) && <DeleteDocumentButton id={d.id} title={d.title} />}
+                  </div>
                 </div>
-                <div className="mt-4 flex flex-wrap items-center gap-3">
-                  <a
-                    href={`/api/documents/${d.id}/file`}
-                    download={d.fileName}
-                    className="rounded-full bg-white px-5 py-2.5 text-xs font-medium text-black transition hover:bg-neutral-200"
-                  >
-                    Download
-                  </a>
-                  {(mod || d.uploadedById === user.id) && <DeleteDocumentButton id={d.id} title={d.title} />}
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </section>

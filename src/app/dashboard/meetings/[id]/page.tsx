@@ -1,3 +1,4 @@
+import EventLinks from "@/components/event-links";
 import PendingCheckins from "@/components/pending-checkins";
 import QrPanel from "@/components/qr-panel";
 import Link from "next/link";
@@ -100,6 +101,7 @@ export default async function MeetingPage({ params }: { params: Promise<{ id: st
 
       <QrPanel kind="meeting" id={id} />
       <PendingCheckins kind="meeting" id={id} />
+      <EventLinks kind="meeting" id={id} />
 
       <section className={card}>
         <h2 className={h2}>Your apology</h2>
