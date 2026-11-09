@@ -53,6 +53,7 @@ enum RequestStatus {
 }
 
 enum TrainingType {
+  BAND
   DRILL
   FIRST_AID
 }

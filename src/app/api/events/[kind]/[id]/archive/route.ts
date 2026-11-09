@@ -26,7 +26,10 @@ export const POST = route(async (req: Request, ctx: { params: Promise<{ kind: st
   } else {
     const t = await db.training.findUnique({ where: { id: p.id } });
     if (!t) throw new HttpError(404, "Training record not found");
-    const allowed = can(actor, "training:verify") || (t.createdById === actor.id && t.status !== "VERIFIED");
+    const allowed =
+      can(actor, "training:verify") ||
+      (t.createdById === actor.id && t.status !== "VERIFIED") ||
+      (t.type === "BAND" && can(actor, "band:issue_instruments"));
     if (!allowed) throw new HttpError(403, "You cannot delete this record");
     if (archived && t.heldAt > now) throw new HttpError(409, "Only past sessions can be deleted");
     await db.training.update({ where: { id: p.id }, data });

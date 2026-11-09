@@ -1,3 +1,5 @@
+import FirstAidManual from "@/components/first-aid-manual";
+import { inBand } from "@/lib/band";
 import type { Prisma, TrainingType, VerificationStatus } from "@prisma/client";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -86,7 +88,7 @@ export default async function TrainingPage() {
     : {
         OR: [
           { createdById: user.id },
-          { status: "VERIFIED", OR: [{ crewId: null }, ...(user.crewId ? [{ crewId: user.crewId }] : [])] },
+          { status: "VERIFIED", ...(inBand(user) ? {} : { type: { not: "BAND" as const } }), OR: [{ crewId: null }, ...(user.crewId ? [{ crewId: user.crewId }] : [])] },
         ],
       };
 
@@ -110,6 +112,8 @@ export default async function TrainingPage() {
         <h1 className="text-3xl font-light tracking-tight">Training</h1>
         <p className="mt-1 text-sm text-white/50">Drills and First Aid. Verified sessions earn 10 points each.</p>
       </div>
+
+      <FirstAidManual />
 
       {types.length > 0 && (
         <section>

@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { audit, requireUser } from "@/lib/auth";
+import { BAND_TITLES } from "@/lib/band";
 import { db } from "@/lib/db";
 import { HttpError, route } from "@/lib/http";
 import { hasStarted } from "@/lib/meetings";
@@ -21,18 +22,25 @@ export const POST = route(async (req: Request, ctx: { params: Promise<{ id: stri
   if (!training) throw new HttpError(404, "Training record not found");
 
   const verifier = can(actor, "training:verify");
-  if (training.createdById !== actor.id && !verifier) {
+  const band = training.type === "BAND";
+  const bandLead = band && can(actor, "band:issue_instruments");
+  if (training.createdById !== actor.id && !verifier && !bandLead) {
     throw new HttpError(403, "Only the creator of this record or DO Training can record attendance");
   }
   if (training.status === "REJECTED") throw new HttpError(409, "This record was rejected");
-  if (training.status === "VERIFIED" && !verifier) {
+  if (training.status === "VERIFIED" && !verifier && !band) {
     throw new HttpError(409, "Verified records are locked. Ask DO Training to change them.");
   }
   if (!hasStarted(training.heldAt)) throw new HttpError(409, "Attendance opens when the session starts");
 
-  // Crew First Aid: that crew. Drills (no crew): every active member who belongs to a crew.
+  // Crew First Aid: that crew. Drills: everyone in a crew. Band practice: band members only.
   const members = await db.user.findMany({
-    where: { status: "ACTIVE", isDeveloper: false, crewId: training.crewId ?? { not: null } },
+    where: {
+      status: "ACTIVE",
+      isDeveloper: false,
+      crewId: training.crewId ?? { not: null },
+      ...(band ? { titles: { hasSome: BAND_TITLES } } : {}),
+    },
     select: { id: true, crewId: true },
   });
   const crewOf = new Map(members.map((m) => [m.id, m.crewId]));

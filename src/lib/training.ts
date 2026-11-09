@@ -1,7 +1,7 @@
 import type { TrainingType, VerificationStatus } from "@prisma/client";
 import { can, type AuthUser } from "./rbac";
 
-export const typeLabel: Record<TrainingType, string> = { DRILL: "Drill", FIRST_AID: "First Aid" };
+export const typeLabel: Record<TrainingType, string> = { DRILL: "Drill", FIRST_AID: "First Aid", BAND: "Band practice" };
 
 export const statusWord: Record<VerificationStatus, string> = {
   PENDING: "Pending verification",
@@ -16,9 +16,9 @@ export const statusTone: Record<VerificationStatus, string> = {
 };
 
 // DO Training can create both types. DSM creates Drills. Sergeant/Corporal create First Aid.
-export function allowedTypes(user: AuthUser): TrainingType[] {
+export function allowedTypes(user: AuthUser): Exclude<TrainingType, "BAND">[] {
   const verifier = can(user, "training:verify");
-  const out: TrainingType[] = [];
+  const out: Exclude<TrainingType, "BAND">[] = [];
   if (verifier || can(user, "training:create_drill")) out.push("DRILL");
   if (verifier || can(user, "training:create_first_aid")) out.push("FIRST_AID");
   return out;

@@ -1,8 +1,7 @@
 import { redirect } from "next/navigation";
 import { GroupedBars, StackedBars } from "@/components/charts";
-import { attendanceAnalytics, bandAnalytics, financeAnalytics, shortDate, trainingAnalytics } from "@/lib/analytics";
+import { attendanceAnalytics, financeAnalytics, shortDate, trainingAnalytics } from "@/lib/analytics";
 import { getCurrentUser } from "@/lib/auth";
-import { canManageInventory } from "@/lib/band";
 import { crewColor, crewName } from "@/lib/crews";
 import { isLeader } from "@/lib/leaderboard";
 import { can } from "@/lib/rbac";
@@ -32,11 +31,11 @@ export default async function AnalyticsPage() {
   const all = can(user, "user:manage_accounts");
   const ownCrew = can(user, "crew:record_attendance") ? user.crewId : null;
 
-  const [att, fin, trn, band] = await Promise.all([
+  const [att, fin, trn] = await Promise.all([
+
     attendanceAnalytics({ all, crewId: ownCrew }),
     can(user, "finance:manage") ? financeAnalytics() : Promise.resolve(null),
     can(user, "training:verify") ? trainingAnalytics() : Promise.resolve(null),
-    canManageInventory(user) ? bandAnalytics() : Promise.resolve(null),
   ]);
   const labels = att.weeks.map(shortDate);
   const showRisk = all || ownCrew !== null;
@@ -140,35 +139,6 @@ export default async function AnalyticsPage() {
               </div>
             ))}
           </div>
-        </section>
-      )}
-
-      {band && (
-        <section className={card}>
-          <p className={eyebrow}>Band</p>
-          <h2 className="mt-1 text-2xl font-light">Instruments</h2>
-          <div className="my-5 grid grid-cols-2 gap-3 md:grid-cols-5">
-            <Tile label="Available" value={band.available} tone="text-ok" />
-            <Tile label="Issued" value={band.issued} tone="text-gold" />
-            <Tile label="Damaged" value={band.damaged} tone={band.damaged ? "text-warn" : ""} />
-            <Tile label="Lost" value={band.lost} tone={band.lost ? "text-bad" : ""} />
-            <Tile label="Band members" value={band.members} />
-          </div>
-          {band.longest.length > 0 && (
-            <>
-              <p className="mb-2 text-[11px] uppercase tracking-[0.2em] text-white/40">Held the longest</p>
-              <div className="divide-y divide-white/10">
-                {band.longest.map((l) => (
-                  <div key={l.id} className="flex flex-wrap items-center justify-between gap-2 py-3 text-sm">
-                    <span>
-                      {l.instrument} <span className="uppercase tracking-wide text-white/40">· {l.holder}</span>
-                    </span>
-                    <span className={l.days > 30 ? "text-warn" : "text-white/60"}>{l.days} days</span>
-                  </div>
-                ))}
-              </div>
-            </>
-          )}
         </section>
       )}
     </div>

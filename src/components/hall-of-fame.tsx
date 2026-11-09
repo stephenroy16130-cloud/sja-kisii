@@ -104,7 +104,7 @@ export default function HallOfFame({ data, meId }: { data: HallData; meId: strin
       </div>
 
       <p className="mt-6 text-[11px] text-white/35">
-        Meeting 10 pts · Field Ops 15 · Training 10 · +5 for a perfect week. The week runs Monday to Sunday.
+        Meeting 10 pts · Field Ops 15 · Training 10 · +5 for a perfect week. The week runs Monday to Sunday. Band practice points only break ties.
       </p>
     </section>
   );

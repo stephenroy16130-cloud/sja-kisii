@@ -1,3 +1,5 @@
+import { Suspense } from "react";
+import ServicePointsCard from "@/components/service-points-card";
 import type { Prisma } from "@prisma/client";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -94,6 +96,12 @@ export default async function DashboardPage() {
           </div>
         </div>
       </section>
+
+      {!user.isDeveloper && (
+        <Suspense fallback={<div className="h-48 animate-pulse rounded-3xl border border-white/10 bg-card" />}>
+          <ServicePointsCard userId={user.id} />
+        </Suspense>
+      )}
 
       {!user.profileComplete && !user.isDeveloper && (
         <Link href="/dashboard/profile" className="block rounded-3xl border border-gold/40 bg-card p-5 transition hover:border-gold">

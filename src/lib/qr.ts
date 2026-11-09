@@ -36,6 +36,7 @@ export type QrEvent = {
   createdById: string;
   crewIds: number[] | null; // crews the event is for. null means everyone.
   blocked: string | null; // a reason this event cannot take check-ins
+  bandOnly: boolean; // a band practice: only band members attend
 };
 type Key = { id: string } | { token: string };
 
@@ -48,6 +49,7 @@ export async function loadEvent(kind: QrKind, key: Key): Promise<QrEvent | null>
       qrToken: m.qrToken, qrActivatesAt: m.qrActivatesAt, qrExpiresAt: m.qrExpiresAt,
       createdById: m.createdById, crewIds: null,
       blocked: m.archivedAt ? "This meeting has been archived." : null,
+      bandOnly: false,
     };
   }
   if (kind === "fieldop") {
@@ -60,6 +62,7 @@ export async function loadEvent(kind: QrKind, key: Key): Promise<QrEvent | null>
       kind, id: o.id, title: o.title, startsAt: o.startsAt,
       qrToken: o.qrToken, qrActivatesAt: o.qrActivatesAt, qrExpiresAt: o.qrExpiresAt,
       createdById: o.createdById, crewIds: o.allCrews ? null : o.crews.map((c) => c.id), blocked: o.archivedAt ? "This operation has been archived." : null,
+      bandOnly: false,
     };
   }
   const t = await db.training.findUnique({ where: "id" in key ? { id: key.id } : { qrToken: key.token } });
@@ -69,6 +72,7 @@ export async function loadEvent(kind: QrKind, key: Key): Promise<QrEvent | null>
     qrToken: t.qrToken, qrActivatesAt: t.qrActivatesAt, qrExpiresAt: t.qrExpiresAt,
     createdById: t.createdById, crewIds: t.crewId === null ? null : [t.crewId],
     blocked: t.status === "REJECTED" ? "This training record was rejected." : t.archivedAt ? "This session has been archived." : null,
+    bandOnly: t.type === "BAND",
   };
 }
 
@@ -86,11 +90,11 @@ export async function updateQr(
 export function canManageQr(u: AuthUser, e: QrEvent) {
   if (e.kind === "meeting") return can(u, "meeting:manage");
   if (e.kind === "fieldop") return can(u, "fieldop:manage");
-  return can(u, "training:verify") || e.createdById === u.id;
+  return can(u, "training:verify") || e.createdById === u.id || (e.bandOnly && can(u, "band:issue_instruments"));
 }
 // Sergeants and Corporals of an eligible crew can download, print and verify their own crew
 export function crewLeaderFor(u: AuthUser, e: QrEvent) {
-  return can(u, "crew:record_attendance") && u.crewId !== null && (e.crewIds === null || e.crewIds.includes(u.crewId));
+  return !e.bandOnly && can(u, "crew:record_attendance") && u.crewId !== null && (e.crewIds === null || e.crewIds.includes(u.crewId));
 }
 export const canViewQr = (u: AuthUser, e: QrEvent) => canManageQr(u, e) || crewLeaderFor(u, e);
 export function canVerifyFor(u: AuthUser, e: QrEvent, memberCrewId: number | null) {

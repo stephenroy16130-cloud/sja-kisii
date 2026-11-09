@@ -1,3 +1,4 @@
+import { BAND_TITLES, inBand } from "@/lib/band";
 import EventLinks from "@/components/event-links";
 import PendingCheckins from "@/components/pending-checkins";
 import QrPanel from "@/components/qr-panel";
@@ -33,11 +34,13 @@ export default async function TrainingDetailPage({ params }: { params: Promise<{
 
   const verifier = can(user, "training:verify");
   const isCreator = t.createdById === user.id;
-  const inAudience = t.crewId === null ? user.crewId !== null : t.crewId === user.crewId;
+  const bandSession = t.type === "BAND";
+  const inAudience = bandSession ? inBand(user) : t.crewId === null ? user.crewId !== null : t.crewId === user.crewId;
   if (!verifier && !isCreator && !(t.status === "VERIFIED" && inAudience)) notFound();
 
   const started = hasStarted(t.heldAt);
-  const canRecord = (isCreator || verifier) && t.status !== "REJECTED" && (t.status !== "VERIFIED" || verifier);
+  const bandLead = bandSession && can(user, "band:issue_instruments");
+  const canRecord = (isCreator || verifier || bandLead) && t.status !== "REJECTED" && (t.status !== "VERIFIED" || verifier || bandSession);
 
   const myRecord = await db.attendanceRecord.findUnique({
     where: { userId_trainingId: { userId: user.id, trainingId: id } },
@@ -47,7 +50,7 @@ export default async function TrainingDetailPage({ params }: { params: Promise<{
   let roster: RosterMember[] = [];
   if (canRecord && started) {
     const members = await db.user.findMany({
-      where: { status: "ACTIVE", isDeveloper: false, crewId: t.crewId ?? { not: null } },
+      where: { status: "ACTIVE", isDeveloper: false, crewId: t.crewId ?? { not: null }, ...(bandSession ? { titles: { hasSome: BAND_TITLES } } : {}) },
       orderBy: [{ crewId: "asc" }, { fullName: "asc" }],
       select: { id: true, fullName: true, username: true, crewId: true },
     });
@@ -119,7 +122,7 @@ export default async function TrainingDetailPage({ params }: { params: Promise<{
           <p className="mt-4">
             {myRecord?.status === "PRESENT" ? (
               t.status === "VERIFIED" ? (
-                <span className={`${chip} border-ok/50 text-ok`}>Present · +10 points</span>
+                <span className={`${chip} border-ok/50 text-ok`}>{bandSession ? "Present · +10 band points" : "Present · +10 points"}</span>
               ) : (
                 <span className={`${chip} border-warn/50 text-warn`}>Present · counts once verified</span>
               )

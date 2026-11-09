@@ -1,5 +1,6 @@
 import type { AttendanceStatus, EventType } from "@prisma/client";
 import { db } from "./db";
+import { BAND_POINTS } from "./points";
 import { displayName, socialPhoto } from "./profile";
 import { currentWeek, lastFinalizableWeekStart, weekEndOf, weekLabel, weekStartOf, WEEK_MS } from "./weeks";
 
@@ -15,6 +16,7 @@ export type Standing = {
   crewId: number | null;
   points: number;
   optional: number; // Field Ops + Training attended
+  band: number; // band practice points: only used as the last tie-break
   perfect: boolean;
   joinedAt: number;
 };
@@ -29,7 +31,7 @@ export async function computeStandings(start: Date, end: Date): Promise<Standing
       OR: [
         { meeting: { startsAt: range } },
         { fieldOp: { startsAt: range } },
-        { training: { heldAt: range, status: "VERIFIED" } }, // only verified training counts
+        { training: { heldAt: range, status: "VERIFIED", type: { not: "BAND" } } }, // only verified, non-band training counts
       ],
     },
     select: {
@@ -55,6 +57,14 @@ export async function computeStandings(start: Date, end: Date): Promise<Standing
     if (!mine) { mine = new Map(); byUser.set(r.userId, mine); }
     mine.set(key, { type: r.eventType, status: r.status });
   }
+
+  // Band practice points never add to the weekly score. They only break a tie after every other rule.
+  const bandRows = await db.attendanceRecord.groupBy({
+    by: ["userId"],
+    where: { eventType: "TRAINING", status: "PRESENT", training: { type: "BAND", status: "VERIFIED", heldAt: range } },
+    _count: { _all: true },
+  });
+  const bandPts = new Map(bandRows.map((b) => [b.userId, b._count._all * BAND_POINTS]));
 
   const users = await db.user.findMany({
     where: { id: { in: [...byUser.keys()] }, status: "ACTIVE", isDeveloper: false },
@@ -89,11 +99,11 @@ export async function computeStandings(start: Date, end: Date): Promise<Standing
 
     out.push({
       userId: u.id, fullName: u.fullName, name: displayName(u), photo: socialPhoto(u), crewId: u.crewId,
-      points, optional, perfect, joinedAt: u.createdAt.getTime(),
+      points, optional, perfect, band: bandPts.get(u.id) ?? 0, joinedAt: u.createdAt.getTime(),
     });
   }
 
-  out.sort((a, b) => b.points - a.points || b.optional - a.optional || a.joinedAt - b.joinedAt);
+  out.sort((a, b) => b.points - a.points || b.optional - a.optional || b.band - a.band || a.joinedAt - b.joinedAt);
   return out;
 }
 

@@ -1,3 +1,4 @@
+import DivisionProfile from "@/components/division-profile";
 import type { Prisma } from "@prisma/client";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
@@ -37,6 +38,8 @@ export default async function DocumentsPage() {
         <h1 className="text-3xl font-light tracking-tight">Documents</h1>
         <p className="mt-1 text-sm text-white/50">The constitution, training manuals and other important files.</p>
       </div>
+
+      <DivisionProfile />
 
       {canPost && (
         <section>

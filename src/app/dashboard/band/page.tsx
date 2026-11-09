@@ -1,42 +1,53 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
+import EventArchiveButton from "@/components/event-archive-button";
 import { getCurrentUser } from "@/lib/auth";
-import { BAND_TITLES, canIssue, canManageInventory, canSeeBand, statusTone, statusWord } from "@/lib/band";
+import { BAND_TITLES, canManageInventory, canSeeBand, inBand } from "@/lib/band";
 import { crewColor, crewName } from "@/lib/crews";
 import { db } from "@/lib/db";
 import { fmt } from "@/lib/meetings";
-import AddInstrumentForm from "./add-instrument-form";
-import InstrumentEdit from "./instrument-edit";
-import IssueForm from "./issue-form";
-import ReturnActions from "./return-actions";
+import { BAND_POINTS } from "@/lib/points";
+import CreateBandSessionForm from "./create-band-session-form";
 
 export const dynamic = "force-dynamic";
+
+const select = { id: true, title: true, heldAt: true, qrToken: true } as const;
+type S = { id: string; title: string; heldAt: Date; qrToken: string | null };
 
 const chip = "rounded-full border px-3 py-1 text-[11px] uppercase tracking-[0.12em]";
 const box = "rounded-2xl border border-white/10 bg-card p-5";
 const empty = "rounded-2xl border border-white/10 bg-card p-6 text-sm text-white/50";
-const open = { returnedAt: null, markedLost: false };
 
-async function loadManage() {
-  const [instruments, roster, openLogs, history] = await Promise.all([
-    db.bandInstrument.findMany({ orderBy: { name: "asc" } }),
-    db.user.findMany({
-      where: { status: "ACTIVE", isDeveloper: false, titles: { hasSome: BAND_TITLES } },
-      orderBy: { fullName: "asc" },
-      select: { id: true, fullName: true, crewId: true, titles: true },
-    }),
-    db.instrumentIssuanceLog.findMany({
-      where: open,
-      orderBy: { issuedAt: "desc" },
-      include: { instrument: { select: { name: true, type: true } }, issuedTo: { select: { fullName: true } } },
-    }),
-    db.instrumentIssuanceLog.findMany({
-      where: { OR: [{ returnedAt: { not: null } }, { markedLost: true }] },
-      orderBy: { issuedAt: "desc" },
-      take: 30,
-      include: { instrument: { select: { name: true } }, issuedTo: { select: { fullName: true } } },
-    }),
-  ]);
-  return { instruments, roster, openLogs, history };
+function Row({
+  s, present, absent, manage, now, archived = false,
+}: {
+  s: S; present: number; absent: number; manage: boolean; now: Date; archived?: boolean;
+}) {
+  const past = s.heldAt < now;
+  return (
+    <div className={`${box} ${archived ? "opacity-70" : ""}`}>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <Link href={`/dashboard/training/${s.id}`} className="min-w-0 flex-1">
+          <p className="text-lg font-light">{s.title}</p>
+          <p className="mt-1 text-sm text-white/60">{fmt(s.heldAt)}</p>
+        </Link>
+        <div className="flex flex-wrap items-center gap-2">
+          {!archived && present + absent > 0 && (
+            <span className={`${chip} border-white/20 text-white/70`}>
+              <span className="text-ok">{present}</span> present · <span className="text-bad">{absent}</span> absent
+            </span>
+          )}
+          {manage && !archived && s.qrToken && (
+            <Link href={`/qr/training/${s.id}`} target="_blank" className={`${chip} border-gold/50 text-gold`}>
+              Print QR
+            </Link>
+          )}
+          {manage && archived && <EventArchiveButton kind="training" id={s.id} title={s.title} archived />}
+          {manage && !archived && past && <EventArchiveButton kind="training" id={s.id} title={s.title} archived={false} />}
+        </div>
+      </div>
+    </div>
+  );
 }
 
 export default async function BandPage() {
@@ -44,108 +55,122 @@ export default async function BandPage() {
   if (!user) redirect("/login");
   if (!canSeeBand(user)) redirect("/dashboard");
 
-  const manage = canManageInventory(user);
-  const issue = canIssue(user);
+  const manage = canManageInventory(user); // the Band Lead and DO Training
+  const member = inBand(user);
+  const now = new Date();
 
-  const [mine, data] = await Promise.all([
-    db.instrumentIssuanceLog.findMany({
-      where: { issuedToId: user.id, ...open },
-      orderBy: { issuedAt: "desc" },
-      include: { instrument: { select: { name: true, type: true, serialNumber: true } } },
-    }),
-    manage ? loadManage() : Promise.resolve(null),
+  const [sessions, archived, mine, roster] = await Promise.all([
+    db.training.findMany({ where: { type: "BAND", archivedAt: null }, orderBy: { heldAt: "desc" }, take: 60, select }),
+    manage
+      ? db.training.findMany({ where: { type: "BAND", archivedAt: { not: null } }, orderBy: { heldAt: "desc" }, take: 30, select })
+      : Promise.resolve([] as S[]),
+    member
+      ? db.attendanceRecord.groupBy({
+          by: ["status"],
+          where: { userId: user.id, eventType: "TRAINING", training: { type: "BAND", status: "VERIFIED" } },
+          _count: { _all: true },
+        })
+      : Promise.resolve([]),
+    manage
+      ? db.user.findMany({
+          where: { status: "ACTIVE", isDeveloper: false, titles: { hasSome: BAND_TITLES } },
+          orderBy: { fullName: "asc" },
+          select: { id: true, fullName: true, crewId: true, titles: true },
+        })
+      : Promise.resolve([]),
   ]);
 
-  const held = new Map<string, number>();
-  data?.openLogs.forEach((l) => held.set(l.issuedToId, (held.get(l.issuedToId) ?? 0) + 1));
+  const ids = sessions.map((s) => s.id);
+  const [att, rosterAtt] = await Promise.all([
+    ids.length
+      ? db.attendanceRecord.groupBy({ by: ["trainingId", "status"], where: { trainingId: { in: ids } }, _count: { _all: true } })
+      : Promise.resolve([]),
+    roster.length
+      ? db.attendanceRecord.groupBy({
+          by: ["userId", "status"],
+          where: { userId: { in: roster.map((r) => r.id) }, eventType: "TRAINING", training: { type: "BAND", status: "VERIFIED" } },
+          _count: { _all: true },
+        })
+      : Promise.resolve([]),
+  ]);
+
+  const count = (id: string, st: string) => att.find((a) => a.trainingId === id && a.status === st)?._count._all ?? 0;
+  const upcoming = sessions.filter((s) => s.heldAt >= now).reverse();
+  const past = sessions.filter((s) => s.heldAt < now);
+
+  const myPresent = mine.find((m) => m.status === "PRESENT")?._count._all ?? 0;
+  const myAbsent = mine.find((m) => m.status === "ABSENT")?._count._all ?? 0;
 
   return (
     <div className="space-y-10">
       <div>
         <h1 className="text-3xl font-light tracking-tight">Band</h1>
         <p className="mt-1 text-sm text-white/50">
-          {issue
-            ? "Roster, instruments and who holds what."
-            : manage
-              ? "Roster, instruments and issue history. The Band Lead issues and receives instruments."
-              : "Your instruments."}
+          Practice attendance. Each practice earns {BAND_POINTS} band points, which only break ties for Member of the Week.
         </p>
       </div>
 
+      {member && (
+        <section className="grid grid-cols-3 gap-3 text-center">
+          <div className="rounded-2xl border border-white/10 bg-card p-4">
+            <p className="text-2xl font-light text-ok">{myPresent}</p>
+            <p className="mt-1 text-[10px] uppercase tracking-[0.12em] text-white/40">Practices attended</p>
+          </div>
+          <div className="rounded-2xl border border-white/10 bg-card p-4">
+            <p className="text-2xl font-light">
+              {myPresent + myAbsent > 0 ? `${Math.round((myPresent / (myPresent + myAbsent)) * 100)}%` : "-"}
+            </p>
+            <p className="mt-1 text-[10px] uppercase tracking-[0.12em] text-white/40">Attendance</p>
+          </div>
+          <div className="rounded-2xl border border-white/10 bg-card p-4">
+            <p className="text-2xl font-light text-gold">{myPresent * BAND_POINTS}</p>
+            <p className="mt-1 text-[10px] uppercase tracking-[0.12em] text-white/40">Band points</p>
+          </div>
+        </section>
+      )}
+
+      {manage && (
+        <section>
+          <h2 className="mb-4 text-xl font-light">New practice</h2>
+          <CreateBandSessionForm />
+        </section>
+      )}
+
       <section>
-        <h2 className="mb-4 text-xl font-light">My instruments</h2>
-        {mine.length === 0 ? (
-          <div className={empty}>You are not holding any instruments.</div>
+        <h2 className="mb-4 text-xl font-light">Upcoming</h2>
+        {upcoming.length === 0 ? (
+          <div className={empty}>No practice scheduled.</div>
         ) : (
           <div className="space-y-3">
-            {mine.map((l) => (
-              <div key={l.id} className={box}>
-                <p className="font-light">
-                  {l.instrument.name} <span className="text-white/40">· {l.instrument.type}</span>
-                </p>
-                <p className="mt-1 text-sm text-white/60">
-                  Issued {fmt(l.issuedAt)}
-                  {l.instrument.serialNumber ? ` · Serial ${l.instrument.serialNumber}` : ""}
-                </p>
-                <p className="mt-2 text-xs text-white/40">Return it to the Band Lead after use.</p>
-              </div>
+            {upcoming.map((s) => (
+              <Row key={s.id} s={s} present={count(s.id, "PRESENT")} absent={count(s.id, "ABSENT")} manage={manage} now={now} />
             ))}
           </div>
         )}
       </section>
 
-      {manage && data && (
-        <>
-          <section>
-            <h2 className="mb-4 text-xl font-light">Currently issued ({data.openLogs.length})</h2>
-            {data.openLogs.length === 0 ? (
-              <div className={empty}>Nothing is out right now.</div>
-            ) : (
-              <div className="space-y-3">
-                {data.openLogs.map((l) => (
-                  <div key={l.id} className={box}>
-                    <div className="flex flex-wrap items-start justify-between gap-3">
-                      <div>
-                        <p className="font-light">
-                          {l.instrument.name} <span className="text-white/40">· {l.instrument.type}</span>
-                        </p>
-                        <p className="mt-1 text-sm text-white/60">
-                          <span className="uppercase tracking-wide">{l.issuedTo.fullName}</span> · issued {fmt(l.issuedAt)}
-                        </p>
-                        {l.notes && <p className="mt-1 text-xs text-white/40">&ldquo;{l.notes}&rdquo;</p>}
-                      </div>
-                      <span className={`${chip} ${statusTone.ISSUED}`}>Issued</span>
-                    </div>
-                    {issue && (
-                      <div className="mt-4">
-                        <ReturnActions logId={l.id} />
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
-          </section>
+      {past.length > 0 && (
+        <section>
+          <h2 className="mb-4 text-xl font-light">Past practices</h2>
+          <div className="space-y-3">
+            {past.map((s) => (
+              <Row key={s.id} s={s} present={count(s.id, "PRESENT")} absent={count(s.id, "ABSENT")} manage={manage} now={now} />
+            ))}
+          </div>
+        </section>
+      )}
 
-          {issue && (
-            <section>
-              <h2 className="mb-4 text-xl font-light">Issue an instrument</h2>
-              <IssueForm
-                instruments={data.instruments
-                  .filter((i) => i.status === "AVAILABLE")
-                  .map((i) => ({ id: i.id, name: i.name, type: i.type }))}
-                members={data.roster.map((m) => ({ id: m.id, fullName: m.fullName }))}
-              />
-            </section>
-          )}
-
-          <section>
-            <h2 className="mb-4 text-xl font-light">Band roster ({data.roster.length})</h2>
-            {data.roster.length === 0 ? (
-              <div className={empty}>No band members yet. The Superintendent gives the Band Member title in People.</div>
-            ) : (
-              <div className="space-y-3">
-                {data.roster.map((m) => (
+      {manage && (
+        <section>
+          <h2 className="mb-4 text-xl font-light">Band roster ({roster.length})</h2>
+          {roster.length === 0 ? (
+            <div className={empty}>No band members yet. The Superintendent gives the Band Member title in People.</div>
+          ) : (
+            <div className="space-y-3">
+              {roster.map((m) => {
+                const p = rosterAtt.find((a) => a.userId === m.id && a.status === "PRESENT")?._count._all ?? 0;
+                const a = rosterAtt.find((x) => x.userId === m.id && x.status === "ABSENT")?._count._all ?? 0;
+                return (
                   <div key={m.id} className={`${box} flex flex-wrap items-center justify-between gap-3`}>
                     <div>
                       <p className="text-sm font-medium uppercase tracking-wide">{m.fullName}</p>
@@ -158,80 +183,32 @@ export default async function BandPage() {
                         )}
                       </p>
                     </div>
-                    <div className="flex items-center gap-2">
-                      {m.titles.includes("BAND_LEAD") && (
-                        <span className={`${chip} border-gold/50 text-gold`}>Band Lead</span>
-                      )}
+                    <div className="flex flex-wrap items-center gap-2">
+                      {m.titles.includes("BAND_LEAD") && <span className={`${chip} border-gold/50 text-gold`}>Band Lead</span>}
                       <span className={`${chip} border-white/20 text-white/60`}>
-                        {held.get(m.id) ?? 0} held
+                        {p + a > 0 ? `${p} of ${p + a} · ${Math.round((p / (p + a)) * 100)}%` : "No practices yet"}
                       </span>
+                      <span className={`${chip} border-white/20 text-gold`}>{p * BAND_POINTS} pts</span>
                     </div>
                   </div>
-                ))}
-              </div>
-            )}
-          </section>
-
-          <section>
-            <h2 className="mb-4 text-xl font-light">Add an instrument</h2>
-            <AddInstrumentForm />
-          </section>
-
-          <section>
-            <h2 className="mb-4 text-xl font-light">Inventory ({data.instruments.length})</h2>
-            {data.instruments.length === 0 ? (
-              <div className={empty}>No instruments yet.</div>
-            ) : (
-              <div className="space-y-3">
-                {data.instruments.map((i) => (
-                  <div key={i.id} className={box}>
-                    <div className="flex flex-wrap items-start justify-between gap-3">
-                      <div>
-                        <p className="font-light">
-                          {i.name} <span className="text-white/40">· {i.type}</span>
-                        </p>
-                        <p className="mt-1 text-sm text-white/50">
-                          {i.serialNumber ? `Serial ${i.serialNumber}` : "No serial number"}
-                          {i.condition ? ` · ${i.condition}` : ""}
-                        </p>
-                        {i.notes && <p className="mt-1 text-xs text-white/40">{i.notes}</p>}
-                      </div>
-                      <span className={`${chip} ${statusTone[i.status]}`}>{statusWord[i.status]}</span>
-                    </div>
-                    <div className="mt-4">
-                      <InstrumentEdit inst={i} />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </section>
-
-          {data.history.length > 0 && (
-            <details>
-              <summary className="cursor-pointer text-xl font-light text-white/60 hover:text-white">
-                History ({data.history.length})
-              </summary>
-              <div className="mt-4 space-y-3">
-                {data.history.map((l) => (
-                  <div key={l.id} className={box}>
-                    <p className="text-sm">
-                      {l.instrument.name} ·{" "}
-                      <span className="uppercase tracking-wide">{l.issuedTo.fullName}</span>
-                    </p>
-                    <p className="mt-1 text-xs text-white/50">
-                      Issued {fmt(l.issuedAt)}
-                      {l.returnedAt ? ` · returned ${fmt(l.returnedAt)}` : ""}
-                      {l.markedLost ? " · marked lost" : ""}
-                      {l.markedDamaged ? " · returned damaged" : ""}
-                      {l.conditionOnReturn ? ` · ${l.conditionOnReturn}` : ""}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </details>
+                );
+              })}
+            </div>
           )}
-        </>
+        </section>
+      )}
+
+      {manage && archived.length > 0 && (
+        <details>
+          <summary className="cursor-pointer text-xl font-light text-white/60 hover:text-white">
+            Archived ({archived.length})
+          </summary>
+          <div className="mt-4 space-y-3">
+            {archived.map((s) => (
+              <Row key={s.id} s={s} present={0} absent={0} manage={manage} now={now} archived />
+            ))}
+          </div>
+        </details>
       )}
     </div>
   );

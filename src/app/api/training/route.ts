@@ -1,15 +1,16 @@
+import type { TrainingType } from "@prisma/client";
 import { after } from "next/server";
-import { fmt } from "@/lib/meetings";
-import { notifyAudience } from "@/lib/push";
 import { z } from "zod";
 import { audit, requireUser } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { HttpError, route } from "@/lib/http";
+import { fmt } from "@/lib/meetings";
+import { notifyAudience } from "@/lib/push";
 import { can } from "@/lib/rbac";
 import { allowedTypes } from "@/lib/training";
 
 const schema = z.object({
-  type: z.enum(["DRILL", "FIRST_AID"]),
+  type: z.enum(["DRILL", "FIRST_AID", "BAND"]),
   title: z.string().trim().min(3, "Title is too short").max(120),
   description: z.string().trim().max(1000).optional(),
   heldAt: z.string().datetime(),
@@ -19,13 +20,18 @@ const schema = z.object({
 export const POST = route(async (req: Request) => {
   const actor = await requireUser();
   const data = schema.parse(await req.json());
+  const verifier = can(actor, "training:verify");
 
-  if (!allowedTypes(actor).includes(data.type)) {
+  if (data.type === "BAND") {
+    // Band practice: the Band Lead or DO Training
+    if (!verifier && !can(actor, "band:issue_instruments")) {
+      throw new HttpError(403, "Only the Band Lead or DO Training can create band practices");
+    }
+  } else if (!(allowedTypes(actor) as TrainingType[]).includes(data.type)) {
     throw new HttpError(403, "You cannot create this type of training record");
   }
 
-  // Drills are for everyone. First Aid belongs to the leader's crew (DO Training may choose any crew or all).
-  const verifier = can(actor, "training:verify");
+  // Drills and band practice are not tied to a crew. First Aid belongs to the leader's crew.
   let crewId: number | null = null;
   if (data.type === "FIRST_AID") {
     if (verifier) {
@@ -36,6 +42,8 @@ export const POST = route(async (req: Request) => {
     }
   }
 
+  // Band practice created by the Band Lead counts straight away
+  const counted = verifier || data.type === "BAND";
   const training = await db.training.create({
     data: {
       type: data.type,
@@ -44,9 +52,9 @@ export const POST = route(async (req: Request) => {
       heldAt: new Date(data.heldAt),
       crewId,
       createdById: actor.id,
-      status: verifier ? "VERIFIED" : "PENDING",
-      verifiedById: verifier ? actor.id : null,
-      verifiedAt: verifier ? new Date() : null,
+      status: counted ? "VERIFIED" : "PENDING",
+      verifiedById: counted ? actor.id : null,
+      verifiedAt: counted ? new Date() : null,
     },
     select: { id: true, title: true, status: true },
   });
@@ -55,13 +63,14 @@ export const POST = route(async (req: Request) => {
     title: training.title,
     status: training.status,
   });
+
   if (training.status === "VERIFIED") {
     after(() =>
       notifyAudience(
-        crewId === null ? "GENERAL" : "CREW",
+        data.type === "BAND" ? "BAND" : crewId === null ? "GENERAL" : "CREW",
         crewId,
         {
-          title: "New training: " + training.title,
+          title: (data.type === "BAND" ? "Band practice: " : "New training: ") + training.title,
           body: fmt(new Date(data.heldAt)),
           url: "/dashboard/training/" + training.id,
           tag: "event-" + training.id,

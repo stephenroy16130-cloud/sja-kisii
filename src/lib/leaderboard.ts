@@ -14,7 +14,7 @@ export async function crewLeaderboard(days = 30): Promise<CrewRate[]> {
       OR: [
         { meeting: { startsAt: { gte: since } } },
         { fieldOp: { startsAt: { gte: since } } },
-        { training: { heldAt: { gte: since }, status: "VERIFIED" } },
+        { training: { heldAt: { gte: since }, status: "VERIFIED", type: { not: "BAND" } } },
       ],
     },
     _count: { _all: true },

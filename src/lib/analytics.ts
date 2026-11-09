@@ -31,7 +31,7 @@ export async function attendanceAnalytics(scope: { all: boolean; crewId: number 
       OR: [
         { meeting: { startsAt: { gte: first } } },
         { fieldOp: { startsAt: { gte: first } } },
-        { training: { heldAt: { gte: first }, status: "VERIFIED" } },
+        { training: { heldAt: { gte: first }, status: "VERIFIED", type: { not: "BAND" } } },
       ],
     },
     select: {
@@ -128,7 +128,7 @@ export async function trainingAnalytics() {
       where: {
         eventType: "TRAINING",
         status: { in: ["PRESENT", "ABSENT"] },
-        training: { heldAt: { gte: since }, status: "VERIFIED" },
+        training: { heldAt: { gte: since }, status: "VERIFIED", type: { not: "BAND" } },
       },
       _count: { _all: true },
     }),
