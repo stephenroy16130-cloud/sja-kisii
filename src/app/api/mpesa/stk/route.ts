@@ -10,6 +10,7 @@ const schema = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("order"), orderId: z.string().min(1), phone: phoneSchema }),
   z.object({ kind: z.literal("announcement"), announcementId: z.string().min(1), phone: phoneSchema }),
   z.object({ kind: z.literal("registration"), phone: phoneSchema }),
+  z.object({ kind: z.literal("collection"), collectionId: z.string().min(1), phone: phoneSchema }),
 ]);
 
 const busy = () => new HttpError(409, "A payment is already in progress. Check your phone, or wait a minute.");
@@ -31,6 +32,7 @@ export const POST = route(async (req: Request) => {
   let desc: string;
   let orderId: string | undefined;
   let announcementId: string | undefined;
+  let collectionId: string | undefined;
 
   if (d.kind === "order") {
     const order = await db.order.findUnique({ where: { id: d.orderId } });
@@ -63,6 +65,27 @@ export const POST = route(async (req: Request) => {
     reference = "CREW" + a.id.slice(-6).toUpperCase();
     desc = "Crew event";
     announcementId = a.id;
+  } else if (d.kind === "collection") {
+    const c = await db.collection.findUnique({ where: { id: d.collectionId } });
+    if (!c || !c.isOpen || (c.closesAt && c.closesAt <= new Date())) {
+      throw new HttpError(404, "This payment is closed");
+    }
+    if (c.crewId !== null && c.crewId !== actor.crewId) throw new HttpError(403, "This payment is for another crew");
+    if (await db.transaction.count({ where: { userId: actor.id, collectionId: c.id, status: "SUCCESS" } })) {
+      throw new HttpError(409, "You have already paid for this");
+    }
+    if (
+      await db.transaction.count({
+        where: { userId: actor.id, collectionId: c.id, status: "PENDING", createdAt: { gte: fresh } },
+      })
+    ) {
+      throw busy();
+    }
+    purpose = "COLLECTION";
+    amount = whole(c.amount);
+    reference = "ACT" + c.id.slice(-6).toUpperCase();
+    desc = "Payment";
+    collectionId = c.id;
   } else {
     const fee = await registrationFee();
     if (!fee) throw new HttpError(400, "There is no registration fee to pay");
@@ -83,7 +106,7 @@ export const POST = route(async (req: Request) => {
   }
 
   const tx = await db.transaction.create({
-    data: { userId: actor.id, purpose, amount, phone: d.phone, orderId, announcementId },
+    data: { userId: actor.id, purpose, amount, phone: d.phone, orderId, announcementId, collectionId },
     select: { id: true },
   });
 

@@ -4,16 +4,18 @@ import ResetForm from "./reset-form";
 export default async function ResetPasswordPage({
   searchParams,
 }: {
-  searchParams: Promise<{ token?: string }>;
+  searchParams: Promise<{ email?: string; code?: string; token?: string }>;
 }) {
-  const { token } = await searchParams;
+  const params = await searchParams;
+  const initialEmail = params.email ?? "";
+  const initialCode = params.code ?? params.token ?? "";
+
   return (
-    <AuthShell title="Choose a new password">
-      {token ? (
-        <ResetForm token={token} />
-      ) : (
-        <p className="text-sm text-white/60">This reset link is missing its token. Request a new one.</p>
-      )}
+    <AuthShell
+      title="Reset your password"
+      subtitle="Enter the 6-digit code sent to your email and your new password."
+    >
+      <ResetForm initialEmail={initialEmail} initialCode={initialCode} />
     </AuthShell>
   );
 }

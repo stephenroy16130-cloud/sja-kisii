@@ -14,7 +14,7 @@ export const getCurrentUser = cache(async () => {
     select: {
       id: true, username: true, fullName: true, email: true, status: true,
       titles: true, isSuperintendent: true, isDeveloper: true, crewId: true,
-      preferredName: true, socialPhotoAt: true,
+      preferredName: true, socialPhotoAt: true, mustChangePassword: true,
       dateOfBirth: true, gender: true, idType: true, idNumber: true,
     },
   });

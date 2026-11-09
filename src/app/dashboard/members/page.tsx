@@ -6,6 +6,7 @@ import { crewName } from "@/lib/crews";
 import { db } from "@/lib/db";
 import { socialPhoto } from "@/lib/profile";
 import { can } from "@/lib/rbac";
+import AddMembers from "./add-members";
 import MasterList, { type MemberRow } from "./master-list";
 
 export const dynamic = "force-dynamic";
@@ -56,6 +57,8 @@ export default async function MembersPage() {
         </div>
         <ReportButton />
       </div>
+
+      <AddMembers />
 
       <MasterList members={members} />
 

@@ -114,6 +114,7 @@ export default async function AnalyticsPage() {
               { name: "Registration fees", color: "#d4af5a", values: fin.byWeek.map((w) => w.REGISTRATION_FEE) },
               { name: "Shop orders", color: "#3fb5e8", values: fin.byWeek.map((w) => w.STORE_ORDER) },
               { name: "Crew events", color: "#a78bfa", values: fin.byWeek.map((w) => w.CREW_EVENT) },
+              { name: "Activity payments", color: "#2fcb8b", values: fin.byWeek.map((w) => w.COLLECTION) },
             ]}
           />
         </section>

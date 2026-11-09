@@ -1,3 +1,5 @@
+import { after } from "next/server";
+import { notifyFinancePayment } from "./finance-alerts";
 import { Prisma, type TransactionPurpose, type TransactionStatus } from "@prisma/client";
 import { db } from "./db";
 import { HttpError } from "./http";
@@ -13,6 +15,7 @@ export const PURPOSE_WORD: Record<TransactionPurpose, string> = {
   REGISTRATION_FEE: "Registration fee",
   STORE_ORDER: "Shop order",
   CREW_EVENT: "Crew event",
+  COLLECTION: "Activity payment",
 };
 export const TX_WORD: Record<TransactionStatus, string> = {
   PENDING: "Pending",
@@ -197,6 +200,14 @@ export async function settle(checkoutRequestId: string, o: Outcome): Promise<Tra
       return settle(checkoutRequestId, { ...o, receipt: null });
     }
     throw e;
+  }
+
+  if (applied && status === "SUCCESS") {
+    try {
+      after(() => notifyFinancePayment(t.id));
+    } catch {
+      void notifyFinancePayment(t.id);
+    }
   }
 
   if (applied) {

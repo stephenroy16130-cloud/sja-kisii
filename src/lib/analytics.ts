@@ -102,7 +102,7 @@ export async function financeAnalytics() {
     where: { createdAt: { gte: weeks[0] }, status: { in: ["SUCCESS", "FAILED", "CANCELLED"] } },
     select: { purpose: true, amount: true, status: true, createdAt: true },
   });
-  const byWeek: Money[] = weeks.map(() => ({ REGISTRATION_FEE: 0, STORE_ORDER: 0, CREW_EVENT: 0 }));
+  const byWeek: Money[] = weeks.map(() => ({ REGISTRATION_FEE: 0, STORE_ORDER: 0, CREW_EVENT: 0, COLLECTION: 0 }));
   let total = 0;
   let ok = 0;
   let notOk = 0;

@@ -3,6 +3,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { officialPhoto, socialPhoto } from "@/lib/profile";
 import AppAccess from "@/components/app-access";
+import ChangePasswordCard from "@/components/change-password-card";
 import PasskeyManager from "@/components/passkey-manager";
 import ProfileForms from "./profile-forms";
 
@@ -33,6 +34,7 @@ export default async function ProfilePage() {
       </div>
       <AppAccess mode="full" />
       <PasskeyManager />
+      <ChangePasswordCard />
       <ProfileForms
         official={{
           fullName: u.fullName,

@@ -76,6 +76,7 @@ enum OrderStatus {
 }
 
 enum TransactionPurpose {
+  COLLECTION
   REGISTRATION_FEE
   STORE_ORDER
   CREW_EVENT
@@ -107,34 +108,35 @@ enum RsvpResponse {
 }
 
 model User {
-  checkIns          CheckIn[]
-  passkeys          Passkey[]
-  pushSubscriptions PushSubscription[]
-  dateOfBirth       DateTime?
-  gender            Gender?
-  idType            IdType?
-  idNumber          String?
-  preferredName     String?
-  officialPhotoAt   DateTime?
-  socialPhotoAt     DateTime?
-  photos            UserPhoto[]
-  weeklyWins        WeeklyResult[]     @relation("WeeklyWins")
-  id                String             @id @default(cuid())
-  username          String             @unique
-  email             String             @unique
-  phone             String             @unique
-  fullName          String
-  passwordHash      String
-  status            UserStatus         @default(PENDING_ADMIN)
-  titles            Title[]            @default([])
-  isSuperintendent  Boolean            @default(false)
-  isDeveloper       Boolean            @default(false)
-  crewId            Int?
-  crew              Crew?              @relation("CrewMembers", fields: [crewId], references: [id])
-  approvedById      String?
-  crewApprovedById  String?
-  createdAt         DateTime           @default(now())
-  updatedAt         DateTime           @updatedAt
+  mustChangePassword Boolean            @default(false)
+  checkIns           CheckIn[]
+  passkeys           Passkey[]
+  pushSubscriptions  PushSubscription[]
+  dateOfBirth        DateTime?
+  gender             Gender?
+  idType             IdType?
+  idNumber           String?
+  preferredName      String?
+  officialPhotoAt    DateTime?
+  socialPhotoAt      DateTime?
+  photos             UserPhoto[]
+  weeklyWins         WeeklyResult[]     @relation("WeeklyWins")
+  id                 String             @id @default(cuid())
+  username           String             @unique
+  email              String             @unique
+  phone              String             @unique
+  fullName           String
+  passwordHash       String
+  status             UserStatus         @default(PENDING_ADMIN)
+  titles             Title[]            @default([])
+  isSuperintendent   Boolean            @default(false)
+  isDeveloper        Boolean            @default(false)
+  crewId             Int?
+  crew               Crew?              @relation("CrewMembers", fields: [crewId], references: [id])
+  approvedById       String?
+  crewApprovedById   String?
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
 
   passwordResets     PasswordResetToken[]
   attendance         AttendanceRecord[]      @relation("AttendanceMember")
@@ -341,6 +343,8 @@ model OrderItem {
 }
 
 model Transaction {
+  collectionId      String?
+  collection        Collection?        @relation(fields: [collectionId], references: [id])
   id                String             @id @default(cuid())
   userId            String
   user              User               @relation(fields: [userId], references: [id])
@@ -600,4 +604,20 @@ model EventLink {
   createdAt DateTime  @default(now())
 
   @@index([kind, eventId])
+}
+
+model Collection {
+  id          String    @id @default(cuid())
+  title       String
+  description String?
+  amount      Int
+  crewId      Int?
+  isOpen      Boolean   @default(true)
+  closesAt    DateTime?
+  createdById String
+  createdAt   DateTime  @default(now())
+
+  transactions Transaction[]
+
+  @@index([isOpen])
 }

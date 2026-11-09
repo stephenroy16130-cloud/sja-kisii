@@ -8,7 +8,8 @@ import { btnGhostCls, inputCls } from "@/lib/ui";
 type Target =
   | { kind: "order"; orderId: string }
   | { kind: "announcement"; announcementId: string }
-  | { kind: "registration" };
+  | { kind: "registration" }
+  | { kind: "collection"; collectionId: string };
 
 type Phase = "idle" | "form" | "waiting" | "paid" | "failed";
 

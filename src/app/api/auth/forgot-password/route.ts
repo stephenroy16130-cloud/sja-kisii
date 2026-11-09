@@ -1,4 +1,4 @@
-import { createHash, randomBytes } from "crypto";
+import { createHash, randomInt } from "crypto";
 import { after } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
@@ -7,7 +7,7 @@ import { escapeHtml, mailConfigured, sendMail } from "@/lib/mail";
 import { appUrl } from "@/lib/site";
 
 // The same answer whether or not the email exists, so accounts cannot be probed
-const GENERIC = { message: "If that email exists, a reset link has been sent." };
+const GENERIC = { message: "If that email exists, a reset code has been sent." };
 
 export const POST = route(async (req: Request) => {
   const { email } = z.object({ email: z.string().email() }).parse(await req.json());
@@ -20,41 +20,65 @@ export const POST = route(async (req: Request) => {
   });
   if (recent >= 3) return Response.json(GENERIC);
 
-  const token = randomBytes(32).toString("hex");
+  // Generate 6-digit verification code
+  const code = randomInt(100000, 999999).toString();
+  const tokenHash = createHash("sha256").update(`${user.id}:${code}`).digest("hex");
+
+  // Invalidate any active reset tokens for this user
+  await db.passwordResetToken.deleteMany({
+    where: { userId: user.id },
+  });
+
   await db.passwordResetToken.create({
     data: {
       userId: user.id,
-      tokenHash: createHash("sha256").update(token).digest("hex"),
-      expiresAt: new Date(Date.now() + 60 * 60 * 1000),
+      tokenHash,
+      expiresAt: new Date(Date.now() + 15 * 60 * 1000), // 15 minutes
     },
   });
 
   let link: string | null = null;
   try {
-    link = `${await appUrl()}/reset-password?token=${token}`;
+    link = `${await appUrl()}/reset-password?email=${encodeURIComponent(user.email)}&code=${code}`;
   } catch (e) {
     console.error(e);
   }
 
   // Sent after the response, so how long this takes never reveals whether the account exists
   after(async () => {
-    if (!link) return;
     try {
-      if (process.env.NODE_ENV !== "production") console.log(`[DEV] Password reset link: ${link}`);
+      if (process.env.NODE_ENV !== "production") {
+        console.log(`[DEV] Reset code for ${user.email}: ${code}`);
+        if (link) console.log(`[DEV] Reset link: ${link}`);
+      }
       if (!mailConfigured()) {
         console.error("A password reset was requested but email is not set up");
         return;
       }
       const text =
-        `Hello ${user.fullName},\n\nSomeone asked to reset your SJA Kisii password. ` +
-        `Open this link within 1 hour to choose a new one:\n\n${link}\n\n` +
+        `Hello ${user.fullName},\n\n` +
+        `Your SJA Kisii password reset code is: ${code}\n\n` +
+        `This code will expire in 15 minutes.\n\n` +
+        (link ? `You can also reset your password directly using this link:\n${link}\n\n` : "") +
         `If you did not ask for this, ignore this email. Your password has not changed.`;
+
       const html =
-        `<p>Hello ${escapeHtml(user.fullName)},</p>` +
-        `<p>Someone asked to reset your SJA Kisii password. Open this link within 1 hour to choose a new one:</p>` +
-        `<p><a href="${link}">Choose a new password</a></p>` +
-        `<p>If you did not ask for this, ignore this email. Your password has not changed.</p>`;
-      await sendMail(user.email, "Reset your SJA Kisii password", text, html);
+        `<div style="font-family: Arial, sans-serif; max-width: 540px; margin: 0 auto; padding: 24px; color: #111;">` +
+        `<h2 style="margin-bottom: 12px; color: #111;">Password Reset Code</h2>` +
+        `<p>Hello <strong>${escapeHtml(user.fullName)}</strong>,</p>` +
+        `<p>Someone requested to reset your SJA Kisii account password. Use the 6-digit code below to set a new password:</p>` +
+        `<div style="margin: 24px 0; padding: 20px; text-align: center; background-color: #f4f4f5; border-radius: 8px; border: 1px solid #e4e4e7;">` +
+        `<span style="font-size: 32px; font-weight: bold; letter-spacing: 6px; color: #09090b; font-family: monospace;">${code}</span>` +
+        `</div>` +
+        `<p style="font-size: 14px; color: #666;">This code expires in <strong>15 minutes</strong>.</p>` +
+        (link
+          ? `<p style="margin-top: 24px;"><a href="${link}" style="background-color: #18181b; color: #ffffff; padding: 10px 20px; border-radius: 6px; text-decoration: none; display: inline-block; font-size: 14px;">Reset Password Directly</a></p>`
+          : "") +
+        `<hr style="border: none; border-top: 1px solid #e4e4e7; margin: 24px 0;" />` +
+        `<p style="font-size: 12px; color: #888;">If you did not request this, you can safely ignore this email.</p>` +
+        `</div>`;
+
+      await sendMail(user.email, "Your SJA Kisii password reset code", text, html);
     } catch (e) {
       console.error("Reset email failed", e);
     }

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Avatar from "@/components/avatar";
+import ResetPassword from "./reset-password";
 import TrophyBadge from "@/components/trophy-badge";
 import { crewColor, crewName } from "@/lib/crews";
 import { GENDER_LABEL, ID_LABEL } from "@/lib/profile";
@@ -130,6 +131,7 @@ export default function MemberDrawer({ memberId, onClose }: { memberId: string; 
             <Row label="Identity document" value={data.official.idType ? ID_LABEL[data.official.idType] : null} />
             <Row label="ID number" value={data.official.idNumber} />
             <Row label="Joined" value={fmtDate(data.official.joinedAt)} />
+            <ResetPassword memberId={memberId} />
             <p className="mt-5 text-[11px] text-white/35">Opening these details is recorded in the audit log.</p>
           </div>
         )}

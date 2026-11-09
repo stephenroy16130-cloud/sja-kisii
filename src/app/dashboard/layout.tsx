@@ -22,6 +22,7 @@ const roleLabel = (u: { isDeveloper: boolean; isSuperintendent: boolean; titles:
 export default async function DashboardLayout({ children }: { children: ReactNode }) {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
+  if (user.mustChangePassword) redirect("/change-password");
 
   const links: NavLink[] = [{ href: "/dashboard/meetings", label: "Meetings", icon: "meetings" }];
   if (user.crewId || can(user, "crew:approve_membership_change")) {
@@ -44,6 +45,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
     { href: "/dashboard/documents", label: "Documents", icon: "documents" }
   );
   if (isLeader(user)) links.push({ href: "/dashboard/analytics", label: "Analytics", icon: "analytics" });
+  links.push({ href: "/dashboard/pay", label: "Pay", icon: "finance" });
   links.push({ href: "/dashboard/scan", label: "Check in", icon: "scan" });
   links.push({ href: "/dashboard/attendance", label: "Attendance", icon: "attendance" });
   links.push({ href: "/dashboard/profile", label: "My profile", icon: "profile" });

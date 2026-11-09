@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import PasswordInput from "@/components/password-input";
+import ResetPassword from "../members/reset-password";
 import { api } from "@/lib/client";
 import { crewName } from "@/lib/crews";
 import { btnCls, btnGhostCls, inputCls, labelCls } from "@/lib/ui";
@@ -173,6 +174,7 @@ function PersonRow({ person, locked }: { person: Person; locked: boolean }) {
         </div>
       )}
       <TitleChecks value={titles} onToggle={toggle} blockNew={locked} held={person.titles} />
+      <ResetPassword memberId={person.id} />
     </div>
   );
 }

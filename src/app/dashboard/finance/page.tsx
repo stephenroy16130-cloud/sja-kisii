@@ -64,6 +64,15 @@ export default async function FinancePage() {
         </div>
       </div>
 
+      <div className="flex flex-wrap gap-3">
+        <Link href="/dashboard/finance/collections" className="rounded-full border border-gold/60 px-5 py-2.5 text-xs uppercase tracking-[0.15em] text-gold transition hover:bg-gold hover:text-black">
+          Payment activities
+        </Link>
+        <Link href="/dashboard/finance/alerts" className="rounded-full border border-white/30 px-5 py-2.5 text-xs uppercase tracking-[0.15em] transition hover:bg-white hover:text-black">
+          Payment alerts
+        </Link>
+      </div>
+
       <section className="grid grid-cols-2 gap-4 md:grid-cols-4">
         <div className={`${card} col-span-2 md:col-span-1`}>
           <p className="text-sm text-white/50">Total collected</p>
