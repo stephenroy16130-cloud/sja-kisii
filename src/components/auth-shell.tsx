@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import Badge from "@/components/badge";
+import EmergencyLine from "@/components/emergency-line";
 
 export default function AuthShell({
   title,
@@ -54,6 +55,7 @@ export default function AuthShell({
           <h2 className="heading accent-bar text-xl">{title}</h2>
           {subtitle && <p className="font-copy mt-4 text-sm leading-relaxed text-white/60">{subtitle}</p>}
           <div className="mt-8">{children}</div>
+          <EmergencyLine className="mt-10" />
         </div>
       </section>
     </main>

@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import Badge from "@/components/badge";
+import EmergencyLine from "@/components/emergency-line";
 import { getCurrentUser } from "@/lib/auth";
 import { fmt } from "@/lib/meetings";
 import { KIND_LABEL, kindOfToken, loadEvent } from "@/lib/qr";
@@ -36,6 +37,7 @@ export default async function CheckInPage({ params }: { params: Promise<{ token:
             <p className="mt-2 text-sm text-white/60">It may have been replaced or turned off. Ask your leader for the current code.</p>
           </>
         )}
+        <EmergencyLine className="mt-10" />
       </div>
     </main>
   );

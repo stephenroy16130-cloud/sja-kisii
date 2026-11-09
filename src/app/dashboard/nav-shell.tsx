@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import Avatar from "@/components/avatar";
 import Badge from "@/components/badge";
+import EmergencyLine from "@/components/emergency-line";
 import { api } from "@/lib/client";
 import { detachPushFromServer } from "@/lib/push-client";
 
@@ -142,6 +143,7 @@ export default function NavShell({
             </Link>
           ))}
         </nav>
+        <EmergencyLine className="mb-5" />
         <div className="border-t border-white/10 pt-6">
           <div className="flex items-center gap-3">
             <Avatar name={name} src={photo} size={44} />
@@ -161,7 +163,10 @@ export default function NavShell({
       </aside>
 
       {/* Phones: top bar */}
-      <header className="sticky top-0 z-10 flex items-center justify-between bg-black px-4 py-4 lg:hidden">{brand}</header>
+      <header className="sticky top-0 z-10 flex items-center justify-between bg-black px-4 py-4 lg:hidden">
+        {brand}
+        <EmergencyLine compact />
+      </header>
 
       {/* Phones: More sheet */}
       {sheet && (

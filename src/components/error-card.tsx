@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { startTransition } from "react";
+import EmergencyLine from "./emergency-line";
 
 export default function ErrorCard({ reset }: { reset: () => void }) {
   const router = useRouter();
@@ -23,6 +24,7 @@ export default function ErrorCard({ reset }: { reset: () => void }) {
       >
         Try again
       </button>
+      <EmergencyLine className="mt-8" />
     </div>
   );
 }
