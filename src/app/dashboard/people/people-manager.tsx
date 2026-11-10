@@ -3,18 +3,29 @@
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import PasswordInput from "@/components/password-input";
-import ResetPassword from "../members/reset-password";
 import { api } from "@/lib/client";
-import { crewName } from "@/lib/crews";
+import { crewColor, crewName } from "@/lib/crews";
 import { btnCls, btnGhostCls, inputCls, labelCls } from "@/lib/ui";
+import ResetPassword from "../members/reset-password";
 
-const TITLES = [
-  "CORPORAL", "SERGEANT", "DSM", "BAND_LEAD", "BAND_MEMBER",
-  "DO_OPERATIONS", "DO_TRAINING", "DO_ADMIN", "DO_FINANCE",
-];
+const RANKS = ["SERGEANT", "CORPORAL"];
+const OTHERS = ["DSM", "BAND_LEAD", "BAND_MEMBER", "DO_OPERATIONS", "DO_TRAINING", "DO_ADMIN", "DO_FINANCE"];
 const pretty = (t: string) => t.replace(/_/g, " ");
 
 export type Person = { id: string; fullName: string; username: string; crewId: number | null; titles: string[] };
+export type Leaders = {
+  crews: { crewId: number; sergeants: string[]; corporals: string[] }[];
+  divisional: { label: string; holders: string[] }[];
+};
+
+// A person is a Sergeant or a Corporal, never both
+function flip(cur: string[], t: string): string[] {
+  if (cur.includes(t)) return cur.filter((x) => x !== t);
+  const next = [...cur, t];
+  if (t === "SERGEANT") return next.filter((x) => x !== "CORPORAL");
+  if (t === "CORPORAL") return next.filter((x) => x !== "SERGEANT");
+  return next;
+}
 
 function TitleChecks({
   value,
@@ -27,24 +38,71 @@ function TitleChecks({
   blockNew?: boolean;
   held?: string[];
 }) {
+  const box = (t: string) => {
+    const blocked = Boolean(blockNew) && !(held ?? []).includes(t);
+    return (
+      <label key={t} className={`flex items-center gap-2 text-sm ${blocked ? "opacity-40" : ""}`}>
+        <input
+          type="checkbox"
+          checked={value.includes(t)}
+          disabled={blocked}
+          onChange={() => onToggle(t)}
+          className="accent-white"
+        />
+        {pretty(t)}
+      </label>
+    );
+  };
   return (
-    <div className="flex flex-wrap gap-x-4 gap-y-2">
-      {TITLES.map((t) => {
-        const blocked = Boolean(blockNew) && !(held ?? []).includes(t);
-        return (
-          <label key={t} className={`flex items-center gap-2 text-sm ${blocked ? "opacity-40" : ""}`}>
-            <input
-              type="checkbox"
-              checked={value.includes(t)}
-              disabled={blocked}
-              onChange={() => onToggle(t)}
-              className="accent-white"
-            />
-            {pretty(t)}
-          </label>
-        );
-      })}
+    <div className="space-y-3">
+      <div>
+        <p className="mb-2 text-[11px] uppercase tracking-[0.15em] text-white/40">Crew rank (one or the other)</p>
+        <div className="flex flex-wrap gap-x-5 gap-y-2">{RANKS.map(box)}</div>
+      </div>
+      <div>
+        <p className="mb-2 text-[11px] uppercase tracking-[0.15em] text-white/40">Other posts</p>
+        <div className="flex flex-wrap gap-x-5 gap-y-2">{OTHERS.map(box)}</div>
+      </div>
     </div>
+  );
+}
+
+function PostRow({ label, names }: { label: string; names: string[] }) {
+  return (
+    <div className="flex flex-wrap items-start justify-between gap-3 border-t border-white/10 py-2.5 text-sm first:border-0">
+      <span className="text-[11px] uppercase tracking-[0.15em] text-white/50">{label}</span>
+      {names.length === 0 ? (
+        <span className="text-warn">Vacant</span>
+      ) : (
+        <span className="text-right uppercase tracking-wide">{names.join(", ")}</span>
+      )}
+    </div>
+  );
+}
+
+function LeadersBoard({ leaders }: { leaders: Leaders }) {
+  return (
+    <section>
+      <h2 className="mb-4 text-xl font-light">Leaders</h2>
+      <div className="grid gap-4 md:grid-cols-2">
+        {leaders.crews.map((c) => (
+          <div key={c.crewId} className="rounded-2xl border border-white/10 bg-card p-5">
+            <p className="mb-2 flex items-center gap-2 text-sm">
+              <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: crewColor(c.crewId) }} />
+              {crewName(c.crewId)}
+            </p>
+            <PostRow label="Sergeant" names={c.sergeants} />
+            <PostRow label="Corporal" names={c.corporals} />
+          </div>
+        ))}
+      </div>
+      <div className="mt-4 rounded-2xl border border-white/10 bg-card p-5">
+        <p className="mb-2 text-sm">Divisional posts</p>
+        {leaders.divisional.map((d) => (
+          <PostRow key={d.label} label={d.label} names={d.holders} />
+        ))}
+      </div>
+    </section>
   );
 }
 
@@ -134,8 +192,7 @@ function PersonRow({ person, locked }: { person: Person; locked: boolean }) {
   const [msg, setMsg] = useState("");
   const [busy, setBusy] = useState(false);
 
-  const toggle = (t: string) =>
-    setTitles((cur) => (cur.includes(t) ? cur.filter((x) => x !== t) : [...cur, t]));
+  const toggle = (t: string) => setTitles((cur) => flip(cur, t));
 
   async function save() {
     setBusy(true);
@@ -186,8 +243,7 @@ function ProvisionForm() {
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
 
-  const toggle = (t: string) =>
-    setTitles((cur) => (cur.includes(t) ? cur.filter((x) => x !== t) : [...cur, t]));
+  const toggle = (t: string) => setTitles((cur) => flip(cur, t));
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -248,14 +304,18 @@ export default function PeopleManager({
   people,
   locked,
   vacant,
+  leaders,
 }: {
   people: Person[];
   locked: boolean;
   vacant: string[];
+  leaders: Leaders;
 }) {
   return (
     <div className="space-y-10">
       <LeadershipLock locked={locked} vacant={vacant} />
+
+      <LeadersBoard leaders={leaders} />
 
       {!locked && (
         <section>

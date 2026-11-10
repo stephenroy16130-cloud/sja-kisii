@@ -45,7 +45,7 @@ export default async function PayPage() {
     <div className="space-y-10">
       <div>
         <h1 className="text-3xl font-light tracking-tight">Pay</h1>
-        <p className="mt-1 text-sm text-white/50">Activities your treasurer has opened for payment. Pay with M-Pesa.</p>
+        <p className="mt-1 text-sm text-white/50">Activities DO Finance has opened for payment. Pay with M-Pesa.</p>
       </div>
 
       <section>
