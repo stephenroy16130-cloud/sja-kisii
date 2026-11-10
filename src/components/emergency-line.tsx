@@ -8,10 +8,34 @@ function PhoneIcon({ size = 16 }: { size?: number }) {
   );
 }
 
-// Compact: a small pill for the phone's top bar. Full: a card for side panels and forms.
-export default function EmergencyLine({ compact = false, className = "" }: { compact?: boolean; className?: string }) {
+// compact: a pill for the phone's top bar. slim: one line for the desktop panel. default: a card for forms.
+export default function EmergencyLine({
+  compact = false,
+  slim = false,
+  className = "",
+}: {
+  compact?: boolean;
+  slim?: boolean;
+  className?: string;
+}) {
   const href = `tel:${EMERGENCY.tel}`;
   const aria = `Call the ${EMERGENCY.label}, ${EMERGENCY.display}`;
+
+  if (slim) {
+    return (
+      <a
+        href={href}
+        aria-label={aria}
+        className={`flex items-center justify-between gap-2 rounded-lg border border-bad/50 px-3 py-2 text-bad transition hover:bg-bad/10 ${className}`}
+      >
+        <span className="flex items-center gap-2">
+          <PhoneIcon size={14} />
+          <span className="text-[10px] uppercase tracking-[0.15em]">Emergency</span>
+        </span>
+        <span className="text-sm font-medium text-white">{EMERGENCY.display}</span>
+      </a>
+    );
+  }
 
   if (compact) {
     return (

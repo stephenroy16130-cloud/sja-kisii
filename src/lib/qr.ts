@@ -25,6 +25,8 @@ export async function siteOrigin() {
   return `${local ? "http" : "https"}://${host}`;
 }
 
+export type Geo = { lat: number; lng: number; radius: number };
+
 export type QrEvent = {
   kind: QrKind;
   id: string;
@@ -37,8 +39,12 @@ export type QrEvent = {
   crewIds: number[] | null; // crews the event is for. null means everyone.
   blocked: string | null; // a reason this event cannot take check-ins
   bandOnly: boolean; // a band practice: only band members attend
+  geo: Geo | null; // the venue circle, when a location check is set
 };
 type Key = { id: string } | { token: string };
+
+const geoOf = (x: { geoLat: number | null; geoLng: number | null; geoRadius: number | null }): Geo | null =>
+  x.geoLat !== null && x.geoLng !== null && x.geoRadius !== null ? { lat: x.geoLat, lng: x.geoLng, radius: x.geoRadius } : null;
 
 export async function loadEvent(kind: QrKind, key: Key): Promise<QrEvent | null> {
   if (kind === "meeting") {
@@ -49,7 +55,7 @@ export async function loadEvent(kind: QrKind, key: Key): Promise<QrEvent | null>
       qrToken: m.qrToken, qrActivatesAt: m.qrActivatesAt, qrExpiresAt: m.qrExpiresAt,
       createdById: m.createdById, crewIds: null,
       blocked: m.archivedAt ? "This meeting has been archived." : null,
-      bandOnly: false,
+      bandOnly: false, geo: geoOf(m),
     };
   }
   if (kind === "fieldop") {
@@ -61,8 +67,9 @@ export async function loadEvent(kind: QrKind, key: Key): Promise<QrEvent | null>
     return {
       kind, id: o.id, title: o.title, startsAt: o.startsAt,
       qrToken: o.qrToken, qrActivatesAt: o.qrActivatesAt, qrExpiresAt: o.qrExpiresAt,
-      createdById: o.createdById, crewIds: o.allCrews ? null : o.crews.map((c) => c.id), blocked: o.archivedAt ? "This operation has been archived." : null,
-      bandOnly: false,
+      createdById: o.createdById, crewIds: o.allCrews ? null : o.crews.map((c) => c.id),
+      blocked: o.archivedAt ? "This operation has been archived." : null,
+      bandOnly: false, geo: geoOf(o),
     };
   }
   const t = await db.training.findUnique({ where: "id" in key ? { id: key.id } : { qrToken: key.token } });
@@ -72,21 +79,29 @@ export async function loadEvent(kind: QrKind, key: Key): Promise<QrEvent | null>
     qrToken: t.qrToken, qrActivatesAt: t.qrActivatesAt, qrExpiresAt: t.qrExpiresAt,
     createdById: t.createdById, crewIds: t.crewId === null ? null : [t.crewId],
     blocked: t.status === "REJECTED" ? "This training record was rejected." : t.archivedAt ? "This session has been archived." : null,
-    bandOnly: t.type === "BAND",
+    bandOnly: t.type === "BAND", geo: geoOf(t),
   };
 }
 
 export async function updateQr(
   kind: QrKind,
   id: string,
-  data: { qrToken?: string | null; qrActivatesAt?: Date | null; qrExpiresAt?: Date | null }
+  data: {
+    qrToken?: string | null;
+    qrActivatesAt?: Date | null;
+    qrExpiresAt?: Date | null;
+    geoLat?: number | null;
+    geoLng?: number | null;
+    geoRadius?: number | null;
+  }
 ) {
   if (kind === "meeting") await db.meeting.update({ where: { id }, data });
   else if (kind === "fieldop") await db.fieldOp.update({ where: { id }, data });
   else await db.training.update({ where: { id }, data });
 }
 
-// The DO who owns that kind of event (and the creator of a training record) controls the code and its times
+// The DO who owns that kind of event (and the creator of a training record, or the Band Lead for band
+// practice) controls the code, its times and its location
 export function canManageQr(u: AuthUser, e: QrEvent) {
   if (e.kind === "meeting") return can(u, "meeting:manage");
   if (e.kind === "fieldop") return can(u, "fieldop:manage");

@@ -85,6 +85,7 @@ export default function QrScanner() {
         <button
           disabled={phase === "starting"}
           onClick={start}
+          data-tip="scan-button"
           className="rounded-full bg-white px-6 py-3 text-sm font-medium text-black transition hover:bg-neutral-200 disabled:opacity-50"
         >
           {phase === "starting" ? "Opening camera..." : "Scan a check-in code"}

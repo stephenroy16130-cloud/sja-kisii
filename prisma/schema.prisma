@@ -109,36 +109,36 @@ enum RsvpResponse {
 }
 
 model User {
-  mustChangePassword      Boolean            @default(false)
-  hasCompletedOnboarding  Boolean            @default(false) @map("has_completed_onboarding")
-  checkIns                CheckIn[]
-  passkeys           Passkey[]
-  pushSubscriptions  PushSubscription[]
-  dateOfBirth        DateTime?
-  gender             Gender?
-  idType             IdType?
-  idNumber           String?
-  preferredName      String?
-  officialPhotoAt    DateTime?
-  socialPhotoAt      DateTime?
-  photos             UserPhoto[]
-  weeklyWins         WeeklyResult[]     @relation("WeeklyWins")
-  id                 String             @id @default(cuid())
-  username           String             @unique
-  email              String             @unique
-  phone              String             @unique
-  fullName           String
-  passwordHash       String
-  status             UserStatus         @default(PENDING_ADMIN)
-  titles             Title[]            @default([])
-  isSuperintendent   Boolean            @default(false)
-  isDeveloper        Boolean            @default(false)
-  crewId             Int?
-  crew               Crew?              @relation("CrewMembers", fields: [crewId], references: [id])
-  approvedById       String?
-  crewApprovedById   String?
-  createdAt          DateTime           @default(now())
-  updatedAt          DateTime           @updatedAt
+  mustChangePassword     Boolean            @default(false)
+  hasCompletedOnboarding Boolean            @default(false) @map("has_completed_onboarding")
+  checkIns               CheckIn[]
+  passkeys               Passkey[]
+  pushSubscriptions      PushSubscription[]
+  dateOfBirth            DateTime?
+  gender                 Gender?
+  idType                 IdType?
+  idNumber               String?
+  preferredName          String?
+  officialPhotoAt        DateTime?
+  socialPhotoAt          DateTime?
+  photos                 UserPhoto[]
+  weeklyWins             WeeklyResult[]     @relation("WeeklyWins")
+  id                     String             @id @default(cuid())
+  username               String             @unique
+  email                  String             @unique
+  phone                  String             @unique
+  fullName               String
+  passwordHash           String
+  status                 UserStatus         @default(PENDING_ADMIN)
+  titles                 Title[]            @default([])
+  isSuperintendent       Boolean            @default(false)
+  isDeveloper            Boolean            @default(false)
+  crewId                 Int?
+  crew                   Crew?              @relation("CrewMembers", fields: [crewId], references: [id])
+  approvedById           String?
+  crewApprovedById       String?
+  createdAt              DateTime           @default(now())
+  updatedAt              DateTime           @updatedAt
 
   passwordResets     PasswordResetToken[]
   attendance         AttendanceRecord[]      @relation("AttendanceMember")
@@ -198,6 +198,9 @@ model PasswordResetToken {
 }
 
 model Meeting {
+  geoLat        Float?
+  geoLng        Float?
+  geoRadius     Int?
   qrToken       String?   @unique
   qrActivatesAt DateTime?
   qrExpiresAt   DateTime?
@@ -231,6 +234,9 @@ model Apology {
 }
 
 model FieldOp {
+  geoLat        Float?
+  geoLng        Float?
+  geoRadius     Int?
   archivedAt    DateTime?
   archivedById  String?
   qrToken       String?   @unique
@@ -252,6 +258,9 @@ model FieldOp {
 }
 
 model Training {
+  geoLat        Float?
+  geoLng        Float?
+  geoRadius     Int?
   archivedAt    DateTime?
   archivedById  String?
   qrToken       String?            @unique

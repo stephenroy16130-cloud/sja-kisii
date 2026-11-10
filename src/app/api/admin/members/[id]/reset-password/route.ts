@@ -16,10 +16,10 @@ export const POST = route(async (_req: Request, ctx: { params: Promise<{ id: str
   if (!target || target.isDeveloper) throw new HttpError(404, "Member not found");
   if (target.id === actor.id) throw new HttpError(400, "Use Change password for your own account");
 
-  // The DO Admin resets plain members only. Resetting a leader's password would let someone become that leader.
-  const asAdmin = can(actor, "user:manage_accounts") && target.titles.length === 0 && !target.isSuperintendent;
-  const asSuperintendent = actor.isSuperintendent;
-  if (!asAdmin && !asSuperintendent) throw new HttpError(403, "You cannot reset this person's password");
+  // Only the DO Admin, and only for plain members. Resetting a leader's password would let someone become that leader.
+  if (!can(actor, "user:manage_accounts") || target.titles.length > 0 || target.isSuperintendent) {
+    throw new HttpError(403, "Only the DO Admin can reset a member's password");
+  }
   if (target.status !== "ACTIVE") throw new HttpError(409, "Only active members can have their password reset");
 
   const temp = tempPassword();

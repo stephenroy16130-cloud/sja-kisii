@@ -196,7 +196,7 @@ export default function ProfileForms({ official, social }: { official: Official;
 
   return (
     <div>
-      <div className="mb-6 flex rounded-full border border-white/15 p-1">
+      <div data-tip="profile-tabs" className="mb-6 flex rounded-full border border-white/15 p-1">
         <button type="button" onClick={() => setTab("official")} className={pill(tab === "official")}>Official</button>
         <button type="button" onClick={() => setTab("social")} className={pill(tab === "social")}>Social</button>
       </div>

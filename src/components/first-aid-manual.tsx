@@ -2,7 +2,7 @@ import { FIRST_AID_MANUAL_URL } from "@/lib/resources";
 
 export default function FirstAidManual() {
   return (
-    <section className="flex flex-wrap items-center justify-between gap-4 rounded-3xl border border-gold/30 bg-card p-6">
+    <section data-tip="first-aid-manual" className="flex flex-wrap items-center justify-between gap-4 rounded-3xl border border-gold/30 bg-card p-6">
       <div>
         <p className="text-[11px] uppercase tracking-[0.25em] text-gold">First Aid</p>
         <h2 className="mt-1 text-xl font-light">First Aid manual</h2>

@@ -10,20 +10,32 @@ import { api } from "@/lib/client";
 import { detachPushFromServer } from "@/lib/push-client";
 
 type IconName =
-  | "approvals" | "people" | "meetings" | "fieldops" | "training" | "store" | "band" | "crew"
-  | "profile" | "members" | "articles" | "documents" | "finance" | "attendance" | "analytics"
-  | "scan" | "more";
+  | "home" | "approvals" | "people" | "meetings" | "fieldops" | "training" | "store" | "pay" | "band"
+  | "crew" | "profile" | "members" | "articles" | "documents" | "finance" | "attendance"
+  | "analytics" | "scan" | "more";
 export type NavLink = { href: string; label: string; icon: IconName };
 
 // Phone bar: Attendance, Meetings, Home (badge), Shop, More
 const BAR = ["/dashboard/attendance", "/dashboard/meetings", "/dashboard/store"];
 
-function Icon({ name }: { name: IconName }) {
+// Desktop panel: links grouped under small headings so more fit on screen
+const GROUPS: { name: string; hrefs: string[] }[] = [
+  { name: "Home", hrefs: ["/dashboard"] },
+  { name: "Activities", hrefs: ["/dashboard/meetings", "/dashboard/fieldops", "/dashboard/training", "/dashboard/band", "/dashboard/crew"] },
+  { name: "My record", hrefs: ["/dashboard/attendance", "/dashboard/scan", "/dashboard/profile"] },
+  { name: "Money", hrefs: ["/dashboard/store", "/dashboard/pay", "/dashboard/finance"] },
+  { name: "Information", hrefs: ["/dashboard/articles", "/dashboard/documents"] },
+  { name: "Management", hrefs: ["/dashboard/approvals", "/dashboard/people", "/dashboard/members", "/dashboard/analytics"] },
+];
+
+function Icon({ name, size = 24 }: { name: IconName; size?: number }) {
   const p = {
-    width: 24, height: 24, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor",
+    width: size, height: size, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor",
     strokeWidth: 1.6, strokeLinecap: "round", strokeLinejoin: "round",
   } as const;
   switch (name) {
+    case "home":
+      return (<svg {...p}><path d="M4 11l8-7 8 7" /><path d="M6 10v9h12v-9" /></svg>);
     case "approvals":
       return (<svg {...p}><rect x="6" y="4" width="12" height="17" rx="2" /><path d="M9 4h6v2H9z" /><path d="m9.5 13 2 2 3.5-4" /></svg>);
     case "people":
@@ -36,6 +48,8 @@ function Icon({ name }: { name: IconName }) {
       return (<svg {...p}><path d="M4 5.5C4 4.7 4.7 4 5.5 4H11v16H5.5C4.7 20 4 19.3 4 18.5z" /><path d="M20 5.5c0-.8-.7-1.5-1.5-1.5H13v16h5.5c.8 0 1.5-.7 1.5-1.5z" /></svg>);
     case "store":
       return (<svg {...p}><path d="M5 8h14l-1 12H6z" /><path d="M9 8V6a3 3 0 0 1 6 0v2" /></svg>);
+    case "pay":
+      return (<svg {...p}><circle cx="12" cy="12" r="8" /><path d="M12 7.5v9M9.5 10c0-1 1-1.6 2.5-1.6s2.5.7 2.5 1.7-1 1.4-2.5 1.6-2.5.7-2.5 1.7 1 1.7 2.5 1.7 2.5-.7 2.5-1.6" /></svg>);
     case "band":
       return (<svg {...p}><ellipse cx="12" cy="10" rx="7" ry="3" /><path d="M5 10v6c0 1.7 3.1 3 7 3s7-1.3 7-3v-6" /><path d="M9 3l3 6M15 3l-3 6" /></svg>);
     case "crew":
@@ -78,7 +92,6 @@ export default function NavShell({
   const router = useRouter();
   const [sheet, setSheet] = useState(false);
 
-  // Close the sheet after navigating, and stop the page scrolling behind it while it is open
   useEffect(() => {
     setSheet(false);
   }, [path]);
@@ -103,6 +116,17 @@ export default function NavShell({
   const moreActive = sheet || extra.some((l) => isActive(l.href));
   const homeActive = path === "/dashboard";
 
+  // Desktop groups
+  const all: NavLink[] = [{ href: "/dashboard", label: "Overview", icon: "home" }, ...links];
+  const used = new Set<string>();
+  const groups = GROUPS.map((g) => {
+    const items = g.hrefs.map((h) => all.find((l) => l.href === h)).filter((l): l is NavLink => Boolean(l));
+    items.forEach((i) => used.add(i.href));
+    return { name: g.name, items };
+  }).filter((g) => g.items.length > 0);
+  const rest = all.filter((l) => !used.has(l.href));
+  if (rest.length) groups.push({ name: "More", items: rest });
+
   const tabCls = (active: boolean) =>
     `flex flex-1 flex-col items-center gap-1 px-0.5 py-2.5 text-[10px] ${active ? "text-gold" : "text-white/45"}`;
   const tab = (l: NavLink) => (
@@ -112,9 +136,9 @@ export default function NavShell({
     </Link>
   );
 
-  const brand = (
+  const brand = (size: number) => (
     <Link href="/dashboard" className="flex items-center gap-3">
-      <Badge size={40} />
+      <Badge size={size} />
       <span className="text-[11px] uppercase leading-tight tracking-[0.2em] text-white/80">
         St. John Ambulance
         <br />
@@ -123,48 +147,59 @@ export default function NavShell({
     </Link>
   );
 
-  const desktopLinks: NavLink[] = [{ href: "/dashboard", label: "Overview", icon: "more" }, ...links];
-
   return (
     <>
-      {/* Large screens: panel on the right */}
-      <aside className="hidden border-l border-white/10 bg-black text-white lg:fixed lg:inset-y-0 lg:right-0 lg:z-20 lg:flex lg:w-72 lg:flex-col lg:p-8">
-        {brand}
-        <nav className="mt-10 min-h-0 flex-1 space-y-1.5 overflow-y-auto">
-          {desktopLinks.map((l) => (
-            <Link
-              key={l.href}
-              href={l.href}
-              className={`block rounded-full px-5 py-2.5 text-sm ${
-                isActive(l.href) ? "bg-white font-medium text-black" : "text-white/60 hover:bg-white/10 hover:text-white"
-              }`}
-            >
-              {l.label}
-            </Link>
+      {/* Large screens: a compact right panel with grouped links */}
+      <aside className="hidden border-l border-white/10 bg-black text-white lg:fixed lg:inset-y-0 lg:right-0 lg:z-20 lg:flex lg:w-72 lg:flex-col">
+        <div className="px-5 pb-3 pt-5">
+          {brand(36)}
+          <EmergencyLine slim className="mt-4" />
+        </div>
+
+        <nav className="no-scrollbar min-h-0 flex-1 overflow-y-auto px-3 pb-3">
+          {groups.map((g) => (
+            <div key={g.name} className="mb-1">
+              <p className="px-3 pb-1 pt-3 text-[10px] uppercase tracking-[0.2em] text-white/30">{g.name}</p>
+              {g.items.map((l) => (
+                <Link
+                  key={l.href}
+                  href={l.href}
+                  className={`flex items-center gap-3 rounded-lg px-3 py-1.5 text-[13px] transition ${
+                    isActive(l.href) ? "bg-white font-medium text-black" : "text-white/65 hover:bg-white/10 hover:text-white"
+                  }`}
+                >
+                  <Icon name={l.icon} size={16} />
+                  {l.label}
+                </Link>
+              ))}
+            </div>
           ))}
         </nav>
-        <EmergencyLine className="mb-5" />
-        <div className="border-t border-white/10 pt-6">
-          <div className="flex items-center gap-3">
-            <Avatar name={name} src={photo} size={44} />
-            <div className="min-w-0">
-              <p className="truncate text-sm font-medium uppercase tracking-wide">{name}</p>
-              <p className="mt-0.5 truncate text-[11px] uppercase tracking-[0.18em] text-white/50">{role}</p>
-            </div>
+
+        <div className="flex items-center gap-3 border-t border-white/10 p-3">
+          <Avatar name={name} src={photo} size={36} />
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-xs font-medium uppercase tracking-wide">{name}</p>
+            <p className="truncate text-[10px] uppercase tracking-[0.12em] text-white/45">
+              {crew ? `${crew} · ${role}` : role}
+            </p>
           </div>
-          {crew && <p className="mt-2 text-sm text-white/60">{crew}</p>}
           <button
             onClick={logout}
-            className="mt-5 rounded-full border border-white/30 px-5 py-2.5 text-xs uppercase tracking-[0.18em] hover:bg-white hover:text-black"
+            title="Log out"
+            aria-label="Log out"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-white/20 text-white/70 transition hover:bg-white hover:text-black"
           >
-            Log out
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M10 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h4M15 8l4 4-4 4M19 12H9" />
+            </svg>
           </button>
         </div>
       </aside>
 
-      {/* Phones: top bar */}
+      {/* Phones: top bar with the emergency number */}
       <header className="sticky top-0 z-10 flex items-center justify-between bg-black px-4 py-4 lg:hidden">
-        {brand}
+        {brand(40)}
         <EmergencyLine compact />
       </header>
 

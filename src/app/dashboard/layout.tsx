@@ -1,16 +1,16 @@
 import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
+import OnboardingModal from "@/components/onboarding-modal";
+import PageTips from "@/components/page-tips";
 import { getCurrentUser } from "@/lib/auth";
 import { canSeeBand } from "@/lib/band";
-import { crewName } from "@/lib/crews";
+import { crewColor, crewName } from "@/lib/crews";
 import { db } from "@/lib/db";
-import { socialPhoto } from "@/lib/profile";
 import { isLeader } from "@/lib/leaderboard";
+import { socialPhoto } from "@/lib/profile";
 import { can } from "@/lib/rbac";
 import DevSwitcher, { type DevUser } from "./dev-switcher";
 import NavShell, { type NavLink } from "./nav-shell";
-import OnboardingModal from "@/components/onboarding-modal";
-import RewardToast from "@/components/reward-toast";
 
 const roleLabel = (u: { isDeveloper: boolean; isSuperintendent: boolean; titles: string[] }) =>
   u.isDeveloper
@@ -33,7 +33,8 @@ export default async function DashboardLayout({ children }: { children: ReactNod
   links.push(
     { href: "/dashboard/fieldops", label: "Field Ops", icon: "fieldops" },
     { href: "/dashboard/training", label: "Training", icon: "training" },
-    { href: "/dashboard/store", label: "Shop", icon: "store" }
+    { href: "/dashboard/store", label: "Shop", icon: "store" },
+    { href: "/dashboard/pay", label: "Pay", icon: "pay" }
   );
   if (can(user, "finance:manage")) links.push({ href: "/dashboard/finance", label: "Finance", icon: "finance" });
   if (can(user, "user:approve_registration") || can(user, "crew:approve_members")) {
@@ -47,10 +48,11 @@ export default async function DashboardLayout({ children }: { children: ReactNod
     { href: "/dashboard/documents", label: "Documents", icon: "documents" }
   );
   if (isLeader(user)) links.push({ href: "/dashboard/analytics", label: "Analytics", icon: "analytics" });
-  links.push({ href: "/dashboard/pay", label: "Pay", icon: "finance" });
-  links.push({ href: "/dashboard/scan", label: "Check in", icon: "scan" });
-  links.push({ href: "/dashboard/attendance", label: "Attendance", icon: "attendance" });
-  links.push({ href: "/dashboard/profile", label: "My profile", icon: "profile" });
+  links.push(
+    { href: "/dashboard/scan", label: "Check in", icon: "scan" },
+    { href: "/dashboard/attendance", label: "Attendance", icon: "attendance" },
+    { href: "/dashboard/profile", label: "My profile", icon: "profile" }
+  );
 
   // Developer Quick Switch: development only
   let devUsers: DevUser[] = [];
@@ -63,19 +65,12 @@ export default async function DashboardLayout({ children }: { children: ReactNod
     devUsers = rows.map((r) => ({ id: r.id, fullName: r.fullName, role: roleLabel(r) }));
   }
 
-  const firstName = user.preferredName || user.fullName.split(" ")[0];
-  const userCrew = user.crewId ? crewName(user.crewId) : "General Division";
+  const needsTour = !user.hasCompletedOnboarding && !user.isDeveloper;
+  const first = user.fullName.trim().split(/\s+/)[0] ?? "";
+  const firstName = first ? first.charAt(0).toUpperCase() + first.slice(1).toLowerCase() : "there";
 
   return (
     <div className="min-h-screen bg-black">
-      <RewardToast />
-      <OnboardingModal
-        user={{
-          firstName,
-          crewName: userCrew,
-          hasCompletedOnboarding: user.hasCompletedOnboarding,
-        }}
-      />
       <NavShell
         links={links}
         name={user.fullName}
@@ -87,6 +82,14 @@ export default async function DashboardLayout({ children }: { children: ReactNod
         <div className="mx-auto max-w-4xl px-4 pb-36 pt-4 lg:px-10 lg:pb-12 lg:pt-12">{children}</div>
       </main>
       {devUsers.length > 0 && <DevSwitcher users={devUsers} currentId={user.id} />}
+      {needsTour && (
+        <OnboardingModal
+          firstName={firstName}
+          crewName={user.crewId ? crewName(user.crewId) : null}
+          crewColor={crewColor(user.crewId)}
+        />
+      )}
+      <PageTips userId={user.id} enabled={!needsTour} />
     </div>
   );
 }

@@ -15,13 +15,8 @@ export default function TrophyBadge({
       title={muted ? "No trophies yet" : `Member of the Week x${count}`}
     >
       <svg viewBox="0 0 48 48" width={size} height={size} aria-hidden="true">
-        <defs>
-          <linearGradient id="trophy-gold" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stopColor="#f6e08a" />
-            <stop offset="1" stopColor="#b8862b" />
-          </linearGradient>
-        </defs>
-        <path d="M14 6h20v10c0 6-4.5 10.5-10 10.5S14 22 14 16z" fill="url(#trophy-gold)" />
+        
+        <path d="M14 6h20v10c0 6-4.5 10.5-10 10.5S14 22 14 16z" fill="#d4af5a" />
         <path
           d="M14 9H8c0 6 2 10 7 11M34 9h6c0 6-2 10-7 11"
           fill="none"
@@ -29,8 +24,8 @@ export default function TrophyBadge({
           strokeWidth="2.5"
           strokeLinecap="round"
         />
-        <rect x="21.5" y="26" width="5" height="8" fill="url(#trophy-gold)" />
-        <rect x="15" y="34" width="18" height="6" rx="1.5" fill="url(#trophy-gold)" />
+        <rect x="21.5" y="26" width="5" height="8" fill="#d4af5a" />
+        <rect x="15" y="34" width="18" height="6" rx="1.5" fill="#d4af5a" />
       </svg>
       {!muted && (
         <span

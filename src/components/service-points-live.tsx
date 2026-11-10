@@ -69,7 +69,7 @@ export default function ServicePointsLive({ initial }: { initial: ServicePointsD
   ];
 
   return (
-    <section className="rounded-3xl border border-gold/30 bg-card p-6 md:p-8">
+    <section data-tip="service-points" className="rounded-3xl border border-gold/30 bg-card p-6 md:p-8">
       <div className="flex items-center justify-between gap-3">
         <p className="text-[11px] uppercase tracking-[0.25em] text-gold">Points in service</p>
         <span className="flex items-center gap-2 text-[10px] uppercase tracking-[0.15em] text-white/40">

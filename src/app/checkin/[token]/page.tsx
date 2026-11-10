@@ -29,7 +29,12 @@ export default async function CheckInPage({ params }: { params: Promise<{ token:
             <p className="mt-6 text-[11px] uppercase tracking-[0.25em] text-gold">{KIND_LABEL[kind]} check-in</p>
             <h1 className="mt-2 text-2xl font-light tracking-tight">{e.title}</h1>
             <p className="mt-1 text-sm text-white/50">{fmt(e.startsAt)}</p>
-            <CheckInRunner token={token} />
+            {e.geo && (
+              <p className="mt-3 text-xs text-white/40">
+                Allow location when asked. You need to be within {e.geo.radius} m of the venue.
+              </p>
+            )}
+            <CheckInRunner token={token} geo={Boolean(e.geo)} />
           </>
         ) : (
           <>

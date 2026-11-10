@@ -1,3 +1,4 @@
+import { EMERGENCY } from "@/lib/contact";
 import { ImageResponse } from "next/og";
 import QRCode from "qrcode";
 import { z } from "zod";
@@ -116,6 +117,9 @@ export const GET = route(async (req: Request, ctx: { params: Promise<{ kind: str
         >
           Open the SJA Kisii app and tap Check in, or point your phone camera at this code. You must be signed in. A
           leader will confirm your attendance.
+        </div>
+        <div style={{ display: "flex", marginTop: 30, fontSize: 24, color: MUTED }}>
+          {`St. John Ambulance emergency line: ${EMERGENCY.display}`}
         </div>
         {windowText ? (
           <div style={{ display: "flex", justifyContent: "center", marginTop: 22, fontSize: 26, color: MUTED }}>

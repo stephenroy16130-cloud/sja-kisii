@@ -12,14 +12,7 @@ export default function AuthShell({
   children: ReactNode;
 }) {
   return (
-    <main
-      className="relative grid min-h-screen overflow-hidden text-white lg:grid-cols-[1.1fr_0.9fr]"
-      style={{
-        backgroundColor: "#000",
-        backgroundImage:
-          "radial-gradient(ellipse 60% 50% at 38% 6%, rgba(212,175,90,0.2), transparent 70%), radial-gradient(ellipse 90% 80% at 35% 30%, #2c2c2c 0%, #111 55%, #000 100%)",
-      }}
-    >
+    <main className="relative grid min-h-screen overflow-hidden bg-black text-white lg:grid-cols-[1.1fr_0.9fr]">
       <div className="pointer-events-none absolute left-[30%] top-1/4 h-[34rem] w-[34rem] rounded-full border border-white/10" />
       <div className="pointer-events-none absolute left-[33%] top-[30%] h-[26rem] w-[26rem] rounded-full border border-white/10" />
 

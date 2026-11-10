@@ -34,6 +34,7 @@ export default async function QrPanel({ kind, id }: { kind: QrKind; id: string }
       stateText={text}
       manage={manage}
       devLink={devLink}
+      geo={e.geo}
     />
   );
 }

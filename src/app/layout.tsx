@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 import { Libre_Baskerville, Montserrat } from "next/font/google";
 import PwaRegister from "@/components/pwa-register";
+import ToastHost from "@/components/toast";
 import "./globals.css";
 
 const head = Montserrat({
@@ -35,6 +36,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     <html lang="en">
       <body className={`${head.variable} ${copy.variable}`}>
         <PwaRegister />
+        <ToastHost />
         {children}
       </body>
     </html>

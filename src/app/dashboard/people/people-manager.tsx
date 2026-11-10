@@ -6,7 +6,6 @@ import PasswordInput from "@/components/password-input";
 import { api } from "@/lib/client";
 import { crewColor, crewName } from "@/lib/crews";
 import { btnCls, btnGhostCls, inputCls, labelCls } from "@/lib/ui";
-import ResetPassword from "../members/reset-password";
 
 const RANKS = ["SERGEANT", "CORPORAL"];
 const OTHERS = ["DSM", "BAND_LEAD", "BAND_MEMBER", "DO_OPERATIONS", "DO_TRAINING", "DO_ADMIN", "DO_FINANCE"];
@@ -231,7 +230,6 @@ function PersonRow({ person, locked }: { person: Person; locked: boolean }) {
         </div>
       )}
       <TitleChecks value={titles} onToggle={toggle} blockNew={locked} held={person.titles} />
-      <ResetPassword memberId={person.id} />
     </div>
   );
 }

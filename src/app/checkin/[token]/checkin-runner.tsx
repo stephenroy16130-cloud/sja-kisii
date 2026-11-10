@@ -2,34 +2,33 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import { announceFirstCheckIn } from "@/components/toast";
 import { api } from "@/lib/client";
-import { triggerRewardToast } from "@/components/reward-toast";
+import { getPosition, locationErrorMessage } from "@/lib/geo-client";
 
 type View =
-  | { phase: "working" }
-  | { phase: "ok"; status: string; message?: string; toast?: string }
+  | { phase: "working"; note: string }
+  | { phase: "ok"; status: string; message?: string }
   | { phase: "error"; message: string };
 
-export default function CheckInRunner({ token }: { token: string }) {
-  const [view, setView] = useState<View>({ phase: "working" });
+export default function CheckInRunner({ token, geo }: { token: string; geo: boolean }) {
+  const [view, setView] = useState<View>({ phase: "working", note: "Checking you in..." });
   const started = useRef(false);
 
   async function run() {
-    setView({ phase: "working" });
+    setView({ phase: "working", note: geo ? "Getting your location..." : "Checking you in..." });
     try {
-      const r = await api("/api/checkin", "POST", { token });
-      const toastMsg = r.toast || r.rewardToast;
-      if (toastMsg) {
-        try {
-          sessionStorage.setItem("sja_first_reward_toast", toastMsg);
-        } catch {
-          // ignore
-        }
-        triggerRewardToast(toastMsg);
+      let payload: Record<string, unknown> = { token };
+      if (geo) {
+        const p = await getPosition();
+        payload = { token, lat: p.lat, lng: p.lng, accuracy: p.accuracy };
+        setView({ phase: "working", note: "Checking you in..." });
       }
-      setView({ phase: "ok", status: r.status, message: r.message, toast: toastMsg });
+      const r = await api("/api/checkin", "POST", payload);
+      announceFirstCheckIn(r);
+      setView({ phase: "ok", status: r.status, message: r.message });
     } catch (e) {
-      setView({ phase: "error", message: e instanceof Error ? e.message : "Something went wrong" });
+      setView({ phase: "error", message: locationErrorMessage(e) });
     }
   }
 
@@ -40,7 +39,7 @@ export default function CheckInRunner({ token }: { token: string }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  if (view.phase === "working") return <p className="mt-8 text-sm text-white/60">Checking you in...</p>;
+  if (view.phase === "working") return <p className="mt-8 text-sm text-white/60">{view.note}</p>;
 
   if (view.phase === "error") {
     return (
@@ -65,15 +64,7 @@ export default function CheckInRunner({ token }: { token: string }) {
         ✓
       </div>
       <p className="mt-5 text-xl font-light">{confirmed ? "You are checked in" : "Check-in received"}</p>
-      
-      {view.toast && (
-        <div className="mx-auto mt-4 max-w-sm rounded-2xl border border-gold/60 bg-gold/10 p-4 text-center">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gold">Achievement Unlocked · +10 PTS</p>
-          <p className="mt-1 text-sm font-medium text-white">{view.toast}</p>
-        </div>
-      )}
-
-      <p className="mt-3 text-sm text-white/60">
+      <p className="mt-2 text-sm text-white/60">
         {view.message ?? (confirmed ? "Your attendance is confirmed." : "Pending verification. A leader will confirm it shortly.")}
       </p>
       <Link href="/dashboard/scan" className="mt-6 inline-block rounded-full bg-white px-5 py-2.5 text-xs font-medium text-black">

@@ -18,7 +18,9 @@ export const PUT = route(async (req: Request, ctx: { params: Promise<{ kind: str
   if (action !== "enable" && !e.qrToken) throw new HttpError(409, "QR check-in is not on");
 
   // Enabling creates the code instantly and leaves it inactive: no times are set yet
-  if (action === "disable") await updateQr(kind, e.id, { qrToken: null, qrActivatesAt: null, qrExpiresAt: null });
+  if (action === "disable") {
+    await updateQr(kind, e.id, { qrToken: null, qrActivatesAt: null, qrExpiresAt: null, geoLat: null, geoLng: null, geoRadius: null });
+  }
   else await updateQr(kind, e.id, { qrToken: makeToken(kind) });
 
   await audit(actor.id, `QR_${action.toUpperCase()}`, "QrCode", e.id, { kind, title: e.title });

@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { officialPhoto, socialPhoto } from "@/lib/profile";
 import AppAccess from "@/components/app-access";
 import ChangePasswordCard from "@/components/change-password-card";
+import ReplayTour from "@/components/replay-tour";
 import ContextualTooltip from "@/components/contextual-tooltip";
 import PasskeyManager from "@/components/passkey-manager";
 import ProfileForms from "./profile-forms";
@@ -44,6 +45,7 @@ export default async function ProfilePage() {
         <PasskeyManager />
       </ContextualTooltip>
       <ChangePasswordCard />
+      <ReplayTour userId={me.id} />
       <ProfileForms
         official={{
           fullName: u.fullName,

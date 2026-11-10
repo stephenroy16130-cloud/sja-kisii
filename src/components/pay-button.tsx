@@ -115,7 +115,7 @@ export default function PayButton({ target, amount, phone }: { target: Target; a
 
   return (
     <div>
-      <button onClick={() => setPhase("form")} className={green}>
+      <button onClick={() => setPhase("form")} data-tip="pay-now" className={green}>
         {phase === "failed" ? "Try again" : `Pay ${amount} with M-Pesa`}
       </button>
       {phase === "failed" && msg && <p className="mt-2 max-w-xs text-xs text-bad">{msg}</p>}
