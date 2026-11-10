@@ -17,7 +17,7 @@ export const POST = route(async (req: Request) => {
 
   const pk = await db.passkey.findUnique({
     where: { id: response.id },
-    include: { user: { select: { id: true, status: true, isDeveloper: true } } },
+    include: { user: { select: { id: true, status: true, isDeveloper: true, hasCompletedOnboarding: true } } },
   });
   if (!pk || pk.user.isDeveloper) {
     throw new HttpError(401, "This device is not registered. Sign in with your password, then add it in My profile.");
@@ -51,5 +51,9 @@ export const POST = route(async (req: Request) => {
     data: { counter: result.authenticationInfo.newCounter, lastUsedAt: new Date() },
   });
   await createSession(pk.user.id);
-  return Response.json({ ok: true });
+  return Response.json({
+    ok: true,
+    hasCompletedOnboarding: pk.user.hasCompletedOnboarding,
+    has_completed_onboarding: pk.user.hasCompletedOnboarding,
+  });
 });

@@ -1,6 +1,7 @@
 import type { CheckInStatus } from "@prisma/client";
 import { redirect } from "next/navigation";
 import QrScanner from "@/components/qr-scanner";
+import GeofenceCheckin from "@/components/geofence-checkin";
 import { getCurrentUser } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { fmt } from "@/lib/meetings";
@@ -23,7 +24,29 @@ export default async function ScanPage() {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
 
-  const rows = await db.checkIn.findMany({ where: { userId: user.id }, orderBy: { scannedAt: "desc" }, take: 15 });
+  const now = new Date();
+  const [rows, activeMeetings, activeOps, activeTrainings] = await Promise.all([
+    db.checkIn.findMany({ where: { userId: user.id }, orderBy: { scannedAt: "desc" }, take: 15 }),
+    db.meeting.findMany({
+      where: { qrToken: { not: null }, qrActivatesAt: { lte: now }, qrExpiresAt: { gt: now }, archivedAt: null },
+      select: { id: true, title: true },
+    }),
+    db.fieldOp.findMany({
+      where: { qrToken: { not: null }, qrActivatesAt: { lte: now }, qrExpiresAt: { gt: now }, archivedAt: null },
+      select: { id: true, title: true },
+    }),
+    db.training.findMany({
+      where: { qrToken: { not: null }, qrActivatesAt: { lte: now }, qrExpiresAt: { gt: now }, archivedAt: null },
+      select: { id: true, title: true },
+    }),
+  ]);
+
+  const activeEvents = [
+    ...activeMeetings.map((m) => ({ kind: "meeting" as const, id: m.id, title: m.title })),
+    ...activeOps.map((o) => ({ kind: "fieldop" as const, id: o.id, title: o.title })),
+    ...activeTrainings.map((t) => ({ kind: "training" as const, id: t.id, title: t.title })),
+  ];
+
   const titles = await titlesFor(rows.map((r) => ({ kind: r.kind, eventId: r.eventId })));
 
   return (
@@ -31,11 +54,13 @@ export default async function ScanPage() {
       <div>
         <h1 className="text-3xl font-light tracking-tight">Check in</h1>
         <p className="mt-1 text-sm text-white/50">
-          Scan the QR code shown at the meeting, field operation or training. A leader then confirms your attendance.
+          Check in using QR Code scanner or Geofence location. A leader then confirms your attendance.
         </p>
       </div>
 
       <QrScanner />
+
+      {activeEvents.length > 0 && <GeofenceCheckin events={activeEvents} />}
 
       <section>
         <h2 className="mb-4 text-xl font-light">My check-ins</h2>

@@ -9,6 +9,8 @@ import { isLeader } from "@/lib/leaderboard";
 import { can } from "@/lib/rbac";
 import DevSwitcher, { type DevUser } from "./dev-switcher";
 import NavShell, { type NavLink } from "./nav-shell";
+import OnboardingModal from "@/components/onboarding-modal";
+import RewardToast from "@/components/reward-toast";
 
 const roleLabel = (u: { isDeveloper: boolean; isSuperintendent: boolean; titles: string[] }) =>
   u.isDeveloper
@@ -61,8 +63,19 @@ export default async function DashboardLayout({ children }: { children: ReactNod
     devUsers = rows.map((r) => ({ id: r.id, fullName: r.fullName, role: roleLabel(r) }));
   }
 
+  const firstName = user.preferredName || user.fullName.split(" ")[0];
+  const userCrew = user.crewId ? crewName(user.crewId) : "General Division";
+
   return (
     <div className="min-h-screen bg-black">
+      <RewardToast />
+      <OnboardingModal
+        user={{
+          firstName,
+          crewName: userCrew,
+          hasCompletedOnboarding: user.hasCompletedOnboarding,
+        }}
+      />
       <NavShell
         links={links}
         name={user.fullName}

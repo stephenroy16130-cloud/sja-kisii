@@ -31,7 +31,12 @@ export default function LoginPage() {
     setBusy(true);
     const f = new FormData(e.currentTarget);
     try {
-      await api("/api/auth/login", "POST", { identifier: f.get("identifier"), password: f.get("password") });
+      const r = await api("/api/auth/login", "POST", { identifier: f.get("identifier"), password: f.get("password") });
+      if (r.hasCompletedOnboarding === true || r.has_completed_onboarding === true) {
+        try { localStorage.setItem("has_completed_onboarding", "true"); } catch {}
+      } else {
+        try { localStorage.removeItem("has_completed_onboarding"); } catch {}
+      }
       router.push(nextUrl());
       router.refresh();
     } catch (err) {
@@ -46,7 +51,12 @@ export default function LoginPage() {
     try {
       const options = await api("/api/passkeys/login/options", "POST");
       const response = await startAuthentication({ optionsJSON: options });
-      await api("/api/passkeys/login/verify", "POST", { response });
+      const r = await api("/api/passkeys/login/verify", "POST", { response });
+      if (r.hasCompletedOnboarding === true || r.has_completed_onboarding === true) {
+        try { localStorage.setItem("has_completed_onboarding", "true"); } catch {}
+      } else {
+        try { localStorage.removeItem("has_completed_onboarding"); } catch {}
+      }
       router.push(nextUrl());
       router.refresh();
     } catch (err) {

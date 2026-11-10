@@ -3,10 +3,11 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { api } from "@/lib/client";
+import { triggerRewardToast } from "@/components/reward-toast";
 
 type View =
   | { phase: "working" }
-  | { phase: "ok"; status: string; message?: string }
+  | { phase: "ok"; status: string; message?: string; toast?: string }
   | { phase: "error"; message: string };
 
 export default function CheckInRunner({ token }: { token: string }) {
@@ -17,7 +18,16 @@ export default function CheckInRunner({ token }: { token: string }) {
     setView({ phase: "working" });
     try {
       const r = await api("/api/checkin", "POST", { token });
-      setView({ phase: "ok", status: r.status, message: r.message });
+      const toastMsg = r.toast || r.rewardToast;
+      if (toastMsg) {
+        try {
+          sessionStorage.setItem("sja_first_reward_toast", toastMsg);
+        } catch {
+          // ignore
+        }
+        triggerRewardToast(toastMsg);
+      }
+      setView({ phase: "ok", status: r.status, message: r.message, toast: toastMsg });
     } catch (e) {
       setView({ phase: "error", message: e instanceof Error ? e.message : "Something went wrong" });
     }
@@ -55,7 +65,15 @@ export default function CheckInRunner({ token }: { token: string }) {
         ✓
       </div>
       <p className="mt-5 text-xl font-light">{confirmed ? "You are checked in" : "Check-in received"}</p>
-      <p className="mt-2 text-sm text-white/60">
+      
+      {view.toast && (
+        <div className="mx-auto mt-4 max-w-sm rounded-2xl border border-gold/60 bg-gold/10 p-4 text-center">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gold">Achievement Unlocked · +10 PTS</p>
+          <p className="mt-1 text-sm font-medium text-white">{view.toast}</p>
+        </div>
+      )}
+
+      <p className="mt-3 text-sm text-white/60">
         {view.message ?? (confirmed ? "Your attendance is confirmed." : "Pending verification. A leader will confirm it shortly.")}
       </p>
       <Link href="/dashboard/scan" className="mt-6 inline-block rounded-full bg-white px-5 py-2.5 text-xs font-medium text-black">

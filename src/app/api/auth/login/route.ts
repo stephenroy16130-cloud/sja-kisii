@@ -49,5 +49,11 @@ export const POST = route(async (req: Request) => {
   }
 
   await createSession(user.id);
-  return Response.json({ id: user.id, username: user.username, fullName: user.fullName });
+  return Response.json({
+    id: user.id,
+    username: user.username,
+    fullName: user.fullName,
+    has_completed_onboarding: user.hasCompletedOnboarding,
+    hasCompletedOnboarding: user.hasCompletedOnboarding,
+  });
 });

@@ -109,8 +109,9 @@ enum RsvpResponse {
 }
 
 model User {
-  mustChangePassword Boolean            @default(false)
-  checkIns           CheckIn[]
+  mustChangePassword      Boolean            @default(false)
+  hasCompletedOnboarding  Boolean            @default(false) @map("has_completed_onboarding")
+  checkIns                CheckIn[]
   passkeys           Passkey[]
   pushSubscriptions  PushSubscription[]
   dateOfBirth        DateTime?

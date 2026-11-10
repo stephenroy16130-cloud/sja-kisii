@@ -16,11 +16,16 @@ export const getCurrentUser = cache(async () => {
       titles: true, isSuperintendent: true, isDeveloper: true, crewId: true,
       preferredName: true, socialPhotoAt: true, mustChangePassword: true,
       dateOfBirth: true, gender: true, idType: true, idNumber: true,
+      hasCompletedOnboarding: true,
     },
   });
   if (!u || u.status !== "ACTIVE") return null;
   const { dateOfBirth, gender, idType, idNumber, ...rest } = u;
-  return { ...rest, profileComplete: Boolean(dateOfBirth && gender && idType && idNumber) };
+  return {
+    ...rest,
+    has_completed_onboarding: u.hasCompletedOnboarding,
+    profileComplete: Boolean(dateOfBirth && gender && idType && idNumber),
+  };
 });
 
 export async function requireUser() {

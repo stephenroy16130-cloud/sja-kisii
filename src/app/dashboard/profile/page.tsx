@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { officialPhoto, socialPhoto } from "@/lib/profile";
 import AppAccess from "@/components/app-access";
 import ChangePasswordCard from "@/components/change-password-card";
+import ContextualTooltip from "@/components/contextual-tooltip";
 import PasskeyManager from "@/components/passkey-manager";
 import ProfileForms from "./profile-forms";
 
@@ -33,7 +34,15 @@ export default async function ProfilePage() {
         <p className="mt-1 text-sm text-white/50">Your official records and how other members see you.</p>
       </div>
       <AppAccess mode="full" />
-      <PasskeyManager />
+      <ContextualTooltip
+        id="hasSeenProfileTooltip"
+        title="Biometric Sign-In"
+        position="bottom"
+        align="start"
+        content="Register your fingerprint or Face ID here to sign in with a single tap on your next visit."
+      >
+        <PasskeyManager />
+      </ContextualTooltip>
       <ChangePasswordCard />
       <ProfileForms
         official={{

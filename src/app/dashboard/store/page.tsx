@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import ContextualTooltip from "@/components/contextual-tooltip";
 import PayButton from "@/components/pay-button";
 import PhotoGallery from "@/components/photo-gallery";
 import { getCurrentUser } from "@/lib/auth";
@@ -30,6 +31,7 @@ export default async function StorePage() {
     db.user.findUnique({ where: { id: user.id }, select: { phone: true } }),
   ]);
   const canManage = can(user, "finance:manage");
+  const hasPending = orders.some((o) => o.status === "PENDING_PAYMENT");
 
   return (
     <div className="space-y-10">
@@ -89,13 +91,31 @@ export default async function StorePage() {
                     </span>
                   </div>
                   {orderable && (
-                    <OrderForm
-                      itemId={item.id}
-                      price={Number(item.price)}
-                      sizes={item.sizes}
-                      madeToOrder={mto}
-                      maxQty={mto ? null : item.quantity}
-                    />
+                    hasPending ? (
+                      <OrderForm
+                        itemId={item.id}
+                        price={Number(item.price)}
+                        sizes={item.sizes}
+                        madeToOrder={mto}
+                        maxQty={mto ? null : item.quantity}
+                      />
+                    ) : (
+                      <ContextualTooltip
+                        id="hasSeenStoreTooltip"
+                        title="Shop & Orders"
+                        position="bottom"
+                        align="start"
+                        content="Select your size and place an order. You can pay via M-Pesa directly in the app."
+                      >
+                        <OrderForm
+                          itemId={item.id}
+                          price={Number(item.price)}
+                          sizes={item.sizes}
+                          madeToOrder={mto}
+                          maxQty={mto ? null : item.quantity}
+                        />
+                      </ContextualTooltip>
+                    )
                   )}
                 </div>
               );
@@ -132,7 +152,15 @@ export default async function StorePage() {
                     <span className={`${chip} ${orderTone[o.status]}`}>{orderWord[o.status]}</span>
                     {o.status === "PENDING_PAYMENT" && (
                       <>
-                        <PayButton target={{ kind: "order", orderId: o.id }} amount={kes(o.total)} phone={me?.phone ?? ""} />
+                        <ContextualTooltip
+                          id="hasSeenStoreTooltip"
+                          title="Pay Now"
+                          position="top"
+                          align="end"
+                          content="Tap 'Pay with M-Pesa' to complete your order automatically without waiting for manual confirmation."
+                        >
+                          <PayButton target={{ kind: "order", orderId: o.id }} amount={kes(o.total)} phone={me?.phone ?? ""} />
+                        </ContextualTooltip>
                         <CancelOrderButton orderId={o.id} />
                       </>
                     )}
