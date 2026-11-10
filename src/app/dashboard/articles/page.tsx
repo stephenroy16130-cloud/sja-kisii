@@ -1,6 +1,7 @@
 import type { Prisma } from "@prisma/client";
 import { redirect } from "next/navigation";
 import Avatar from "@/components/avatar";
+import ContextualTooltip from "@/components/contextual-tooltip";
 import { getCurrentUser } from "@/lib/auth";
 import { audienceFilters, audienceText, canModerate, cleanHtml, postable } from "@/lib/content";
 import { db } from "@/lib/db";
@@ -35,9 +36,22 @@ export default async function ArticlesPage() {
 
   return (
     <div className="space-y-10">
-      <div>
-        <h1 className="text-3xl font-light tracking-tight">Articles</h1>
-        <p className="mt-1 text-sm text-white/50">News, notices and stories from your leaders.</p>
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-light tracking-tight">Articles</h1>
+          <p className="mt-1 text-sm text-white/50">News, notices and stories from your leaders.</p>
+        </div>
+        <ContextualTooltip
+          id="hasSeenArticlesTooltip"
+          title="Division News & Stories"
+          position="bottom"
+          align="end"
+          content="Official division news, field stories, and publications appear here. Leaders can broadcast updates to specific crews or everyone."
+        >
+          <span className="cursor-pointer text-xs uppercase tracking-[0.18em] text-gold/80 hover:text-gold">
+            Information Hub ⓘ
+          </span>
+        </ContextualTooltip>
       </div>
 
       {canPost && (

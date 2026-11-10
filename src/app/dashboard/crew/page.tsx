@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import ContextualTooltip from "@/components/contextual-tooltip";
 import { getCurrentUser } from "@/lib/auth";
 import { crewColor, crewName } from "@/lib/crews";
 import { db } from "@/lib/db";
@@ -135,14 +136,22 @@ export default async function CrewPage() {
           <p className="mt-2 text-sm text-white/60">{members.length} active members</p>
           <div className="mt-5 flex flex-wrap items-center gap-3">
             {crew?.whatsappLink ? (
-              <a
-                href={crew.whatsappLink}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="rounded-full bg-ok px-5 py-2.5 text-xs font-medium text-black transition hover:brightness-110"
+              <ContextualTooltip
+                id="hasSeenCrewTooltip"
+                title="Crew WhatsApp Group"
+                position="bottom"
+                align="start"
+                content="Tap here to join your crew's official WhatsApp group. Your Sergeant and Corporals coordinate duties and drills here."
               >
-                Join WhatsApp group
-              </a>
+                <a
+                  href={crew.whatsappLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="rounded-full bg-ok px-5 py-2.5 text-xs font-medium text-black transition hover:brightness-110"
+                >
+                  Join WhatsApp group
+                </a>
+              </ContextualTooltip>
             ) : (
               <span className="text-sm text-white/50">No WhatsApp group link yet.</span>
             )}

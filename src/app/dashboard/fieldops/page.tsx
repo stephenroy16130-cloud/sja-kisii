@@ -1,6 +1,7 @@
 import type { Prisma } from "@prisma/client";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import ContextualTooltip from "@/components/contextual-tooltip";
 import CrewTargets from "@/components/crew-targets";
 import EventArchiveButton from "@/components/event-archive-button";
 import { getCurrentUser } from "@/lib/auth";
@@ -100,7 +101,20 @@ export default async function FieldOpsPage() {
       )}
 
       <section>
-        <h2 className="mb-4 text-xl font-light">Upcoming and live</h2>
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="text-xl font-light">Upcoming and live</h2>
+          <ContextualTooltip
+            id="hasSeenFieldOpsTooltip"
+            title="Field Ops · +15 PTS"
+            position="bottom"
+            align="end"
+            content="Field Operations represent major division service missions. Checking into an operation earns 15 points toward Member of the Week!"
+          >
+            <span className="cursor-pointer text-xs uppercase tracking-[0.18em] text-gold/80 hover:text-gold">
+              Mission Guide ⓘ
+            </span>
+          </ContextualTooltip>
+        </div>
         {active.length === 0 ? (
           <div className="rounded-2xl border border-white/10 bg-card p-6 text-sm text-white/50">Nothing scheduled.</div>
         ) : (

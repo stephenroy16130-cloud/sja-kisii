@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import ContextualTooltip from "@/components/contextual-tooltip";
 import PayButton from "@/components/pay-button";
 import { getCurrentUser } from "@/lib/auth";
 import { crewName } from "@/lib/crews";
@@ -49,7 +50,20 @@ export default async function PayPage() {
       </div>
 
       <section>
-        <h2 className="mb-4 text-xl font-light">Open for payment</h2>
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="text-xl font-light">Open for payment</h2>
+          <ContextualTooltip
+            id="hasSeenPayTooltip"
+            title="Instant M-Pesa Verification"
+            position="bottom"
+            align="end"
+            content="Pay division dues, event collections, and registration with M-Pesa. Once the STK push completes on your phone, receipts are logged automatically."
+          >
+            <span className="cursor-pointer text-xs uppercase tracking-[0.18em] text-gold/80 hover:text-gold">
+              Payment Guide ⓘ
+            </span>
+          </ContextualTooltip>
+        </div>
         {open.length === 0 ? (
           <div className="rounded-2xl border border-white/10 bg-card p-6 text-sm text-white/50">
             Nothing is open for payment right now.

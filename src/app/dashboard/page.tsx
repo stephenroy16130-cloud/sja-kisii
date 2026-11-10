@@ -4,6 +4,7 @@ import type { Prisma } from "@prisma/client";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import Badge from "@/components/badge";
+import ContextualTooltip from "@/components/contextual-tooltip";
 import CrewLeaderboard from "@/components/crew-leaderboard";
 import HallOfFame from "@/components/hall-of-fame";
 import ReportButton from "@/components/report-button";
@@ -98,18 +99,34 @@ export default async function DashboardPage() {
       </section>
 
       {!user.isDeveloper && (
-        <Suspense fallback={<div className="h-48 animate-pulse rounded-3xl border border-white/10 bg-card" />}>
-          <ServicePointsCard userId={user.id} />
-        </Suspense>
+        <ContextualTooltip
+          id="hasSeenMotwTooltip"
+          title="Member of the Week"
+          position="bottom"
+          align="start"
+          content="Earn points by attending meetings and field ops. The highest scorer by Sunday midnight is crowned Member of the Week!"
+        >
+          <Suspense fallback={<div className="h-48 animate-pulse rounded-3xl border border-white/10 bg-card" />}>
+            <ServicePointsCard userId={user.id} />
+          </Suspense>
+        </ContextualTooltip>
       )}
 
       {!user.profileComplete && !user.isDeveloper && (
-        <Link href="/dashboard/profile" className="block rounded-3xl border border-gold/40 bg-card p-5 transition hover:border-gold">
-          <p className="text-sm text-gold">Complete your official profile</p>
-          <p className="mt-1 text-sm text-white/60">
-            Add your date of birth, gender and ID so the DO Admin has your records. Only you and the DO Admin can see them.
-          </p>
-        </Link>
+        <ContextualTooltip
+          id="hasSeenProfileNudgeTooltip"
+          title="Official Records"
+          position="bottom"
+          align="start"
+          content="Tap here to complete your official records (DOB, gender, ID) so you are formally registered with St. John Ambulance."
+        >
+          <Link href="/dashboard/profile" className="block rounded-3xl border border-gold/40 bg-card p-5 transition hover:border-gold">
+            <p className="text-sm text-gold">Complete your official profile</p>
+            <p className="mt-1 text-sm text-white/60">
+              Add your date of birth, gender and ID so the DO Admin has your records. Only you and the DO Admin can see them.
+            </p>
+          </Link>
+        </ContextualTooltip>
       )}
 
       {!user.isDeveloper && <FeeCard userId={user.id} />}

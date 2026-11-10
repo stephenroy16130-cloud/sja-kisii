@@ -1,4 +1,5 @@
 import FirstAidManual from "@/components/first-aid-manual";
+import ContextualTooltip from "@/components/contextual-tooltip";
 import { inBand } from "@/lib/band";
 import type { Prisma, TrainingType, VerificationStatus } from "@prisma/client";
 import Link from "next/link";
@@ -113,7 +114,15 @@ export default async function TrainingPage() {
         <p className="mt-1 text-sm text-white/50">Drills and First Aid. Verified sessions earn 10 points each.</p>
       </div>
 
-      <FirstAidManual />
+      <ContextualTooltip
+        id="hasSeenTrainingTooltip"
+        title="Training & First Aid Manual"
+        position="bottom"
+        align="start"
+        content="Read the St. John First Aid Manual here for emergency protocols, and check into verified training sessions to log emergency training hours."
+      >
+        <FirstAidManual />
+      </ContextualTooltip>
 
       {types.length > 0 && (
         <section>

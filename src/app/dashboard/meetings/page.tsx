@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import ContextualTooltip from "@/components/contextual-tooltip";
 import { getCurrentUser } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { fmt, isApologyLocked } from "@/lib/meetings";
@@ -107,7 +108,20 @@ export default async function MeetingsPage() {
       )}
 
       <section>
-        <h2 className="mb-4 text-xl font-light">Upcoming</h2>
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="text-xl font-light">Upcoming</h2>
+          <ContextualTooltip
+            id="hasSeenMeetingsTooltip"
+            title="Meeting Attendance & Apologies"
+            position="bottom"
+            align="end"
+            content="Click on any meeting to see location details and QR codes. If you cannot attend, submit an apology before the meeting starts."
+          >
+            <span className="cursor-pointer text-xs uppercase tracking-[0.18em] text-gold/80 hover:text-gold">
+              Quick Guide ⓘ
+            </span>
+          </ContextualTooltip>
+        </div>
         {upcoming.length === 0 ? (
           <div className="rounded-2xl border border-white/10 bg-card p-6 text-sm text-white/50">
             No upcoming meetings.

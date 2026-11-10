@@ -1,5 +1,6 @@
 import type { AttendanceStatus, Prisma, RequestStatus } from "@prisma/client";
 import { redirect } from "next/navigation";
+import ContextualTooltip from "@/components/contextual-tooltip";
 import { getCurrentUser } from "@/lib/auth";
 import { crewName } from "@/lib/crews";
 import { db } from "@/lib/db";
@@ -133,20 +134,28 @@ export default async function AttendancePage() {
         </section>
       )}
 
-      <section className="grid grid-cols-3 gap-3 text-center">
-        <div className="rounded-2xl border border-white/10 bg-card p-4">
-          <p className="text-2xl font-light text-ok">{count("PRESENT")}</p>
-          <p className="mt-1 text-[10px] uppercase tracking-[0.12em] text-white/40">Present</p>
-        </div>
-        <div className="rounded-2xl border border-white/10 bg-card p-4">
-          <p className="text-2xl font-light text-bad">{count("ABSENT")}</p>
-          <p className="mt-1 text-[10px] uppercase tracking-[0.12em] text-white/40">Absent</p>
-        </div>
-        <div className="rounded-2xl border border-white/10 bg-card p-4">
-          <p className="text-2xl font-light text-warn">{count("EXCUSED")}</p>
-          <p className="mt-1 text-[10px] uppercase tracking-[0.12em] text-white/40">Excused</p>
-        </div>
-      </section>
+      <ContextualTooltip
+        id="hasSeenAttendanceTooltip"
+        title="Attendance Records & Disputes"
+        position="bottom"
+        align="start"
+        content="Every meeting or field op attended earns points toward Member of the Week. If marked absent by mistake, tap 'Dispute' within 14 days."
+      >
+        <section className="grid grid-cols-3 gap-3 text-center">
+          <div className="rounded-2xl border border-white/10 bg-card p-4">
+            <p className="text-2xl font-light text-ok">{count("PRESENT")}</p>
+            <p className="mt-1 text-[10px] uppercase tracking-[0.12em] text-white/40">Present</p>
+          </div>
+          <div className="rounded-2xl border border-white/10 bg-card p-4">
+            <p className="text-2xl font-light text-bad">{count("ABSENT")}</p>
+            <p className="mt-1 text-[10px] uppercase tracking-[0.12em] text-white/40">Absent</p>
+          </div>
+          <div className="rounded-2xl border border-white/10 bg-card p-4">
+            <p className="text-2xl font-light text-warn">{count("EXCUSED")}</p>
+            <p className="mt-1 text-[10px] uppercase tracking-[0.12em] text-white/40">Excused</p>
+          </div>
+        </section>
+      </ContextualTooltip>
 
       <section>
         <h2 className="mb-4 text-xl font-light">My history</h2>
