@@ -21,7 +21,10 @@ const DIVISIONAL: { title: Title; label: string }[] = [
 export default async function PeoplePage() {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
-  if (!can(user, "user:manage_titles")) redirect("/dashboard");
+  const admin = can(user, "user:manage_titles");
+  const appoint = can(user, "user:appoint_admin");
+  if (!admin && !appoint) redirect("/dashboard");
+  const mode = admin ? "admin" : "appoint";
 
   const [people, locked] = await Promise.all([
     db.user.findMany({
@@ -44,7 +47,7 @@ export default async function PeoplePage() {
     divisional: DIVISIONAL.map((d) => ({ label: d.label, holders: holders(d.title) })),
   };
 
-  // Posts nobody holds yet, so the Superintendent knows what is left before locking
+  // Posts nobody holds yet, so the DO Admin knows what is left before locking
   const vacant = [
     ...leaders.divisional.filter((d) => d.holders.length === 0).map((d) => d.label),
     ...leaders.crews.flatMap((c) => [
@@ -55,11 +58,15 @@ export default async function PeoplePage() {
 
   return (
     <div>
-      <h1 className="text-3xl font-light tracking-tight">People and titles</h1>
+      <h1 className="text-3xl font-light tracking-tight">
+        {mode === "admin" ? "People and titles" : "Appoint the DO Admin"}
+      </h1>
       <p className="mb-8 mt-1 text-sm text-white/50">
-        Promote or demote by ticking titles. Titles stack, and demotion never deletes a member&apos;s history.
+        {mode === "admin"
+          ? "Promote or demote leaders by ticking titles. Titles stack, and demotion never deletes a member's history. The DO Admin post itself is held by the Superintendent's appointment."
+          : "The DO Admin promotes every other leader. Here you appoint or replace the DO Admin."}
       </p>
-      <PeopleManager people={people} locked={locked} vacant={vacant} leaders={leaders} />
+      <PeopleManager people={people} locked={locked} vacant={vacant} leaders={leaders} mode={mode} meId={user.id} />
     </div>
   );
 }

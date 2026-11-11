@@ -1,3 +1,5 @@
+import { after } from "next/server";
+import { notifyTitles } from "@/lib/push";
 import { z } from "zod";
 import { audit, requirePermission } from "@/lib/auth";
 import { db } from "@/lib/db";
@@ -37,5 +39,8 @@ export const POST = route(async (req: Request) => {
     select: { id: true },
   });
   await audit(actor.id, "MEMBERSHIP_REQUESTED", "MembershipRequest", req2.id, { action, targetUserId });
+  after(() =>
+    notifyTitles(["DO_ADMIN"], { title: "Crew change request", body: actor.fullName + ": " + (action === "ADD" ? "add " : "remove ") + target.fullName, url: "/dashboard/crew", tag: "mreq-" + req2.id }, actor.id)
+  );
   return Response.json(req2, { status: 201 });
 });

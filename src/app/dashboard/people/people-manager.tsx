@@ -7,8 +7,10 @@ import { api } from "@/lib/client";
 import { crewColor, crewName } from "@/lib/crews";
 import { btnCls, btnGhostCls, inputCls, labelCls } from "@/lib/ui";
 
+type Mode = "admin" | "appoint";
+
 const RANKS = ["SERGEANT", "CORPORAL"];
-const OTHERS = ["DSM", "BAND_LEAD", "BAND_MEMBER", "DO_OPERATIONS", "DO_TRAINING", "DO_ADMIN", "DO_FINANCE"];
+const OTHERS = ["DSM", "BAND_LEAD", "BAND_MEMBER", "DO_OPERATIONS", "DO_TRAINING", "DO_FINANCE"];
 const pretty = (t: string) => t.replace(/_/g, " ");
 
 export type Person = { id: string; fullName: string; username: string; crewId: number | null; titles: string[] };
@@ -31,27 +33,31 @@ function TitleChecks({
   onToggle,
   blockNew,
   held,
+  mode,
 }: {
   value: string[];
   onToggle: (t: string) => void;
   blockNew?: boolean;
   held?: string[];
+  mode: Mode;
 }) {
   const box = (t: string) => {
     const blocked = Boolean(blockNew) && !(held ?? []).includes(t);
     return (
       <label key={t} className={`flex items-center gap-2 text-sm ${blocked ? "opacity-40" : ""}`}>
-        <input
-          type="checkbox"
-          checked={value.includes(t)}
-          disabled={blocked}
-          onChange={() => onToggle(t)}
-          className="accent-white"
-        />
+        <input type="checkbox" checked={value.includes(t)} disabled={blocked} onChange={() => onToggle(t)} className="accent-white" />
         {pretty(t)}
       </label>
     );
   };
+  if (mode === "appoint") {
+    return (
+      <div>
+        <p className="mb-2 text-[11px] uppercase tracking-[0.15em] text-white/40">Divisional post</p>
+        <div className="flex flex-wrap gap-x-5 gap-y-2">{box("DO_ADMIN")}</div>
+      </div>
+    );
+  }
   return (
     <div className="space-y-3">
       <div>
@@ -79,7 +85,15 @@ function PostRow({ label, names }: { label: string; names: string[] }) {
   );
 }
 
-function LeadersBoard({ leaders }: { leaders: Leaders }) {
+function LeadersBoard({ leaders, mode }: { leaders: Leaders; mode: Mode }) {
+  if (mode === "appoint") {
+    const d = leaders.divisional.find((x) => x.label === "DO Admin");
+    return (
+      <section className="rounded-2xl border border-white/10 bg-card p-5">
+        <PostRow label="DO Admin" names={d?.holders ?? []} />
+      </section>
+    );
+  }
   return (
     <section>
       <h2 className="mb-4 text-xl font-light">Leaders</h2>
@@ -130,7 +144,6 @@ function LeadershipLock({ locked, vacant }: { locked: boolean; vacant: string[] 
         <span className={`h-2 w-2 rounded-full ${locked ? "bg-bad" : "bg-ok"}`} />
         {locked ? "Promotions are locked" : "Promotions are open"}
       </p>
-
       {locked ? (
         <p className="mt-2 text-sm text-white/60">
           You can no longer add titles or create leader accounts. You can still demote leaders. Reopen promotions when
@@ -138,9 +151,7 @@ function LeadershipLock({ locked, vacant }: { locked: boolean; vacant: string[] 
         </p>
       ) : (
         <>
-          <p className="mt-2 text-sm text-white/60">
-            When every leadership post is filled, finish the setup to shut promotions.
-          </p>
+          <p className="mt-2 text-sm text-white/60">When every leadership post is filled, finish the setup to shut promotions.</p>
           {vacant.length > 0 ? (
             <div className="mt-3 rounded-2xl bg-white/5 p-4 text-sm">
               <p className="text-warn">Still vacant ({vacant.length})</p>
@@ -155,7 +166,6 @@ function LeadershipLock({ locked, vacant }: { locked: boolean; vacant: string[] 
           )}
         </>
       )}
-
       <div className="mt-4">
         {!ask ? (
           <button onClick={() => setAsk(true)} className={btnGhostCls}>
@@ -184,13 +194,14 @@ function LeadershipLock({ locked, vacant }: { locked: boolean; vacant: string[] 
   );
 }
 
-function PersonRow({ person, locked }: { person: Person; locked: boolean }) {
+function PersonRow({ person, locked, mode, meId }: { person: Person; locked: boolean; mode: Mode; meId: string }) {
   const router = useRouter();
   const [titles, setTitles] = useState<string[]>(person.titles);
   const [crew, setCrew] = useState("");
   const [msg, setMsg] = useState("");
   const [busy, setBusy] = useState(false);
 
+  const mine = mode === "admin" && person.id === meId;
   const toggle = (t: string) => setTitles((cur) => flip(cur, t));
 
   async function save() {
@@ -208,35 +219,46 @@ function PersonRow({ person, locked }: { person: Person; locked: boolean }) {
 
   return (
     <div className="rounded-2xl border border-white/10 bg-card p-5">
-      <div className="mb-3 flex items-center justify-between">
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
         <p className="font-medium">
           {person.fullName} <span className="font-normal text-white/50">@{person.username}</span>
           {person.crewId && <span className="ml-2 text-xs text-white/50">{crewName(person.crewId)}</span>}
+          {mode === "admin" && person.titles.includes("DO_ADMIN") && (
+            <span className="ml-2 rounded-full border border-gold/50 px-2 py-0.5 text-[10px] uppercase tracking-[0.12em] text-gold">DO Admin</span>
+          )}
         </p>
-        <div className="flex items-center gap-3">
-          {msg && <span className="text-xs text-white/50">{msg}</span>}
-          <button onClick={save} disabled={busy} className={btnGhostCls}>Save titles</button>
-        </div>
+        {!mine && (
+          <div className="flex items-center gap-3">
+            {msg && <span className="text-xs text-white/50">{msg}</span>}
+            <button onClick={save} disabled={busy} className={btnGhostCls}>Save titles</button>
+          </div>
+        )}
       </div>
-      {!person.crewId && (
-        <div className="mb-4 max-w-xs">
-          <label className={labelCls}>Choose this leader&apos;s crew</label>
-          <select value={crew} onChange={(e) => setCrew(e.target.value)} className={inputCls}>
-            <option value="">No crew yet</option>
-            {[1, 2, 3, 4].map((n) => (
-              <option key={n} value={n}>{crewName(n)}</option>
-            ))}
-          </select>
-        </div>
+      {mine ? (
+        <p className="text-xs text-white/40">Your own titles are managed by the Superintendent.</p>
+      ) : (
+        <>
+          {!person.crewId && (
+            <div className="mb-4 max-w-xs">
+              <label className={labelCls}>Choose this leader&apos;s crew</label>
+              <select value={crew} onChange={(e) => setCrew(e.target.value)} className={inputCls}>
+                <option value="">No crew yet</option>
+                {[1, 2, 3, 4].map((n) => (
+                  <option key={n} value={n}>{crewName(n)}</option>
+                ))}
+              </select>
+            </div>
+          )}
+          <TitleChecks value={titles} onToggle={toggle} blockNew={mode === "admin" && locked} held={person.titles} mode={mode} />
+        </>
       )}
-      <TitleChecks value={titles} onToggle={toggle} blockNew={locked} held={person.titles} />
     </div>
   );
 }
 
-function ProvisionForm() {
+function ProvisionForm({ mode }: { mode: Mode }) {
   const router = useRouter();
-  const [titles, setTitles] = useState<string[]>([]);
+  const [titles, setTitles] = useState<string[]>(mode === "appoint" ? ["DO_ADMIN"] : []);
   const [msg, setMsg] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -261,9 +283,9 @@ function ProvisionForm() {
         ...(crew ? { crewId: Number(crew) } : {}),
         titles,
       });
-      setMsg(`Created ${res.username}`);
+      setMsg(`Created ${res.username}. They will choose their own password when they first sign in.`);
       form.reset();
-      setTitles([]);
+      setTitles(mode === "appoint" ? ["DO_ADMIN"] : []);
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
@@ -277,7 +299,7 @@ function ProvisionForm() {
       <div><label className={labelCls}>Username</label><input name="username" required className={inputCls} /></div>
       <div><label className={labelCls}>Email</label><input name="email" type="email" required className={inputCls} /></div>
       <div><label className={labelCls}>Phone</label><input name="phone" required className={inputCls} /></div>
-      <div><label className={labelCls}>Password</label><PasswordInput name="password" /></div>
+      <div><label className={labelCls}>Temporary password</label><PasswordInput name="password" /></div>
       <div>
         <label className={labelCls}>Crew (required for every leader)</label>
         <select name="crewId" defaultValue="" required={titles.length > 0} className={inputCls}>
@@ -287,13 +309,19 @@ function ProvisionForm() {
           ))}
         </select>
       </div>
-      <div className="sm:col-span-2">
-        <label className={labelCls}>Titles</label>
-        <TitleChecks value={titles} onToggle={toggle} />
-      </div>
+      {mode === "admin" && (
+        <div className="sm:col-span-2">
+          <label className={labelCls}>Titles</label>
+          <TitleChecks value={titles} onToggle={toggle} mode="admin" />
+        </div>
+      )}
       {error && <p className="text-sm text-bad sm:col-span-2">{error}</p>}
       {msg && <p className="text-sm sm:col-span-2">{msg}</p>}
-      <div className="sm:col-span-2"><button disabled={busy} className={btnCls}>{busy ? "Creating..." : "Create account"}</button></div>
+      <div className="sm:col-span-2">
+        <button disabled={busy} className={btnCls}>
+          {busy ? "Creating..." : mode === "appoint" ? "Create the DO Admin account" : "Create account"}
+        </button>
+      </div>
     </form>
   );
 }
@@ -303,35 +331,41 @@ export default function PeopleManager({
   locked,
   vacant,
   leaders,
+  mode,
+  meId,
 }: {
   people: Person[];
   locked: boolean;
   vacant: string[];
   leaders: Leaders;
+  mode: Mode;
+  meId: string;
 }) {
   return (
     <div className="space-y-10">
-      <LeadershipLock locked={locked} vacant={vacant} />
+      {mode === "admin" && <LeadershipLock locked={locked} vacant={vacant} />}
 
-      <LeadersBoard leaders={leaders} />
+      <LeadersBoard leaders={leaders} mode={mode} />
 
-      {!locked && (
+      {(mode === "appoint" || !locked) && (
         <section>
-          <h2 className="mb-4 text-xl font-light">Create a leader account</h2>
-          <ProvisionForm />
+          <h2 className="mb-4 text-xl font-light">
+            {mode === "appoint" ? "Create a DO Admin account" : "Create a leader account"}
+          </h2>
+          <ProvisionForm mode={mode} />
         </section>
       )}
 
       <section>
-        <h2 className="mb-4 text-xl font-light">Active members ({people.length})</h2>
+        <h2 className="mb-4 text-xl font-light">
+          {mode === "appoint" ? "Or appoint an existing member" : `Active members (${people.length})`}
+        </h2>
         {people.length === 0 ? (
-          <div className="rounded-2xl border border-white/10 bg-card p-6 text-sm text-white/50">
-            No other active members yet.
-          </div>
+          <div className="rounded-2xl border border-white/10 bg-card p-6 text-sm text-white/50">No other active members yet.</div>
         ) : (
           <div className="space-y-3">
             {people.map((p) => (
-              <PersonRow key={p.id + p.titles.join()} person={p} locked={locked} />
+              <PersonRow key={p.id + p.titles.join()} person={p} locked={locked} mode={mode} meId={meId} />
             ))}
           </div>
         )}

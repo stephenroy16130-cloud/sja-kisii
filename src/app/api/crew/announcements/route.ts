@@ -1,3 +1,5 @@
+import { after } from "next/server";
+import { notifyAudience } from "@/lib/push";
 import { z } from "zod";
 import { audit, requirePermission } from "@/lib/auth";
 import { db } from "@/lib/db";
@@ -31,5 +33,8 @@ export const POST = route(async (req: Request) => {
     select: { id: true, title: true },
   });
   await audit(actor.id, "CREW_ANNOUNCEMENT_CREATED", "Announcement", a.id, { title: a.title, crewId: actor.crewId });
+  after(() =>
+    notifyAudience("CREW", actor.crewId, { title: "Crew announcement: " + a.title, body: "Open the Crew page to read it.", url: "/dashboard/crew", tag: "ann-" + a.id }, actor.id)
+  );
   return Response.json(a, { status: 201 });
 });

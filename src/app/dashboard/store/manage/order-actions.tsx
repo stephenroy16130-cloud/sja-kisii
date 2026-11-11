@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { api } from "@/lib/client";
 import { btnGhostCls, inputCls } from "@/lib/ui";
+import DeleteOrderButton from "../delete-order-button";
 
 export default function OrderActions({ orderId, status }: { orderId: string; status: OrderStatus }) {
   const router = useRouter();
@@ -28,7 +29,8 @@ export default function OrderActions({ orderId, status }: { orderId: string; sta
     }
   }
 
-  if (status === "CANCELLED" || status === "FULFILLED") return null;
+  if (status === "FULFILLED") return null;
+  if (status === "CANCELLED") return <DeleteOrderButton orderId={orderId} />;
 
   return (
     <div>

@@ -4,6 +4,7 @@ export type Permission =
   | "dev:bootstrap"
   | "user:manage_titles"
   | "user:provision"
+  | "user:appoint_admin"
   | "user:approve_registration"
   | "user:manage_accounts"
   | "crew:approve_members"
@@ -42,6 +43,8 @@ export const TITLE_PERMISSIONS: Record<Title, Permission[]> = {
   DO_ADMIN: [
     "user:approve_registration",
     "user:manage_accounts",
+    "user:manage_titles",
+    "user:provision",
     "meeting:manage",
     "crew:approve_membership_change",
     "content:create",
@@ -50,8 +53,8 @@ export const TITLE_PERMISSIONS: Record<Title, Permission[]> = {
   DO_FINANCE: ["finance:manage", "content:create"],
 };
 
-// Superintendent = HR authority only. No operational permissions.
-const SUPERINTENDENT: Permission[] = ["user:manage_titles", "user:provision", "content:create"];
+// The Superintendent appoints or replaces the DO Admin. The DO Admin promotes every other leader.
+const SUPERINTENDENT: Permission[] = ["user:appoint_admin", "content:create"];
 
 export type AuthUser = {
   id: string;

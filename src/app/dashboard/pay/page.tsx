@@ -18,6 +18,7 @@ export default async function PayPage() {
     db.collection.findMany({
       where: {
         isOpen: true,
+        archivedAt: null,
         AND: [
           { OR: [{ closesAt: null }, { closesAt: { gt: now } }] },
           { OR: [{ crewId: null }, ...(user.crewId ? [{ crewId: user.crewId }] : [])] },

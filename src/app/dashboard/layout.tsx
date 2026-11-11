@@ -40,7 +40,9 @@ export default async function DashboardLayout({ children }: { children: ReactNod
   if (can(user, "user:approve_registration") || can(user, "crew:approve_members")) {
     links.push({ href: "/dashboard/approvals", label: "Approvals", icon: "approvals" });
   }
-  if (can(user, "user:manage_titles")) links.push({ href: "/dashboard/people", label: "People", icon: "people" });
+  if (can(user, "user:manage_titles") || can(user, "user:appoint_admin")) {
+    links.push({ href: "/dashboard/people", label: "People", icon: "people" });
+  }
   if (can(user, "user:manage_accounts")) links.push({ href: "/dashboard/members", label: "Members", icon: "members" });
   if (canSeeBand(user)) links.push({ href: "/dashboard/band", label: "Band", icon: "band" });
   links.push(
@@ -50,6 +52,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
   if (isLeader(user)) links.push({ href: "/dashboard/analytics", label: "Analytics", icon: "analytics" });
   links.push(
     { href: "/dashboard/scan", label: "Check in", icon: "scan" },
+    { href: "/dashboard/notifications", label: "Notifications", icon: "bell" },
     { href: "/dashboard/attendance", label: "Attendance", icon: "attendance" },
     { href: "/dashboard/profile", label: "My profile", icon: "profile" }
   );

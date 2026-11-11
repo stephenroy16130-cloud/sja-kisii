@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import Avatar from "@/components/avatar";
 import Badge from "@/components/badge";
+import Bell from "@/components/bell";
 import EmergencyLine from "@/components/emergency-line";
 import { api } from "@/lib/client";
 import { detachPushFromServer } from "@/lib/push-client";
@@ -12,7 +13,7 @@ import { detachPushFromServer } from "@/lib/push-client";
 type IconName =
   | "home" | "approvals" | "people" | "meetings" | "fieldops" | "training" | "store" | "pay" | "band"
   | "crew" | "profile" | "members" | "articles" | "documents" | "finance" | "attendance"
-  | "analytics" | "scan" | "more";
+  | "analytics" | "scan" | "bell" | "more";
 export type NavLink = { href: string; label: string; icon: IconName };
 
 // Phone bar: Attendance, Meetings, Home (badge), Shop, More
@@ -22,7 +23,7 @@ const BAR = ["/dashboard/attendance", "/dashboard/meetings", "/dashboard/store"]
 const GROUPS: { name: string; hrefs: string[] }[] = [
   { name: "Home", hrefs: ["/dashboard"] },
   { name: "Activities", hrefs: ["/dashboard/meetings", "/dashboard/fieldops", "/dashboard/training", "/dashboard/band", "/dashboard/crew"] },
-  { name: "My record", hrefs: ["/dashboard/attendance", "/dashboard/scan", "/dashboard/profile"] },
+  { name: "My record", hrefs: ["/dashboard/notifications", "/dashboard/attendance", "/dashboard/scan", "/dashboard/profile"] },
   { name: "Money", hrefs: ["/dashboard/store", "/dashboard/pay", "/dashboard/finance"] },
   { name: "Information", hrefs: ["/dashboard/articles", "/dashboard/documents"] },
   { name: "Management", hrefs: ["/dashboard/approvals", "/dashboard/people", "/dashboard/members", "/dashboard/analytics"] },
@@ -70,6 +71,8 @@ function Icon({ name, size = 24 }: { name: IconName; size?: number }) {
       return (<svg {...p}><path d="M5 20V10M12 20V4M19 20v-7" /></svg>);
     case "scan":
       return (<svg {...p}><path d="M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2M7 12h10" /></svg>);
+    case "bell":
+      return (<svg {...p}><path d="M6 9a6 6 0 0 1 12 0c0 5 2 6 2 6H4s2-1 2-6" /><path d="M10 19a2 2 0 0 0 4 0" /></svg>);
     default:
       return (<svg {...p}><circle cx="5.5" cy="12" r="1.3" /><circle cx="12" cy="12" r="1.3" /><circle cx="18.5" cy="12" r="1.3" /></svg>);
   }
@@ -152,11 +155,14 @@ export default function NavShell({
       {/* Large screens: a compact right panel with grouped links */}
       <aside className="hidden border-l border-white/10 bg-black text-white lg:fixed lg:inset-y-0 lg:right-0 lg:z-20 lg:flex lg:w-72 lg:flex-col">
         <div className="px-5 pb-3 pt-5">
-          {brand(36)}
+          <div className="flex items-center justify-between gap-2">
+            {brand(36)}
+            <Bell />
+          </div>
           <EmergencyLine slim className="mt-4" />
         </div>
 
-        <nav className="no-scrollbar min-h-0 flex-1 overflow-y-auto px-3 pb-3">
+        <nav className="nav-scroll min-h-0 flex-1 overflow-y-scroll px-3 pb-3">
           {groups.map((g) => (
             <div key={g.name} className="mb-1">
               <p className="px-3 pb-1 pt-3 text-[10px] uppercase tracking-[0.2em] text-white/30">{g.name}</p>
@@ -200,7 +206,10 @@ export default function NavShell({
       {/* Phones: top bar with the emergency number */}
       <header className="sticky top-0 z-10 flex items-center justify-between bg-black px-4 py-4 lg:hidden">
         {brand(40)}
-        <EmergencyLine compact />
+        <div className="flex items-center gap-2">
+          <Bell />
+          <EmergencyLine compact />
+        </div>
       </header>
 
       {/* Phones: More sheet */}

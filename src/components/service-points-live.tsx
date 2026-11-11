@@ -69,7 +69,7 @@ export default function ServicePointsLive({ initial }: { initial: ServicePointsD
   ];
 
   return (
-    <section data-tip="service-points" className="rounded-3xl border border-gold/30 bg-card p-6 md:p-8">
+    <section data-tip="service-points" className="w-full rounded-3xl border border-gold/30 bg-card p-6 md:p-8">
       <div className="flex items-center justify-between gap-3">
         <p className="text-[11px] uppercase tracking-[0.25em] text-gold">Points in service</p>
         <span className="flex items-center gap-2 text-[10px] uppercase tracking-[0.15em] text-white/40">
@@ -77,18 +77,24 @@ export default function ServicePointsLive({ initial }: { initial: ServicePointsD
           Live
         </span>
       </div>
-      <div className="mt-3 flex items-end gap-3">
-        <p className="text-6xl font-light tabular-nums text-gold md:text-7xl">{shown.toLocaleString("en-KE")}</p>
-        {gain > 0 && <p className="mb-2 text-lg text-ok">+{gain}</p>}
-      </div>
-      <p className="mt-1 text-xs text-white/40">All time, since you joined. Every event you attend adds to it.</p>
-      <div className={`mt-5 grid gap-3 ${parts.length === 4 ? "grid-cols-2 md:grid-cols-4" : "grid-cols-3"}`}>
-        {parts.map((p) => (
-          <div key={p.label} className="rounded-2xl bg-white/5 p-3 text-center">
-            <p className="text-xl font-light tabular-nums">{p.v.toLocaleString("en-KE")}</p>
-            <p className="mt-1 text-[10px] uppercase tracking-[0.12em] text-white/40">{p.label}</p>
+
+      <div className="mt-4 flex flex-col gap-6 md:flex-row md:items-center md:gap-10">
+        <div className="shrink-0">
+          <div className="flex items-end gap-3">
+            <p className="text-6xl font-light tabular-nums text-gold md:text-7xl">{shown.toLocaleString("en-KE")}</p>
+            {gain > 0 && <p className="mb-2 text-lg text-ok">+{gain}</p>}
           </div>
-        ))}
+          <p className="mt-1 text-xs text-white/40">All time, since you joined. Every event you attend adds to it.</p>
+        </div>
+
+        <div className={`grid w-full flex-1 gap-3 ${parts.length === 4 ? "grid-cols-2 md:grid-cols-4" : "grid-cols-3"}`}>
+          {parts.map((p) => (
+            <div key={p.label} className="flex flex-col justify-center rounded-2xl bg-white/5 p-4 text-center md:p-5">
+              <p className="text-2xl font-light tabular-nums">{p.v.toLocaleString("en-KE")}</p>
+              <p className="mt-1 text-[10px] uppercase tracking-[0.12em] text-white/40">{p.label}</p>
+            </div>
+          ))}
+        </div>
       </div>
     </section>
   );

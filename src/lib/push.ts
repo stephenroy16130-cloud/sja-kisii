@@ -65,11 +65,29 @@ async function deliver(subs: Sub[], payload: PushPayload) {
   if (dead.length) await db.pushSubscription.deleteMany({ where: { id: { in: dead } } });
 }
 
+// The in-app copy, so the alert is always visible in the Notifications page and on the bell
+async function record(userIds: string[], p: PushPayload) {
+  try {
+    await db.notification.createMany({
+      data: userIds.map((userId) => ({
+        userId,
+        title: p.title.slice(0, 120),
+        body: p.body.slice(0, 300),
+        url: safeUrl(p.url),
+      })),
+    });
+  } catch (e) {
+    console.error("could not save notifications", e);
+  }
+}
+
 // Never throws: a failed notification must not break the action that caused it
 export async function notifyUsers(userIds: string[], payload: PushPayload) {
   try {
-    if (userIds.length === 0) return;
-    const subs = await db.pushSubscription.findMany({ where: { userId: { in: userIds } } });
+    const ids = [...new Set(userIds)];
+    if (ids.length === 0) return;
+    await record(ids, payload);
+    const subs = await db.pushSubscription.findMany({ where: { userId: { in: ids } } });
     await deliver(subs, payload);
   } catch (e) {
     console.error("push failed", e);
@@ -89,8 +107,26 @@ export async function notifyAudience(audience: Audience, crewId: number | null, 
       ...(audience === "CREW" ? { crewId } : {}),
       ...(audience === "BAND" ? { titles: { hasSome: BAND_VISIBLE } } : {}),
     };
-    const subs = await db.pushSubscription.findMany({ where: { user: where } });
-    await deliver(subs, payload);
+    const users = await db.user.findMany({ where, select: { id: true } });
+    await notifyUsers(users.map((u) => u.id), payload);
+  } catch (e) {
+    console.error("push failed", e);
+  }
+}
+
+// Everyone holding one of these titles, for things that need a leader's decision
+export async function notifyTitles(titles: Title[], payload: PushPayload, exceptUserId?: string) {
+  try {
+    const users = await db.user.findMany({
+      where: {
+        status: "ACTIVE",
+        isDeveloper: false,
+        titles: { hasSome: titles },
+        ...(exceptUserId ? { id: { not: exceptUserId } } : {}),
+      },
+      select: { id: true },
+    });
+    await notifyUsers(users.map((u) => u.id), payload);
   } catch (e) {
     console.error("push failed", e);
   }

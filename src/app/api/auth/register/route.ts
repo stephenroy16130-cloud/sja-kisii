@@ -1,7 +1,9 @@
 import { Prisma } from "@prisma/client";
+import { after } from "next/server";
 import { db } from "@/lib/db";
 import { HttpError, route } from "@/lib/http";
 import { hashPassword } from "@/lib/password";
+import { notifyTitles } from "@/lib/push";
 import { registerSchema } from "@/lib/validation";
 
 export const POST = route(async (req: Request) => {
@@ -23,6 +25,14 @@ export const POST = route(async (req: Request) => {
       },
       select: { id: true },
     });
+    after(() =>
+      notifyTitles(["DO_ADMIN"], {
+        title: "New member awaiting approval",
+        body: data.fullName,
+        url: "/dashboard/approvals",
+        tag: "reg-" + user.id,
+      })
+    );
     return Response.json(
       { id: user.id, message: "Registered. Your account is awaiting DO Admin approval." },
       { status: 201 }

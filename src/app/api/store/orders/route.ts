@@ -1,3 +1,5 @@
+import { after } from "next/server";
+import { notifyTitles } from "@/lib/push";
 import { z } from "zod";
 import { audit, requireUser } from "@/lib/auth";
 import { db } from "@/lib/db";
@@ -57,5 +59,8 @@ export const POST = route(async (req: Request) => {
   }, TX_OPTS);
 
   await audit(actor.id, "ORDER_PLACED", "Order", order.id, { itemId: item.id, quantity: d.quantity });
+  after(() =>
+    notifyTitles(["DO_FINANCE"], { title: "New shop order", body: actor.fullName + ": " + d.quantity + " x " + item.name, url: "/dashboard/store/manage", tag: "order-" + order.id }, actor.id)
+  );
   return Response.json({ id: order.id, total: Number(order.total) }, { status: 201 });
 });

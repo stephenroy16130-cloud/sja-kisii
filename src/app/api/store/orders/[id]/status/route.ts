@@ -1,3 +1,5 @@
+import { after } from "next/server";
+import { notifyUsers } from "@/lib/push";
 import { Prisma } from "@prisma/client";
 import { z } from "zod";
 import { audit, requireUser } from "@/lib/auth";
@@ -89,5 +91,15 @@ export const POST = route(async (req: Request, ctx: { params: Promise<{ id: stri
 
   const status = action === "cancel" ? "CANCELLED" : action === "pay" ? "PAID" : "FULFILLED";
   await audit(actor.id, `ORDER_${status}`, "Order", id, { receipt: receipt ?? null });
+  if (order.userId !== actor.id) {
+    after(() =>
+      notifyUsers([order.userId], {
+        title: status === "PAID" ? "Your order was marked paid" : status === "FULFILLED" ? "Your order is ready for collection" : "Your order was cancelled",
+        body: "Open the shop to see the details.",
+        url: "/dashboard/store",
+        tag: "order-" + id,
+      })
+    );
+  }
   return Response.json({ id, status });
 });

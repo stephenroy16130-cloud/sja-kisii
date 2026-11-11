@@ -23,7 +23,15 @@ export default async function CollectionsPage() {
   if (!user) redirect("/login");
   if (!can(user, "finance:manage")) redirect("/dashboard");
 
-  const list = await db.collection.findMany({ orderBy: { createdAt: "desc" }, take: 50 });
+  const [list, removed] = await Promise.all([
+    db.collection.findMany({ where: { archivedAt: null }, orderBy: { createdAt: "desc" }, take: 50 }),
+    db.collection.findMany({
+      where: { archivedAt: { not: null } },
+      orderBy: { createdAt: "desc" },
+      take: 30,
+      select: { id: true, title: true },
+    }),
+  ]);
   const sums = list.length
     ? await db.transaction.groupBy({
         by: ["collectionId"],
@@ -85,6 +93,21 @@ export default async function CollectionsPage() {
           </div>
         )}
       </section>
+
+      {removed.length > 0 && (
+        <details>
+          <summary className="cursor-pointer text-sm text-white/40 hover:text-white">Deleted ({removed.length})</summary>
+          <ul className="mt-3 space-y-2 text-sm">
+            {removed.map((r) => (
+              <li key={r.id}>
+                <Link href={`/dashboard/finance/collections/${r.id}`} className="text-white/50 underline hover:text-white">
+                  {r.title}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </details>
+      )}
     </div>
   );
 }

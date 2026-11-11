@@ -127,8 +127,8 @@ export default function AppAccess({ mode }: { mode: "nudge" | "full" }) {
     setBusy(true);
     setMsg("");
     try {
-      await api("/api/push/test", "POST");
-      setMsg("Test sent. It should arrive in a few seconds.");
+      const r = (await api("/api/push/test", "POST")) as { devices: number };
+      setMsg(r.devices > 0 ? "Test sent. It should arrive in a few seconds, and it is saved in your notifications." : "Saved in your notifications. No phone is registered for alerts yet.");
     } catch (e) {
       setMsg(e instanceof Error ? e.message : "Could not send the test");
     }

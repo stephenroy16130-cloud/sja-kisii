@@ -10,6 +10,7 @@ import { can } from "@/lib/rbac";
 import { itemImages } from "@/lib/shop-images";
 import { kes, orderTone, orderWord, windowState } from "@/lib/store";
 import CancelOrderButton from "./cancel-order-button";
+import DeleteOrderButton from "./delete-order-button";
 import OrderForm from "./order-form";
 
 export const dynamic = "force-dynamic";
@@ -150,6 +151,7 @@ export default async function StorePage() {
                   </div>
                   <div className="flex flex-wrap items-center gap-3">
                     <span className={`${chip} ${orderTone[o.status]}`}>{orderWord[o.status]}</span>
+                    {o.status === "CANCELLED" && <DeleteOrderButton orderId={o.id} />}
                     {o.status === "PENDING_PAYMENT" && (
                       <>
                         <ContextualTooltip

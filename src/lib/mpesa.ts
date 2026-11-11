@@ -1,5 +1,5 @@
 import { after } from "next/server";
-import { notifyFinancePayment } from "./finance-alerts";
+import { notifyPaymentSuccess } from "./payment-notify";
 import { Prisma, type TransactionPurpose, type TransactionStatus } from "@prisma/client";
 import { db } from "./db";
 import { HttpError } from "./http";
@@ -204,9 +204,9 @@ export async function settle(checkoutRequestId: string, o: Outcome): Promise<Tra
 
   if (applied && status === "SUCCESS") {
     try {
-      after(() => notifyFinancePayment(t.id));
+      after(() => notifyPaymentSuccess(t.id));
     } catch {
-      void notifyFinancePayment(t.id);
+      void notifyPaymentSuccess(t.id);
     }
   }
 

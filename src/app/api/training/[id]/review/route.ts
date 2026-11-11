@@ -1,3 +1,5 @@
+import { after } from "next/server";
+import { notifyUsers } from "@/lib/push";
 import { z } from "zod";
 import { audit, requirePermission } from "@/lib/auth";
 import { db } from "@/lib/db";
@@ -22,5 +24,15 @@ export const POST = route(async (req: Request, ctx: { params: Promise<{ id: stri
     select: { id: true, status: true },
   });
   await audit(actor.id, `TRAINING_${updated.status}`, "Training", id, { title: training.title });
+  if (training.createdById !== actor.id) {
+    after(() =>
+      notifyUsers([training.createdById], {
+        title: updated.status === "VERIFIED" ? "Training record verified" : "Training record rejected",
+        body: training.title,
+        url: "/dashboard/training/" + id,
+        tag: "trn-" + id,
+      })
+    );
+  }
   return Response.json(updated);
 });

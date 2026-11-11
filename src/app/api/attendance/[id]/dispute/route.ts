@@ -1,3 +1,5 @@
+import { after } from "next/server";
+import { notifyTitles } from "@/lib/push";
 import { z } from "zod";
 import { audit, requireUser } from "@/lib/auth";
 import { db } from "@/lib/db";
@@ -36,5 +38,9 @@ export const POST = route(async (req: Request, ctx: { params: Promise<{ id: stri
   if (u.count === 0) throw new HttpError(409, "This record just changed. Refresh and try again.");
 
   await audit(actor.id, "ATTENDANCE_DISPUTED", "AttendanceRecord", id, { event: info.title });
+  const owner = r.eventType === "MEETING" ? "DO_ADMIN" : r.eventType === "FIELD_OP" ? "DO_OPERATIONS" : "DO_TRAINING";
+  after(() =>
+    notifyTitles([owner], { title: "New attendance dispute", body: actor.fullName + ": " + info.title, url: "/dashboard/attendance", tag: "dispute-" + id }, actor.id)
+  );
   return Response.json({ id });
 });

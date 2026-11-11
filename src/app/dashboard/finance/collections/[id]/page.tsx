@@ -45,7 +45,7 @@ export default async function CollectionPage({ params }: { params: Promise<{ id:
         {c.description && <p className="font-copy mt-4 text-sm leading-relaxed text-white/70">{c.description}</p>}
       </section>
 
-      <CollectionControls id={c.id} isOpen={c.isOpen} />
+      <CollectionControls id={c.id} isOpen={c.isOpen} closed={st !== "OPEN"} archived={Boolean(c.archivedAt)} />
       <LivePayments id={c.id} initial={live} />
     </div>
   );

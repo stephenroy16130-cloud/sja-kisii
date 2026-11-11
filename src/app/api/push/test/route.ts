@@ -1,18 +1,17 @@
 import { requireUser } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { HttpError, route } from "@/lib/http";
+import { route } from "@/lib/http";
 import { notifyUsers, pushConfigured } from "@/lib/push";
 
 export const POST = route(async () => {
   const actor = await requireUser();
-  if (!pushConfigured()) throw new HttpError(503, "Push notifications are not set up on the server yet.");
-  const n = await db.pushSubscription.count({ where: { userId: actor.id } });
-  if (n === 0) throw new HttpError(409, "No device is registered yet. Turn on notifications first.");
+  const devices = await db.pushSubscription.count({ where: { userId: actor.id } });
+  // Always saved in the app. Also sent to the phone when one is registered.
   await notifyUsers([actor.id], {
     title: "St. John Ambulance",
-    body: "Notifications are working on this device.",
-    url: "/dashboard",
+    body: "Notifications are working.",
+    url: "/dashboard/notifications",
     tag: "test",
   });
-  return Response.json({ sent: n });
+  return Response.json({ devices, configured: pushConfigured() });
 });

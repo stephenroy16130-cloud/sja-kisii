@@ -1,3 +1,5 @@
+import { after } from "next/server";
+import { notifyTitles } from "@/lib/push";
 import { z } from "zod";
 import { requireUser } from "@/lib/auth";
 import { db } from "@/lib/db";
@@ -28,5 +30,10 @@ export const POST = route(async (req: Request, ctx: { params: Promise<{ id: stri
     create: { meetingId: id, userId: user.id, reason },
     select: { id: true, status: true },
   });
+  if (!existing) {
+    after(() =>
+      notifyTitles(["DO_ADMIN"], { title: "New apology", body: user.fullName + ": " + meeting.title, url: "/dashboard/meetings/" + id, tag: "apology-" + id }, user.id)
+    );
+  }
   return Response.json(apology, { status: 201 });
 });

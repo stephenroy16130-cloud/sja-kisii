@@ -67,7 +67,7 @@ export const POST = route(async (req: Request) => {
     announcementId = a.id;
   } else if (d.kind === "collection") {
     const c = await db.collection.findUnique({ where: { id: d.collectionId } });
-    if (!c || !c.isOpen || (c.closesAt && c.closesAt <= new Date())) {
+    if (!c || c.archivedAt || !c.isOpen || (c.closesAt && c.closesAt <= new Date())) {
       throw new HttpError(404, "This payment is closed");
     }
     if (c.crewId !== null && c.crewId !== actor.crewId) throw new HttpError(403, "This payment is for another crew");

@@ -109,6 +109,7 @@ enum RsvpResponse {
 }
 
 model User {
+  notifications          Notification[]
   mustChangePassword     Boolean            @default(false)
   hasCompletedOnboarding Boolean            @default(false) @map("has_completed_onboarding")
   checkIns               CheckIn[]
@@ -618,6 +619,7 @@ model EventLink {
 }
 
 model Collection {
+  archivedAt  DateTime?
   id          String    @id @default(cuid())
   title       String
   description String?
@@ -631,4 +633,18 @@ model Collection {
   transactions Transaction[]
 
   @@index([isOpen])
+}
+
+model Notification {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  body      String
+  url       String?
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId, createdAt])
+  @@index([userId, readAt])
 }

@@ -1,3 +1,5 @@
+import { after } from "next/server";
+import { notifyUsers } from "@/lib/push";
 import { z } from "zod";
 import { audit, requirePermission } from "@/lib/auth";
 import { db } from "@/lib/db";
@@ -38,5 +40,13 @@ export const POST = route(async (req: Request, ctx: { params: Promise<{ id: stri
     crewId: r.crewId,
     targetUserId: r.targetUserId,
   });
+  after(() =>
+    notifyUsers([r.requestedById], {
+      title: decision === "approve" ? "Crew change approved" : "Crew change declined",
+      body: r.targetUser.fullName,
+      url: "/dashboard/crew",
+      tag: "mreq-" + id,
+    })
+  );
   return Response.json({ id, decision });
 });
