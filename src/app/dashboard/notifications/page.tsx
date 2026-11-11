@@ -17,11 +17,13 @@ export default async function NotificationsPage() {
     .deleteMany({ where: { userId: user.id, createdAt: { lt: new Date(Date.now() - 60 * 86_400_000) } } })
     .catch(() => undefined);
 
-  const rows = await db.notification.findMany({
-    where: { userId: user.id },
-    orderBy: { createdAt: "desc" },
-    take: 60,
-  });
+  const rows = await db.notification
+    .findMany({
+      where: { userId: user.id },
+      orderBy: { createdAt: "desc" },
+      take: 60,
+    })
+    .catch(() => []);
 
   return (
     <div className="space-y-8">
