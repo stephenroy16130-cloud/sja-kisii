@@ -22,6 +22,10 @@ export function pushConfigured() {
     }
   }
 
+  if (subject === "mailto:" || subject === "https://" || subject === "http://") {
+    return false;
+  }
+
   try {
     webpush.setVapidDetails(subject, pub, priv);
     ready = true;
