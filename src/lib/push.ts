@@ -10,11 +10,26 @@ export function pushConfigured() {
   if (ready) return true;
   const pub = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
   const priv = process.env.VAPID_PRIVATE_KEY;
-  const subject = process.env.VAPID_SUBJECT;
+  let subject = process.env.VAPID_SUBJECT?.trim();
   if (!pub || !priv || !subject) return false;
-  webpush.setVapidDetails(subject, pub, priv);
-  ready = true;
-  return true;
+
+  // WebPush VAPID subject must be either a mailto: URI or a valid URL
+  if (!subject.startsWith("mailto:") && !subject.startsWith("http://") && !subject.startsWith("https://")) {
+    if (subject.includes("@")) {
+      subject = `mailto:${subject}`;
+    } else {
+      subject = `https://${subject}`;
+    }
+  }
+
+  try {
+    webpush.setVapidDetails(subject, pub, priv);
+    ready = true;
+    return true;
+  } catch (err) {
+    console.error("VAPID configuration error:", err instanceof Error ? err.message : err);
+    return false;
+  }
 }
 
 // Only real browser push services are accepted, so nobody can point the server at another address
