@@ -138,6 +138,7 @@ model User {
   crew                   Crew?              @relation("CrewMembers", fields: [crewId], references: [id])
   approvedById           String?
   crewApprovedById       String?
+  hasSeenMotw      Boolean  @default(false)
   createdAt              DateTime           @default(now())
   updatedAt              DateTime           @updatedAt
 
