@@ -93,3 +93,24 @@ select optgroup {
 .nav-scroll::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.05); border-radius: 9999px; }
 .nav-scroll::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.35); border-radius: 9999px; }
 .nav-scroll::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.55); }
+
+/* Member of the Week reveal: a 3D card flip with a gold glow (no gradients) */
+.reveal-scene { position: relative; perspective: 1400px; }
+.reveal-card { position: relative; transform-style: preserve-3d; transition: transform 1s cubic-bezier(0.2, 0.7, 0.2, 1); }
+.reveal-card.flipped { transform: rotateY(180deg); }
+.reveal-face { position: absolute; inset: 0; -webkit-backface-visibility: hidden; backface-visibility: hidden; }
+.reveal-back { transform: rotateY(180deg); }
+@keyframes reveal-glow {
+  0%, 100% { box-shadow: 0 0 24px 2px rgba(212, 175, 90, 0.35); }
+  50% { box-shadow: 0 0 64px 14px rgba(212, 175, 90, 0.75); }
+}
+@keyframes reveal-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+.reveal-glow { animation: reveal-glow 1.8s ease-in-out infinite; }
+.reveal-float { animation: reveal-float 3s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .reveal-card { transition: none; }
+  .reveal-glow, .reveal-float { animation: none; }
+}

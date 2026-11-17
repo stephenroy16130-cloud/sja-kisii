@@ -1,3 +1,4 @@
+import MotwReveal from "@/components/motw-reveal";
 import { Suspense } from "react";
 import ServicePointsCard from "@/components/service-points-card";
 import type { Prisma } from "@prisma/client";
@@ -133,7 +134,10 @@ export default async function DashboardPage() {
 
       <AppAccess mode="nudge" />
 
-      <HallOfFame data={motw.hall} meId={user.id} />
+      <div id="hall-of-fame" className="scroll-mt-6">
+        <HallOfFame data={motw.hall} meId={user.id} />
+        <MotwReveal />
+      </div>
       {board && <CrewLeaderboard rows={board} />}
       <TrophyCase wins={motw.myWins} history={motw.myHistory} week={motw.myWeek} />
 

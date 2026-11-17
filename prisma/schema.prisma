@@ -138,7 +138,7 @@ model User {
   crew                   Crew?              @relation("CrewMembers", fields: [crewId], references: [id])
   approvedById           String?
   crewApprovedById       String?
-  hasSeenMotw      Boolean  @default(false)
+  hasSeenMotw            Boolean            @default(false)
   createdAt              DateTime           @default(now())
   updatedAt              DateTime           @updatedAt
 
@@ -504,16 +504,17 @@ model AuditLog {
 }
 
 model WeeklyResult {
-  id            String   @id @default(cuid())
-  weekStart     DateTime @unique
-  weekEnd       DateTime
-  winnerId      String?
-  winner        User?    @relation("WeeklyWins", fields: [winnerId], references: [id])
-  points        Int      @default(0)
-  optionalCount Int      @default(0)
-  perfectWeek   Boolean  @default(false)
-  topFive       Json?
-  createdAt     DateTime @default(now())
+  isMotwRevealed Boolean  @default(false)
+  id             String   @id @default(cuid())
+  weekStart      DateTime @unique
+  weekEnd        DateTime
+  winnerId       String?
+  winner         User?    @relation("WeeklyWins", fields: [winnerId], references: [id])
+  points         Int      @default(0)
+  optionalCount  Int      @default(0)
+  perfectWeek    Boolean  @default(false)
+  topFive        Json?
+  createdAt      DateTime @default(now())
 
   @@index([winnerId])
 }
