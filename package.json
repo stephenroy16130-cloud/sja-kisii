@@ -18,11 +18,11 @@
     "bcryptjs": "^3.0.3",
     "canvas-confetti": "^1.9.4",
     "jose": "^6.2.13",
-    "next": "16.4.3",
+    "next": "^16.4.6",
     "nodemailer": "^10.3.1",
     "qrcode": "^1.5.4",
-    "react": "19.3.0",
-    "react-dom": "19.3.0",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
     "sanitize-html": "^2.18.1",
     "web-push": "^3.6.7",
     "zod": "^3.25.76"
@@ -34,12 +34,12 @@
     "@types/node": "^20",
     "@types/nodemailer": "^8.0.2",
     "@types/qrcode": "^1.5.6",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
     "@types/sanitize-html": "^2.16.2",
     "@types/web-push": "^3.6.4",
-    "eslint": "^9",
-    "eslint-config-next": "16.4.3",
+    "eslint": "9.39.5",
+    "eslint-config-next": "16.4.6",
     "postcss": "^8.5.32",
     "prisma": "^6.19.3",
     "sharp": "^0.35.5",
@@ -49,5 +49,9 @@
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
+  },
+  "overrides": {
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0"
   }
 }

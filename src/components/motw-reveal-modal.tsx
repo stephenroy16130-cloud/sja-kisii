@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { api } from "@/lib/client";
-import { Badge } from "@/components/badge";
-import { SocialPhoto } from "@/lib/profile";
+import Badge from "@/components/badge";
+import Avatar from "@/components/avatar";
 import confetti from "canvas-confetti";
 
 /**
@@ -87,7 +87,7 @@ export default function MotwRevealModal({
       {stage === "reveal" && (
         <div className="flex flex-col items-center gap-6 text-center">
           <div className="rounded-full overflow-hidden border-4 border-gold">
-            <SocialPhoto src={winner.photo} size={120} alt={winner.fullName} />
+            <Avatar name={winner.fullName} src={winner.photo} size={120} />
           </div>
           <h2 className="text-2xl font-light text-white">{winner.fullName}</h2>
           {winner.crewName && (

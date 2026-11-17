@@ -9,16 +9,29 @@ import { readSessionUserId } from "./session";
 export const getCurrentUser = cache(async () => {
   const id = await readSessionUserId();
   if (!id) return null;
-  const u = await db.user.findUnique({
-    where: { id },
-    select: {
-      id: true, username: true, fullName: true, email: true, status: true,
-      titles: true, isSuperintendent: true, isDeveloper: true, crewId: true,
-      preferredName: true, socialPhotoAt: true, mustChangePassword: true,
-      dateOfBirth: true, gender: true, idType: true, idNumber: true,
-      hasCompletedOnboarding: true,
-    },
-  });
+
+  const select = {
+    id: true, username: true, fullName: true, email: true, status: true,
+    titles: true, isSuperintendent: true, isDeveloper: true, crewId: true,
+    preferredName: true, socialPhotoAt: true, mustChangePassword: true,
+    dateOfBirth: true, gender: true, idType: true, idNumber: true,
+    hasCompletedOnboarding: true,
+  } as const;
+
+  let u;
+  try {
+    u = await db.user.findUnique({ where: { id }, select });
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    if (msg.includes("connection pool") || msg.includes("connect_timeout") || msg.includes("P1001")) {
+      console.warn("[auth] Cold start retry for user session...");
+      await new Promise((r) => setTimeout(r, 1500));
+      u = await db.user.findUnique({ where: { id }, select });
+    } else {
+      throw err;
+    }
+  }
+
   if (!u || u.status !== "ACTIVE") return null;
   const { dateOfBirth, gender, idType, idNumber, ...rest } = u;
   return {

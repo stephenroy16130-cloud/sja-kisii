@@ -159,51 +159,61 @@ export async function loadMotw(userId: string) {
   }
 
   const { start, end } = currentWeek();
-  const [standings, lastResult, winCounts, myHistory] = await Promise.all([
-    computeStandings(start, end),
-    db.weeklyResult.findFirst({
-      where: { winnerId: { not: null } },
-      orderBy: { weekStart: "desc" },
-      include: { winner: { select: { id: true, fullName: true, preferredName: true, socialPhotoAt: true, crewId: true } } },
-    }),
-    db.weeklyResult.groupBy({ by: ["winnerId"], where: { winnerId: { not: null } }, _count: { _all: true } }),
-    db.weeklyResult.findMany({
-      where: { winnerId: userId },
-      orderBy: { weekStart: "desc" },
-      take: 5,
-      select: { weekStart: true, points: true },
-    }),
-  ]);
+  try {
+    const [standings, lastResult, winCounts, myHistory] = await Promise.all([
+      computeStandings(start, end),
+      db.weeklyResult.findFirst({
+        where: { winnerId: { not: null } },
+        orderBy: { weekStart: "desc" },
+        include: { winner: { select: { id: true, fullName: true, preferredName: true, socialPhotoAt: true, crewId: true } } },
+      }),
+      db.weeklyResult.groupBy({ by: ["winnerId"], where: { winnerId: { not: null } }, _count: { _all: true } }),
+      db.weeklyResult.findMany({
+        where: { winnerId: userId },
+        orderBy: { weekStart: "desc" },
+        take: 5,
+        select: { weekStart: true, points: true },
+      }),
+    ]);
 
-  const wins = new Map<string, number>();
-  for (const w of winCounts) if (w.winnerId) wins.set(w.winnerId, w._count._all);
+    const wins = new Map<string, number>();
+    for (const w of winCounts) if (w.winnerId) wins.set(w.winnerId, w._count._all);
 
-  const mineIdx = standings.findIndex((s) => s.userId === userId);
+    const mineIdx = standings.findIndex((s) => s.userId === userId);
 
-  return {
-    hall: {
-      weekLabel: weekLabel(start),
-      leaders: standings.slice(0, 3).map((s) => ({
-        userId: s.userId, name: s.name, photo: s.photo, crewId: s.crewId, points: s.points, wins: wins.get(s.userId) ?? 0,
-      })),
-      last: lastResult?.winner
-        ? {
-            userId: lastResult.winner.id,
-            name: displayName(lastResult.winner),
-            photo: socialPhoto(lastResult.winner),
-            crewId: lastResult.winner.crewId,
-            points: lastResult.points,
-            wins: wins.get(lastResult.winner.id) ?? 0,
-            weekLabel: weekLabel(lastResult.weekStart),
-          }
-        : null,
-    },
-    myWins: wins.get(userId) ?? 0,
-    myHistory: myHistory.map((h) => ({ weekLabel: weekLabel(h.weekStart), points: h.points })),
-    myWeek: {
-      points: mineIdx >= 0 ? standings[mineIdx].points : 0,
-      rank: mineIdx >= 0 ? mineIdx + 1 : null,
-      perfect: mineIdx >= 0 ? standings[mineIdx].perfect : false,
-    },
-  };
+    return {
+      hall: {
+        weekLabel: weekLabel(start),
+        leaders: standings.slice(0, 3).map((s) => ({
+          userId: s.userId, name: s.name, photo: s.photo, crewId: s.crewId, points: s.points, wins: wins.get(s.userId) ?? 0,
+        })),
+        last: lastResult?.winner
+          ? {
+              userId: lastResult.winner.id,
+              name: displayName(lastResult.winner),
+              photo: socialPhoto(lastResult.winner),
+              crewId: lastResult.winner.crewId,
+              points: lastResult.points,
+              wins: wins.get(lastResult.winner.id) ?? 0,
+              weekLabel: weekLabel(lastResult.weekStart),
+            }
+          : null,
+      },
+      myWins: wins.get(userId) ?? 0,
+      myHistory: myHistory.map((h) => ({ weekLabel: weekLabel(h.weekStart), points: h.points })),
+      myWeek: {
+        points: mineIdx >= 0 ? standings[mineIdx].points : 0,
+        rank: mineIdx >= 0 ? mineIdx + 1 : null,
+        perfect: mineIdx >= 0 ? standings[mineIdx].perfect : false,
+      },
+    };
+  } catch (err) {
+    console.error("[loadMotw] Error loading MOTW data:", err);
+    return {
+      hall: { weekLabel: weekLabel(start), leaders: [], last: null },
+      myWins: 0,
+      myHistory: [],
+      myWeek: { points: 0, rank: null, perfect: false },
+    };
+  }
 }

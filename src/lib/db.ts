@@ -18,7 +18,19 @@ function getDatabaseUrl(): string | undefined {
         u.searchParams.set("pgbouncer", "true");
       }
       if (!u.searchParams.has("connect_timeout")) {
-        u.searchParams.set("connect_timeout", "15");
+        u.searchParams.set("connect_timeout", "30");
+      }
+      if (!u.searchParams.has("pool_timeout")) {
+        u.searchParams.set("pool_timeout", "30");
+      }
+      return u.toString();
+    }
+    if (u.protocol.startsWith("postgres")) {
+      if (!u.searchParams.has("connect_timeout")) {
+        u.searchParams.set("connect_timeout", "30");
+      }
+      if (!u.searchParams.has("pool_timeout")) {
+        u.searchParams.set("pool_timeout", "30");
       }
       return u.toString();
     }
