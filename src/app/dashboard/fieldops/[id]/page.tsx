@@ -1,3 +1,4 @@
+import EventManage from "@/components/event-manage";
 import EventLinks from "@/components/event-links";
 import PendingCheckins from "@/components/pending-checkins";
 import QrPanel from "@/components/qr-panel";
@@ -129,6 +130,7 @@ export default async function FieldOpPage({ params }: { params: Promise<{ id: st
         </div>
       </section>
 
+      <EventManage kind="fieldop" id={id} />
       <QrPanel kind="fieldop" id={id} />
       <PendingCheckins kind="fieldop" id={id} />
       <EventLinks kind="fieldop" id={id} />

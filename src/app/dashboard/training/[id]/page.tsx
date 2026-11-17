@@ -1,3 +1,4 @@
+import EventManage from "@/components/event-manage";
 import { BAND_TITLES, inBand } from "@/lib/band";
 import EventLinks from "@/components/event-links";
 import PendingCheckins from "@/components/pending-checkins";
@@ -102,6 +103,7 @@ export default async function TrainingDetailPage({ params }: { params: Promise<{
         </div>
       </section>
 
+      <EventManage kind="training" id={id} />
       <QrPanel kind="training" id={id} />
       <PendingCheckins kind="training" id={id} />
       <EventLinks kind="training" id={id} />

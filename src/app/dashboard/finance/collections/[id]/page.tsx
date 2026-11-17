@@ -1,3 +1,4 @@
+import EditCollection from "./edit-collection";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
@@ -46,6 +47,16 @@ export default async function CollectionPage({ params }: { params: Promise<{ id:
       </section>
 
       <CollectionControls id={c.id} isOpen={c.isOpen} closed={st !== "OPEN"} archived={Boolean(c.archivedAt)} />
+      {!c.archivedAt && (
+        <EditCollection
+          id={c.id}
+          title={c.title}
+          description={c.description ?? ""}
+          amount={c.amount}
+          closesAt={c.closesAt ? c.closesAt.toISOString() : null}
+          locked={live.count > 0}
+        />
+      )}
       <LivePayments id={c.id} initial={live} />
     </div>
   );

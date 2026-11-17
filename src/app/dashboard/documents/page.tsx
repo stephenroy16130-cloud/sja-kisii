@@ -8,6 +8,7 @@ import { fmt } from "@/lib/meetings";
 import { displayName } from "@/lib/profile";
 import { can } from "@/lib/rbac";
 import DeleteDocumentButton from "./delete-document-button";
+import EditDocument from "./edit-document";
 import DocumentForm from "./document-form";
 
 export const dynamic = "force-dynamic";
@@ -82,7 +83,12 @@ export default async function DocumentsPage() {
                         Download
                       </a>
                     )}
-                    {(mod || d.uploadedById === user.id) && <DeleteDocumentButton id={d.id} title={d.title} />}
+                    {(mod || d.uploadedById === user.id) && (
+                      <>
+                        <EditDocument id={d.id} title={d.title} description={d.description ?? ""} />
+                        <DeleteDocumentButton id={d.id} title={d.title} />
+                      </>
+                    )}
                   </div>
                 </div>
               );
