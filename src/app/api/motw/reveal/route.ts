@@ -1,13 +1,13 @@
-import { NextResponse } from "next/server";
+import { route } from "@/lib/http";
 import { db } from "@/lib/db";
 import { requireUser } from "@/lib/auth";
 
-export async function POST() {
-  const user = await requireUser(); // throws 401 if not authenticated
+export const POST = route(async () => {
+  const user = await requireUser();
   await db.user.update({
     where: { id: user.id },
     data: { hasSeenMotw: true },
   });
-  return NextResponse.json({ ok: true });
-}
+  return Response.json({ ok: true });
+});
 
