@@ -9,6 +9,7 @@ import { calcAge, GENDER_LABEL, ID_LABEL, REPORT_FIELDS, REPORT_KEYS, type Repor
 const schema = z.object({ fields: z.array(z.enum(REPORT_KEYS)).min(1, "Choose at least one field") });
 
 type Row = {
+  admissionNumber: string | null;
   fullName: string;
   dateOfBirth: Date | null;
   gender: Gender | null;
