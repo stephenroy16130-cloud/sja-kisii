@@ -26,7 +26,7 @@ const GROUPS: { name: string; hrefs: string[] }[] = [
   { name: "My record", hrefs: ["/dashboard/notifications", "/dashboard/attendance", "/dashboard/scan", "/dashboard/profile"] },
   { name: "Money", hrefs: ["/dashboard/store", "/dashboard/pay", "/dashboard/finance"] },
   { name: "Information", hrefs: ["/dashboard/articles", "/dashboard/documents"] },
-  { name: "Management", hrefs: ["/dashboard/approvals", "/dashboard/people", "/dashboard/members", "/dashboard/analytics"] },
+  { name: "Management", hrefs: ["/dashboard/approvals", "/dashboard/approve-attendance", "/dashboard/people", "/dashboard/members", "/dashboard/analytics"] },
 ];
 
 function Icon({ name, size = 24 }: { name: IconName; size?: number }) {

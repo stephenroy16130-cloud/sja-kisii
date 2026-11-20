@@ -32,6 +32,8 @@ function value(u: Row, k: ReportKey): string {
     case "idType": return u.idType ? ID_LABEL[u.idType] : "";
     case "idNumber": return u.idNumber ?? "";
     case "crew": return u.crewId ? crewName(u.crewId) : "";
+    case "admissionNumber":
+      return u.admissionNumber ?? "";
     case "profileStatus": {
       const missing = [
         !u.dateOfBirth && "Date of birth",
@@ -62,7 +64,7 @@ export const POST = route(async (req: Request) => {
     orderBy: [{ crewId: "asc" }, { fullName: "asc" }],
     select: {
       fullName: true, dateOfBirth: true, gender: true, phone: true, email: true,
-      idType: true, idNumber: true, crewId: true, titles: true, isSuperintendent: true,
+      idType: true, idNumber: true, admissionNumber: true, crewId: true, titles: true, isSuperintendent: true,
     },
   });
 

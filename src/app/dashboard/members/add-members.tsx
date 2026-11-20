@@ -5,7 +5,7 @@ import { useState } from "react";
 import { api } from "@/lib/client";
 import { btnGhostCls, inputCls, labelCls } from "@/lib/ui";
 
-type Row = { fullName: string; phone: string; email: string; crewId: number };
+type Row = { fullName: string; phone: string; email: string; crewId: number; admissionNumber?: string };
 type Result = { name: string; email: string; phone: string; username?: string; tempPassword?: string; error?: string };
 
 const CREW_WORDS: [RegExp, number][] = [
@@ -34,7 +34,7 @@ function parse(text: string) {
       if (i === 0 && /name/i.test(p[0]) && /email/i.test(p[2] ?? "")) return; // a header line
       const crew = p[3] ? crewOf(p[3]) : null;
       if (p.length < 4 || !p[0] || !crew) bad.push(`Line ${i + 1} is not in the right format: ${line}`);
-      else ok.push({ fullName: p[0], phone: p[1], email: p[2], crewId: crew });
+      else ok.push({ fullName: p[0], phone: p[1], email: p[2], crewId: crew, ...(p[4] ? { admissionNumber: p[4] } : {}) });
     });
   return { ok, bad };
 }
@@ -113,7 +113,7 @@ export default function AddMembers() {
       {open && (
         <div className="mt-5 space-y-4">
           <div>
-            <label className={labelCls}>One person per line: full name, phone, email, crew</label>
+            <label className={labelCls}>One person per line: full name, phone, email, crew, admission number (optional)</label>
             <textarea
               value={text}
               onChange={(e) => setText(e.target.value)}

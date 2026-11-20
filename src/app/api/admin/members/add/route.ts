@@ -17,6 +17,7 @@ const body = z.object({
         phone: z.string().max(30),
         email: z.string().max(120),
         crewId: z.number().int().min(1).max(4),
+        admissionNumber: z.string().trim().max(40).optional(),
       })
     )
     .min(1)
@@ -68,6 +69,7 @@ export const POST = route(async (req: Request) => {
           phone: phone.data,
           fullName: r.fullName,
           crewId: r.crewId,
+          admissionNumber: r.admissionNumber ? r.admissionNumber.replace(/\s+/g, ' ').toUpperCase() : null,
           passwordHash: await hashPassword(temp),
           status: "ACTIVE", // added by the DO Admin, so no approval steps
           mustChangePassword: true,

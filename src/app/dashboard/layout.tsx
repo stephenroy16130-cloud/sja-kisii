@@ -45,6 +45,9 @@ export default async function DashboardLayout({ children }: { children: ReactNod
   }
   if (can(user, "user:manage_accounts")) links.push({ href: "/dashboard/members", label: "Members", icon: "members" });
   if (canSeeBand(user)) links.push({ href: "/dashboard/band", label: "Band", icon: "band" });
+  if (can(user, "meeting:manage") || can(user, "fieldop:manage") || can(user, "training:verify")) {
+    links.push({ href: "/dashboard/approve-attendance", label: "Approve attendance", icon: "approvals" });
+  }
   links.push(
     { href: "/dashboard/articles", label: "Articles", icon: "articles" },
     { href: "/dashboard/documents", label: "Documents", icon: "documents" }

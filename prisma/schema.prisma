@@ -109,6 +109,7 @@ enum RsvpResponse {
 }
 
 model User {
+  admissionNumber        String?            @unique
   notifications          Notification[]
   mustChangePassword     Boolean            @default(false)
   hasCompletedOnboarding Boolean            @default(false) @map("has_completed_onboarding")
@@ -314,6 +315,7 @@ model AttendanceRecord {
 }
 
 model Item {
+  archivedAt    DateTime?
   images        String[]  @default([])
   id            String    @id @default(cuid())
   name          String

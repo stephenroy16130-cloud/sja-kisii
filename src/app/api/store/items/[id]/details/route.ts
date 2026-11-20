@@ -31,21 +31,28 @@ export const PUT = route(async (req: Request, ctx: { params: Promise<{ id: strin
   return Response.json({ id });
 });
 
-// An item that was ever ordered cannot be deleted: hide it instead
+// Never ordered: removed for good. Ordered before: hidden everywhere, so old orders still show what was bought.
 export const DELETE = route(async (_req: Request, ctx: { params: Promise<{ id: string }> }) => {
   const actor = await requirePermission("finance:manage");
   const { id } = await ctx.params;
   const item = await db.item.findUnique({ where: { id }, select: { name: true, imageUrl: true, images: true } });
   if (!item) throw new HttpError(404, "Item not found");
-  if ((await db.orderItem.count({ where: { itemId: id } })) > 0) {
-    throw new HttpError(409, "This item has been ordered before, so it cannot be deleted. Use Hide instead.");
-  }
 
   const fileIds = itemImages(item).map(fileIdOf).filter((x): x is string => Boolean(x));
-  await db.$transaction([
-    db.storedFile.deleteMany({ where: { id: { in: fileIds } } }),
-    db.item.delete({ where: { id } }),
-  ]);
-  await audit(actor.id, "STORE_ITEM_DELETED", "Item", id, { name: item.name });
-  return Response.json({ id });
+  const ordered = await db.orderItem.count({ where: { itemId: id } });
+
+  if (ordered === 0) {
+    await db.$transaction([
+      db.storedFile.deleteMany({ where: { id: { in: fileIds } } }),
+      db.item.delete({ where: { id } }),
+    ]);
+  } else {
+    await db.$transaction([
+      db.storedFile.deleteMany({ where: { id: { in: fileIds } } }),
+      db.item.update({ where: { id }, data: { archivedAt: new Date(), isActive: false, images: [], imageUrl: null } }),
+    ]);
+  }
+
+  await audit(actor.id, ordered === 0 ? "STORE_ITEM_DELETED" : "STORE_ITEM_ARCHIVED", "Item", id, { name: item.name, ordered });
+  return Response.json({ result: ordered === 0 ? "deleted" : "archived" });
 });

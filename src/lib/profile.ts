@@ -22,7 +22,7 @@ export function calcAge(dob: Date, now = new Date()) {
 }
 
 export const REPORT_KEYS = [
-  "fullName", "dateOfBirth", "age", "gender", "phone", "email", "idType", "idNumber", "crew", "titles", "profileStatus",
+  "fullName", "dateOfBirth", "age", "gender", "phone", "email", "idType", "idNumber", "crew", "titles", "profileStatus", "admissionNumber",
 ] as const;
 export type ReportKey = (typeof REPORT_KEYS)[number];
 
@@ -36,6 +36,7 @@ export const REPORT_FIELDS: { key: ReportKey; label: string; group: string; on: 
   { key: "idType", label: "Identity Type", group: "Official details", on: false },
   { key: "idNumber", label: "ID Number", group: "Official details", on: true },
   { key: "profileStatus", label: "Official profile (complete or incomplete)", group: "Official details", on: false },
+  { key: "admissionNumber", label: "Admission number", group: "Official details", on: true },
   { key: "crew", label: "Crew", group: "Membership", on: false },
   { key: "titles", label: "Leadership Titles", group: "Membership", on: false },
 ];

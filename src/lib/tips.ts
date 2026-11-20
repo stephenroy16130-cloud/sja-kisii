@@ -25,6 +25,7 @@ export const TIPS: { match: RegExp; tip: TipDef }[] = [
   { match: /^\/dashboard\/articles\/?$/, tip: { id: "Articles", title: "Articles", text: "News and notices from your leaders. Leaders can write, edit and add up to 10 photos." } },
   { match: /^\/dashboard\/documents\/?$/, tip: { id: "Documents", title: "Documents", text: "The constitution, manuals and other files. Download them, or open the Google links." } },
   { match: /^\/dashboard\/approvals\/?$/, tip: { id: "Approvals", title: "Approvals", text: "New members wait here for your decision. Approve or reject them." } },
+  { match: /^\/dashboard\/approve-attendance\/?$/, tip: { id: "ApproveAttendance", title: "Approve attendance", text: "Check-ins still waiting for approval, even from past events. Confirm only the people who were really there." } },
   { match: /^\/dashboard\/people\/?$/, tip: { id: "People", title: "People and titles", text: "Promote or demote leaders. When every post is filled, finish the leadership setup to lock promotions." } },
   { match: /^\/dashboard\/members\/?$/, tip: { id: "Members", title: "Members", text: "Click a name to open their record. You can add people and export a member report from here." } },
   { match: /^\/dashboard\/analytics\/?$/, tip: { id: "Analytics", title: "Analytics", text: "Crew attendance trends, and members who may need a friendly check-in." } },
