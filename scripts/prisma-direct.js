@@ -24,7 +24,7 @@ u.hostname = u.hostname.replace("-pooler", "");
 u.searchParams.delete("channel_binding");
 u.searchParams.set("sslmode", "require");
 u.searchParams.set("connect_timeout", "30");
-console.log("Prisma will use the direct database address: " + u.hostname);
+console.error("Prisma will use the direct database address: " + u.hostname);
 
 const r = spawnSync("npx", ["prisma", ...process.argv.slice(2)], {
   stdio: "inherit",

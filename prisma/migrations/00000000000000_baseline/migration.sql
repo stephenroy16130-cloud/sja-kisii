@@ -1,3 +1,6 @@
+-- CreateSchema
+CREATE SCHEMA IF NOT EXISTS "public";
+
 -- CreateEnum
 CREATE TYPE "Title" AS ENUM ('CORPORAL', 'SERGEANT', 'DSM', 'BAND_LEAD', 'BAND_MEMBER', 'DO_OPERATIONS', 'DO_TRAINING', 'DO_ADMIN', 'DO_FINANCE');
 
@@ -17,7 +20,7 @@ CREATE TYPE "AttendanceStatus" AS ENUM ('PRESENT', 'ABSENT', 'EXCUSED');
 CREATE TYPE "RequestStatus" AS ENUM ('PENDING', 'APPROVED', 'REJECTED');
 
 -- CreateEnum
-CREATE TYPE "TrainingType" AS ENUM ('DRILL', 'FIRST_AID');
+CREATE TYPE "TrainingType" AS ENUM ('BAND', 'DRILL', 'FIRST_AID');
 
 -- CreateEnum
 CREATE TYPE "VerificationStatus" AS ENUM ('PENDING', 'VERIFIED', 'REJECTED');
@@ -29,7 +32,7 @@ CREATE TYPE "StockType" AS ENUM ('READY_STOCK', 'MADE_TO_ORDER');
 CREATE TYPE "OrderStatus" AS ENUM ('PENDING_PAYMENT', 'PAID', 'CANCELLED', 'FULFILLED');
 
 -- CreateEnum
-CREATE TYPE "TransactionPurpose" AS ENUM ('REGISTRATION_FEE', 'STORE_ORDER', 'CREW_EVENT');
+CREATE TYPE "TransactionPurpose" AS ENUM ('COLLECTION', 'REGISTRATION_FEE', 'STORE_ORDER', 'CREW_EVENT');
 
 -- CreateEnum
 CREATE TYPE "TransactionStatus" AS ENUM ('PENDING', 'SUCCESS', 'FAILED', 'CANCELLED');
@@ -43,8 +46,30 @@ CREATE TYPE "MembershipAction" AS ENUM ('ADD', 'REMOVE');
 -- CreateEnum
 CREATE TYPE "RsvpResponse" AS ENUM ('GOING', 'NOT_GOING', 'MAYBE');
 
+-- CreateEnum
+CREATE TYPE "Gender" AS ENUM ('MALE', 'FEMALE', 'OTHER');
+
+-- CreateEnum
+CREATE TYPE "IdType" AS ENUM ('NATIONAL_ID', 'BIRTH_CERTIFICATE');
+
+-- CreateEnum
+CREATE TYPE "PhotoKind" AS ENUM ('OFFICIAL', 'SOCIAL');
+
+-- CreateEnum
+CREATE TYPE "CheckInStatus" AS ENUM ('PENDING', 'CONFIRMED', 'REJECTED');
+
 -- CreateTable
 CREATE TABLE "User" (
+    "admissionNumber" TEXT,
+    "mustChangePassword" BOOLEAN NOT NULL DEFAULT false,
+    "has_completed_onboarding" BOOLEAN NOT NULL DEFAULT false,
+    "dateOfBirth" TIMESTAMP(3),
+    "gender" "Gender",
+    "idType" "IdType",
+    "idNumber" TEXT,
+    "preferredName" TEXT,
+    "officialPhotoAt" TIMESTAMP(3),
+    "socialPhotoAt" TIMESTAMP(3),
     "id" TEXT NOT NULL,
     "username" TEXT NOT NULL,
     "email" TEXT NOT NULL,
@@ -58,6 +83,7 @@ CREATE TABLE "User" (
     "crewId" INTEGER,
     "approvedById" TEXT,
     "crewApprovedById" TEXT,
+    "hasSeenMotw" BOOLEAN NOT NULL DEFAULT false,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -96,6 +122,14 @@ CREATE TABLE "PasswordResetToken" (
 
 -- CreateTable
 CREATE TABLE "Meeting" (
+    "geoLat" DOUBLE PRECISION,
+    "geoLng" DOUBLE PRECISION,
+    "geoRadius" INTEGER,
+    "qrToken" TEXT,
+    "qrActivatesAt" TIMESTAMP(3),
+    "qrExpiresAt" TIMESTAMP(3),
+    "archivedAt" TIMESTAMP(3),
+    "archivedById" TEXT,
     "id" TEXT NOT NULL,
     "title" TEXT NOT NULL,
     "description" TEXT,
@@ -122,6 +156,14 @@ CREATE TABLE "Apology" (
 
 -- CreateTable
 CREATE TABLE "FieldOp" (
+    "geoLat" DOUBLE PRECISION,
+    "geoLng" DOUBLE PRECISION,
+    "geoRadius" INTEGER,
+    "archivedAt" TIMESTAMP(3),
+    "archivedById" TEXT,
+    "qrToken" TEXT,
+    "qrActivatesAt" TIMESTAMP(3),
+    "qrExpiresAt" TIMESTAMP(3),
     "id" TEXT NOT NULL,
     "title" TEXT NOT NULL,
     "description" TEXT,
@@ -137,6 +179,14 @@ CREATE TABLE "FieldOp" (
 
 -- CreateTable
 CREATE TABLE "Training" (
+    "geoLat" DOUBLE PRECISION,
+    "geoLng" DOUBLE PRECISION,
+    "geoRadius" INTEGER,
+    "archivedAt" TIMESTAMP(3),
+    "archivedById" TEXT,
+    "qrToken" TEXT,
+    "qrActivatesAt" TIMESTAMP(3),
+    "qrExpiresAt" TIMESTAMP(3),
     "id" TEXT NOT NULL,
     "type" "TrainingType" NOT NULL,
     "title" TEXT NOT NULL,
@@ -173,6 +223,8 @@ CREATE TABLE "AttendanceRecord" (
 
 -- CreateTable
 CREATE TABLE "Item" (
+    "archivedAt" TIMESTAMP(3),
+    "images" TEXT[] DEFAULT ARRAY[]::TEXT[],
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "description" TEXT,
@@ -215,6 +267,7 @@ CREATE TABLE "OrderItem" (
 
 -- CreateTable
 CREATE TABLE "Transaction" (
+    "collectionId" TEXT,
     "id" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
     "purpose" "TransactionPurpose" NOT NULL,
@@ -358,12 +411,140 @@ CREATE TABLE "AuditLog" (
 );
 
 -- CreateTable
+CREATE TABLE "WeeklyResult" (
+    "isMotwRevealed" BOOLEAN NOT NULL DEFAULT false,
+    "id" TEXT NOT NULL,
+    "weekStart" TIMESTAMP(3) NOT NULL,
+    "weekEnd" TIMESTAMP(3) NOT NULL,
+    "winnerId" TEXT,
+    "points" INTEGER NOT NULL DEFAULT 0,
+    "optionalCount" INTEGER NOT NULL DEFAULT 0,
+    "perfectWeek" BOOLEAN NOT NULL DEFAULT false,
+    "topFive" JSONB,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "WeeklyResult_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "UserPhoto" (
+    "userId" TEXT NOT NULL,
+    "kind" "PhotoKind" NOT NULL,
+    "data" BYTEA NOT NULL,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "UserPhoto_pkey" PRIMARY KEY ("userId","kind")
+);
+
+-- CreateTable
+CREATE TABLE "StoredFile" (
+    "id" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "mimeType" TEXT NOT NULL,
+    "size" INTEGER NOT NULL,
+    "data" BYTEA NOT NULL,
+    "audience" "Audience" NOT NULL DEFAULT 'GENERAL',
+    "crewId" INTEGER,
+    "uploadedById" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "StoredFile_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "PushSubscription" (
+    "id" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "endpoint" TEXT NOT NULL,
+    "p256dh" TEXT NOT NULL,
+    "auth" TEXT NOT NULL,
+    "userAgent" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "PushSubscription_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Passkey" (
+    "id" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "publicKey" BYTEA NOT NULL,
+    "counter" INTEGER NOT NULL DEFAULT 0,
+    "transports" TEXT[] DEFAULT ARRAY[]::TEXT[],
+    "deviceName" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "lastUsedAt" TIMESTAMP(3),
+
+    CONSTRAINT "Passkey_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "CheckIn" (
+    "id" TEXT NOT NULL,
+    "kind" "EventType" NOT NULL,
+    "eventId" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "crewId" INTEGER,
+    "status" "CheckInStatus" NOT NULL DEFAULT 'PENDING',
+    "scannedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "decidedById" TEXT,
+    "decidedAt" TIMESTAMP(3),
+
+    CONSTRAINT "CheckIn_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "EventLink" (
+    "id" TEXT NOT NULL,
+    "kind" "EventType" NOT NULL,
+    "eventId" TEXT NOT NULL,
+    "title" TEXT NOT NULL,
+    "url" TEXT NOT NULL,
+    "addedById" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "EventLink_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Collection" (
+    "archivedAt" TIMESTAMP(3),
+    "id" TEXT NOT NULL,
+    "title" TEXT NOT NULL,
+    "description" TEXT,
+    "amount" INTEGER NOT NULL,
+    "crewId" INTEGER,
+    "isOpen" BOOLEAN NOT NULL DEFAULT true,
+    "closesAt" TIMESTAMP(3),
+    "createdById" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "Collection_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Notification" (
+    "id" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "title" TEXT NOT NULL,
+    "body" TEXT NOT NULL,
+    "url" TEXT,
+    "readAt" TIMESTAMP(3),
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "Notification_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "_CrewToFieldOp" (
     "A" INTEGER NOT NULL,
     "B" TEXT NOT NULL,
 
     CONSTRAINT "_CrewToFieldOp_AB_pkey" PRIMARY KEY ("A","B")
 );
+
+-- CreateIndex
+CREATE UNIQUE INDEX "User_admissionNumber_key" ON "User"("admissionNumber");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "User_username_key" ON "User"("username");
@@ -381,10 +562,22 @@ CREATE INDEX "User_status_idx" ON "User"("status");
 CREATE INDEX "User_crewId_idx" ON "User"("crewId");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "User_idType_idNumber_key" ON "User"("idType", "idNumber");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "PasswordResetToken_tokenHash_key" ON "PasswordResetToken"("tokenHash");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "Meeting_qrToken_key" ON "Meeting"("qrToken");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "Apology_meetingId_userId_key" ON "Apology"("meetingId", "userId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "FieldOp_qrToken_key" ON "FieldOp"("qrToken");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Training_qrToken_key" ON "Training"("qrToken");
 
 -- CreateIndex
 CREATE INDEX "AttendanceRecord_crewId_idx" ON "AttendanceRecord"("crewId");
@@ -415,6 +608,42 @@ CREATE INDEX "AuditLog_entity_entityId_idx" ON "AuditLog"("entity", "entityId");
 
 -- CreateIndex
 CREATE INDEX "AuditLog_actorId_idx" ON "AuditLog"("actorId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "WeeklyResult_weekStart_key" ON "WeeklyResult"("weekStart");
+
+-- CreateIndex
+CREATE INDEX "WeeklyResult_winnerId_idx" ON "WeeklyResult"("winnerId");
+
+-- CreateIndex
+CREATE INDEX "StoredFile_uploadedById_idx" ON "StoredFile"("uploadedById");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "PushSubscription_endpoint_key" ON "PushSubscription"("endpoint");
+
+-- CreateIndex
+CREATE INDEX "PushSubscription_userId_idx" ON "PushSubscription"("userId");
+
+-- CreateIndex
+CREATE INDEX "Passkey_userId_idx" ON "Passkey"("userId");
+
+-- CreateIndex
+CREATE INDEX "CheckIn_kind_eventId_status_idx" ON "CheckIn"("kind", "eventId", "status");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "CheckIn_kind_eventId_userId_key" ON "CheckIn"("kind", "eventId", "userId");
+
+-- CreateIndex
+CREATE INDEX "EventLink_kind_eventId_idx" ON "EventLink"("kind", "eventId");
+
+-- CreateIndex
+CREATE INDEX "Collection_isOpen_idx" ON "Collection"("isOpen");
+
+-- CreateIndex
+CREATE INDEX "Notification_userId_createdAt_idx" ON "Notification"("userId", "createdAt");
+
+-- CreateIndex
+CREATE INDEX "Notification_userId_readAt_idx" ON "Notification"("userId", "readAt");
 
 -- CreateIndex
 CREATE INDEX "_CrewToFieldOp_B_index" ON "_CrewToFieldOp"("B");
@@ -474,6 +703,9 @@ ALTER TABLE "OrderItem" ADD CONSTRAINT "OrderItem_orderId_fkey" FOREIGN KEY ("or
 ALTER TABLE "OrderItem" ADD CONSTRAINT "OrderItem_itemId_fkey" FOREIGN KEY ("itemId") REFERENCES "Item"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "Transaction" ADD CONSTRAINT "Transaction_collectionId_fkey" FOREIGN KEY ("collectionId") REFERENCES "Collection"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "Transaction" ADD CONSTRAINT "Transaction_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
@@ -531,7 +763,26 @@ ALTER TABLE "Document" ADD CONSTRAINT "Document_uploadedById_fkey" FOREIGN KEY (
 ALTER TABLE "AuditLog" ADD CONSTRAINT "AuditLog_actorId_fkey" FOREIGN KEY ("actorId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "WeeklyResult" ADD CONSTRAINT "WeeklyResult_winnerId_fkey" FOREIGN KEY ("winnerId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "UserPhoto" ADD CONSTRAINT "UserPhoto_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "PushSubscription" ADD CONSTRAINT "PushSubscription_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Passkey" ADD CONSTRAINT "Passkey_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "CheckIn" ADD CONSTRAINT "CheckIn_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Notification" ADD CONSTRAINT "Notification_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "_CrewToFieldOp" ADD CONSTRAINT "_CrewToFieldOp_A_fkey" FOREIGN KEY ("A") REFERENCES "Crew"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "_CrewToFieldOp" ADD CONSTRAINT "_CrewToFieldOp_B_fkey" FOREIGN KEY ("B") REFERENCES "FieldOp"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+

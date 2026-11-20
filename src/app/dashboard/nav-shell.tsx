@@ -106,6 +106,11 @@ export default function NavShell({
   }, [sheet]);
 
   async function logout() {
+    try {
+      sessionStorage.removeItem("sja-install-asked");
+    } catch {
+      // ignore
+    }
     await detachPushFromServer();
     await api("/api/auth/logout", "POST");
     router.push("/login");

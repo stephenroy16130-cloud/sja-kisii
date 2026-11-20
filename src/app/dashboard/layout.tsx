@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
 import OnboardingModal from "@/components/onboarding-modal";
+import InstallPrompt from "@/components/install-prompt";
 import PageTips from "@/components/page-tips";
 import { getCurrentUser } from "@/lib/auth";
 import { canSeeBand } from "@/lib/band";
@@ -96,6 +97,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
         />
       )}
       <PageTips userId={user.id} enabled={!needsTour} />
+      <InstallPrompt enabled={!needsTour} />
     </div>
   );
 }

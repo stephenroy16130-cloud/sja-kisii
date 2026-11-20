@@ -45,6 +45,24 @@ function TrophyIcon() {
   );
 }
 
+// The real photo, shown as a circle. If the file is missing, the team icon takes its place.
+function IntroPhoto({ color }: { color: string }) {
+  const [ok, setOk] = useState(true);
+  if (!ok) return <TeamIcon />;
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src="/sjaintro.jpg"
+      alt="St. John Ambulance Kisii University"
+      width={208}
+      height={208}
+      onError={() => setOk(false)}
+      className="h-44 w-44 rounded-full border-[3px] object-cover sm:h-52 sm:w-52"
+      style={{ borderColor: color }}
+    />
+  );
+}
+
 export default function OnboardingModal({
   firstName,
   crewName,
@@ -69,7 +87,7 @@ export default function OnboardingModal({
 
   const slides: { icon: ReactNode; title: string; body: string; color: string; chip?: string | null }[] = [
     {
-      icon: <TeamIcon />,
+      icon: <IntroPhoto color={crewColor} />,
       color: crewColor,
       title: `Welcome to St. John KSU, ${firstName}!`,
       body: crewName ? "You have been assigned to" : "Your leaders will assign you to a crew soon.",
@@ -119,15 +137,18 @@ export default function OnboardingModal({
       <button
         onClick={finish}
         disabled={busy}
-        className="absolute right-4 top-4 rounded-full border border-white/30 px-5 py-2 text-xs uppercase tracking-[0.15em] text-white/80 transition hover:bg-white hover:text-black"
+        className="absolute right-4 top-4 z-10 rounded-full border border-white/30 px-5 py-2 text-xs uppercase tracking-[0.15em] text-white/80 transition hover:bg-white hover:text-black"
       >
         Skip
       </button>
 
-      <div className="w-full max-w-sm overflow-hidden rounded-3xl border border-white/10 bg-card">
+      <div className="max-h-[92vh] w-full max-w-sm overflow-y-auto rounded-3xl border border-white/10 bg-card">
         <div ref={track} onScroll={onScroll} className="no-scrollbar flex snap-x snap-mandatory overflow-x-auto">
           {slides.map((s) => (
-            <div key={s.title} className="w-full shrink-0 snap-center px-8 pb-6 pt-12 text-center">
+            <div
+              key={s.title}
+              className="flex w-full shrink-0 snap-center flex-col items-center justify-center px-8 pb-6 pt-14 text-center"
+            >
               <div className="flex justify-center" style={{ color: s.color }}>
                 {s.icon}
               </div>
