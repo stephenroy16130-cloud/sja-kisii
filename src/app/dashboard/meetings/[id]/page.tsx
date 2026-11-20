@@ -9,6 +9,7 @@ import { crewName } from "@/lib/crews";
 import { db } from "@/lib/db";
 import { fmt, hasStarted, isApologyLocked, lockTime } from "@/lib/meetings";
 import { can } from "@/lib/rbac";
+import { isLeader as isDivisionLeader } from "@/lib/leaderboard";
 import ApologyActions from "./apology-actions";
 import ApologyForm from "./apology-form";
 import AttendanceRoster, { type RosterMember } from "./attendance-roster";
@@ -37,6 +38,7 @@ export default async function MeetingPage({ params }: { params: Promise<{ id: st
   const started = hasStarted(meeting.startsAt, now);
   const isAdmin = can(user, "meeting:manage");
   if (meeting.archivedAt && !isAdmin) notFound();
+  if (meeting.leadersOnly && !isAdmin && !isDivisionLeader(user)) notFound();
   const crewId = user.crewId;
   const isLeader = can(user, "crew:record_attendance") && crewId !== null;
 
@@ -94,6 +96,11 @@ export default async function MeetingPage({ params }: { params: Promise<{ id: st
       </Link>
 
       <section className="vignette-dark rounded-3xl border border-white/10 p-7 md:p-10">
+        {meeting.leadersOnly && (
+          <span className="mb-3 inline-block rounded-full border border-gold/60 bg-gold/10 px-3 py-1 text-xs uppercase tracking-[0.12em] text-gold">
+            Leaders only meeting
+          </span>
+        )}
         <h1 className="text-3xl font-light tracking-tight md:text-4xl">{meeting.title}</h1>
         <p className="mt-3 text-white/70">{fmt(meeting.startsAt)}</p>
         {meeting.location && <p className="mt-1 text-sm text-white/50">{meeting.location}</p>}

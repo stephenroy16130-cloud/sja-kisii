@@ -23,7 +23,7 @@ export default async function MembersPage() {
       select: {
         id: true, fullName: true, preferredName: true, socialPhotoAt: true, crewId: true,
         titles: true, isSuperintendent: true,
-        dateOfBirth: true, gender: true, idType: true, idNumber: true,
+        dateOfBirth: true, gender: true, idType: true, idNumber: true, admissionNumber: true,
       },
     }),
     db.user.findMany({

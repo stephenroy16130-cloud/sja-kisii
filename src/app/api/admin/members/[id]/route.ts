@@ -15,7 +15,7 @@ export const GET = route(async (_req: Request, ctx: { params: Promise<{ id: stri
     where: { id },
     select: {
       id: true, fullName: true, preferredName: true, email: true, phone: true,
-      dateOfBirth: true, gender: true, idType: true, idNumber: true, crewId: true,
+      dateOfBirth: true, gender: true, idType: true, idNumber: true, admissionNumber: true, crewId: true,
       titles: true, isSuperintendent: true, isDeveloper: true, status: true, createdAt: true,
       officialPhotoAt: true, socialPhotoAt: true,
     },
@@ -69,6 +69,7 @@ export const GET = route(async (_req: Request, ctx: { params: Promise<{ id: stri
       email: u.email,
       idType: u.idType,
       idNumber: u.idNumber,
+      admissionNumber: u.admissionNumber,
       photo: officialPhoto(u),
       status: u.status,
       joinedAt: u.createdAt.toISOString(),

@@ -34,7 +34,7 @@ export default function AdmissionForm({ initial }: { initial: string }) {
         <input
           name="admissionNumber"
           defaultValue={initial}
-          placeholder="SC211/1234/2022"
+          placeholder="SC211/1234/26"
           autoCapitalize="characters"
           className={`${inputCls} max-w-xs`}
         />

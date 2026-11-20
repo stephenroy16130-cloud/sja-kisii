@@ -5,14 +5,18 @@ import { getCurrentUser } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { fmt, isApologyLocked } from "@/lib/meetings";
 import { can } from "@/lib/rbac";
+import { isLeader } from "@/lib/leaderboard";
 import ArchiveButton from "./archive-button";
 import CreateMeetingForm from "./create-meeting-form";
 
 export const dynamic = "force-dynamic";
 
-async function load(userId: string, archived: boolean) {
+async function load(userId: string, archived: boolean, canSeeLeadersOnly: boolean) {
   return db.meeting.findMany({
-    where: archived ? { archivedAt: { not: null } } : { archivedAt: null },
+    where: {
+      ...(archived ? { archivedAt: { not: null } } : { archivedAt: null }),
+      ...(canSeeLeadersOnly ? {} : { leadersOnly: false }),
+    },
     orderBy: { startsAt: "desc" },
     take: archived ? 50 : 100,
     include: {
@@ -61,6 +65,9 @@ function Row({
           </p>
         </Link>
         <div className="flex flex-wrap items-center gap-2">
+          {m.leadersOnly && (
+            <span className={`${chip} border-gold/60 bg-gold/10 text-gold`}>Leaders only</span>
+          )}
           {!archived && isAdmin && m._count.apologies > 0 && (
             <span className={`${chip} border-warn/50 text-warn`}>{m._count.apologies} pending</span>
           )}
@@ -85,9 +92,10 @@ export default async function MeetingsPage() {
   if (!user) redirect("/login");
 
   const isAdmin = can(user, "meeting:manage");
+  const canSeeLeadersOnly = isAdmin || isLeader(user);
   const [meetings, archivedMeetings] = await Promise.all([
-    load(user.id, false),
-    isAdmin ? load(user.id, true) : Promise.resolve([] as MeetingRow[]),
+    load(user.id, false, canSeeLeadersOnly),
+    isAdmin ? load(user.id, true, true) : Promise.resolve([] as MeetingRow[]),
   ]);
   const now = new Date();
   const upcoming = meetings.filter((m) => m.startsAt >= now).reverse();

@@ -150,3 +150,35 @@ export async function notifyTitles(titles: Title[], payload: PushPayload, except
     console.error("push failed", e);
   }
 }
+
+const LEADER_TITLES: Title[] = [
+  "CORPORAL",
+  "SERGEANT",
+  "DSM",
+  "BAND_LEAD",
+  "DO_OPERATIONS",
+  "DO_TRAINING",
+  "DO_ADMIN",
+  "DO_FINANCE",
+];
+
+// All division leaders (Superintendent or holding any leadership title), for leaders-only meetings
+export async function notifyLeaders(payload: PushPayload, exceptUserId?: string) {
+  try {
+    const users = await db.user.findMany({
+      where: {
+        status: "ACTIVE",
+        isDeveloper: false,
+        OR: [
+          { isSuperintendent: true },
+          { titles: { hasSome: LEADER_TITLES } },
+        ],
+        ...(exceptUserId ? { id: { not: exceptUserId } } : {}),
+      },
+      select: { id: true },
+    });
+    await notifyUsers(users.map((u) => u.id), payload);
+  } catch (e) {
+    console.error("push failed", e);
+  }
+}

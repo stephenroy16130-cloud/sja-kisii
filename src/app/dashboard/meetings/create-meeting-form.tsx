@@ -21,10 +21,12 @@ export default function CreateMeetingForm() {
     const f = new FormData(form);
     const location = String(f.get("location") || "").trim();
     const description = String(f.get("description") || "").trim();
+    const leadersOnly = f.get("leadersOnly") === "true";
     try {
       const created = await api("/api/meetings", "POST", {
         title: f.get("title"),
         startsAt: new Date(String(f.get("startsAt"))).toISOString(),
+        leadersOnly,
         ...(location ? { location } : {}),
         ...(description ? { description } : {}),
       });
@@ -50,6 +52,16 @@ export default function CreateMeetingForm() {
       <div className="sm:col-span-2">
         <label className={labelCls}>Title</label>
         <input name="title" required className={inputCls} placeholder="General Meeting" />
+      </div>
+      <div className="sm:col-span-2">
+        <label className={labelCls}>Audience</label>
+        <select name="leadersOnly" className={inputCls} defaultValue="false">
+          <option value="false">All members (general meeting)</option>
+          <option value="true">Leaders only (division leaders only)</option>
+        </select>
+        <p className="mt-1 text-xs text-white/40">
+          When set to Leaders only, notifications and meeting access are restricted to leaders.
+        </p>
       </div>
       <div>
         <label className={labelCls}>Date and time</label>

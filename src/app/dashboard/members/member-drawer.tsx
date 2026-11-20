@@ -16,6 +16,7 @@ type Detail = {
     fullName: string; dateOfBirth: string | null; age: number | null;
     gender: "MALE" | "FEMALE" | "OTHER" | null; phone: string; email: string;
     idType: "NATIONAL_ID" | "BIRTH_CERTIFICATE" | null; idNumber: string | null;
+    admissionNumber: string | null;
     photo: string | null; status: string; joinedAt: string;
   };
   social: {
@@ -132,6 +133,7 @@ export default function MemberDrawer({ memberId, onClose }: { memberId: string; 
             <Row label="Email" value={data.official.email} />
             <Row label="Identity document" value={data.official.idType ? ID_LABEL[data.official.idType] : null} />
             <Row label="ID number" value={data.official.idNumber} />
+            <Row label="Admission number" value={data.official.admissionNumber} />
             <Row label="Joined" value={fmtDate(data.official.joinedAt)} />
             <AdmissionNumber memberId={memberId} />
             <ResetPassword memberId={memberId} />

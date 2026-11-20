@@ -45,7 +45,7 @@ export default function AdmissionNumber({ memberId }: { memberId: string }) {
         <p className="mt-1 text-sm text-white/40">Loading...</p>
       ) : editing ? (
         <div className="mt-2 flex flex-wrap gap-2">
-          <input value={draft} onChange={(e) => setDraft(e.target.value)} placeholder="SC211/1234/2022" className={`${inputCls} max-w-xs`} />
+          <input value={draft} onChange={(e) => setDraft(e.target.value)} placeholder="SC211/1234/26" className={`${inputCls} max-w-xs`} />
           <button disabled={busy} onClick={save} className={btnGhostCls}>{busy ? "Saving..." : "Save"}</button>
           <button disabled={busy} onClick={() => { setEditing(false); setDraft(value); setError(""); }} className={btnGhostCls}>Cancel</button>
         </div>

@@ -1,6 +1,6 @@
 import { after } from "next/server";
 import { fmt } from "@/lib/meetings";
-import { notifyAudience } from "@/lib/push";
+import { notifyAudience, notifyLeaders } from "@/lib/push";
 import { z } from "zod";
 import { audit, requirePermission, requireUser } from "@/lib/auth";
 import { db } from "@/lib/db";
@@ -11,6 +11,7 @@ const createSchema = z.object({
   description: z.string().trim().max(1000).optional(),
   location: z.string().trim().max(200).optional(),
   startsAt: z.string().datetime(),
+  leadersOnly: z.boolean().optional(),
 });
 
 export const GET = route(async () => {
@@ -28,23 +29,26 @@ export const POST = route(async (req: Request) => {
       description: data.description || null,
       location: data.location || null,
       startsAt: new Date(data.startsAt),
+      leadersOnly: Boolean(data.leadersOnly),
       createdById: actor.id,
     },
-    select: { id: true, title: true },
+    select: { id: true, title: true, leadersOnly: true },
   });
-  await audit(actor.id, "MEETING_CREATED", "Meeting", meeting.id, { title: meeting.title });
-  after(() =>
-    notifyAudience(
-      "GENERAL",
-      null,
-      {
-        title: "New meeting: " + meeting.title,
-        body: fmt(new Date(data.startsAt)),
-        url: "/dashboard/meetings/" + meeting.id,
-        tag: "event-" + meeting.id,
-      },
-      actor.id
-    )
-  );
+  await audit(actor.id, "MEETING_CREATED", "Meeting", meeting.id, {
+    title: meeting.title,
+    leadersOnly: meeting.leadersOnly,
+  });
+  after(() => {
+    const payload = {
+      title: (meeting.leadersOnly ? "Leaders Meeting: " : "New meeting: ") + meeting.title,
+      body: fmt(new Date(data.startsAt)),
+      url: "/dashboard/meetings/" + meeting.id,
+      tag: "event-" + meeting.id,
+    };
+    if (meeting.leadersOnly) {
+      return notifyLeaders(payload, actor.id);
+    }
+    return notifyAudience("GENERAL", null, payload, actor.id);
+  });
   return Response.json(meeting, { status: 201 });
 });
