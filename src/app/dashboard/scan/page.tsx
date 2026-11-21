@@ -1,3 +1,4 @@
+import { isLeaderUser } from "@/lib/leaders";
 import type { CheckInStatus } from "@prisma/client";
 import { redirect } from "next/navigation";
 import GeoCheckin from "@/components/geo-checkin";
@@ -34,7 +35,7 @@ export default async function ScanPage() {
   const [rows, meetings, ops, trainings, mine] = await Promise.all([
     db.checkIn.findMany({ where: { userId: user.id }, orderBy: { scannedAt: "desc" }, take: 15 }),
     crewId
-      ? db.meeting.findMany({ where: win, select: { id: true, title: true, startsAt: true, geoLat: true } })
+      ? db.meeting.findMany({ where: { ...win, ...(isLeaderUser(user) ? {} : { leadersOnly: false }) }, select: { id: true, title: true, startsAt: true, geoLat: true } })
       : Promise.resolve([]),
     crewId
       ? db.fieldOp.findMany({

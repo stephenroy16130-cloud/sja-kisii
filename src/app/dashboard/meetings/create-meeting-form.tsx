@@ -11,6 +11,7 @@ export default function CreateMeetingForm() {
   const [msg, setMsg] = useState("");
   const [busy, setBusy] = useState(false);
   const [qr, setQr] = useState(false);
+  const [leadersOnly, setLeadersOnly] = useState(false);
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -23,7 +24,7 @@ export default function CreateMeetingForm() {
     const description = String(f.get("description") || "").trim();
     const leadersOnly = f.get("leadersOnly") === "true";
     try {
-      const created = await api("/api/meetings", "POST", {
+      const created = await api(leadersOnly ? "/api/meetings/leaders" : "/api/meetings", "POST", {
         title: f.get("title"),
         startsAt: new Date(String(f.get("startsAt"))).toISOString(),
         leadersOnly,
@@ -40,6 +41,7 @@ export default function CreateMeetingForm() {
       }
       form.reset();
       setQr(false);
+      setLeadersOnly(false);
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
@@ -82,6 +84,14 @@ export default function CreateMeetingForm() {
           <span className="block text-xs text-white/40">A printable QR code is created instantly. You set when it opens and closes afterwards.</span>
         </span>
       </label>
+      <div className="sm:col-span-2">
+        <p className="mb-2 text-[11px] uppercase tracking-[0.2em] text-white/50">Who is this meeting for?</p>
+        <div className="flex flex-wrap gap-2">
+          <button type="button" onClick={() => setLeadersOnly(false)} className={`rounded-full border px-4 py-2 text-xs transition ${!leadersOnly ? "border-white bg-white text-black" : "border-white/20 text-white/60 hover:border-white/50"}`}>All members</button>
+          <button type="button" onClick={() => setLeadersOnly(true)} className={`rounded-full border px-4 py-2 text-xs transition ${leadersOnly ? "border-white bg-white text-black" : "border-white/20 text-white/60 hover:border-white/50"}`}>Leaders only</button>
+        </div>
+        <p className="mt-2 text-xs text-white/40">{leadersOnly ? "Only leaders are told about it, see it and can check in." : "Every member is told about it."}</p>
+      </div>
       {error && <p className="text-sm text-bad sm:col-span-2">{error}</p>}
       {msg && <p className="text-sm text-ok sm:col-span-2">{msg}</p>}
       <div className="sm:col-span-2">

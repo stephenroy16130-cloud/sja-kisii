@@ -1,3 +1,4 @@
+import { isLeaderUser } from "@/lib/leaders";
 import { Prisma } from "@prisma/client";
 import { z } from "zod";
 import { requireUser } from "@/lib/auth";
@@ -43,6 +44,7 @@ export const POST = route(async (req: Request) => {
   if (w === "CLOSED") throw new HttpError(409, "Check-in has closed.");
 
   if (e.bandOnly && !inBand(actor)) throw new HttpError(403, "This check-in is for band members.");
+  if (e.leadersOnly && !isLeaderUser(actor)) throw new HttpError(403, "This check-in is for leaders.");
   if (actor.crewId === null) throw new HttpError(403, "You are not assigned to a crew, so you cannot check in.");
   if (e.crewIds && !e.crewIds.includes(actor.crewId)) throw new HttpError(403, "This check-in is not for your crew.");
 

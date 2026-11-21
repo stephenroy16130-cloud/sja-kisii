@@ -20,6 +20,7 @@ type Props = {
   allCrews: boolean;
   crewIds: number[];
   locked: string | null;
+  leadersOnly: boolean | null;
 };
 
 const local = (iso: string) => {
@@ -32,6 +33,7 @@ export default function EventEditor(p: Props) {
   const [editing, setEditing] = useState(false);
   const [all, setAll] = useState(p.allCrews);
   const [crews, setCrews] = useState<number[]>(p.crewIds);
+  const [leaders, setLeaders] = useState(p.leadersOnly === true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [msg, setMsg] = useState("");
@@ -51,6 +53,7 @@ export default function EventEditor(p: Props) {
         ...(p.location !== null ? { location: String(f.get("location") ?? "") } : {}),
         ...(p.hasEnds ? { endsAt: ends ? new Date(ends).toISOString() : null } : {}),
         ...(p.showCrews ? { allCrews: all, crewIds: all ? [] : crews } : {}),
+        ...(p.leadersOnly !== null ? { leadersOnly: leaders } : {}),
       });
       setEditing(false);
       setMsg("Saved");
@@ -130,6 +133,15 @@ export default function EventEditor(p: Props) {
             <div className="sm:col-span-2">
               <label className={labelCls}>Notes</label>
               <textarea name="description" rows={3} defaultValue={p.description} className={inputCls} />
+            </div>
+          )}
+          {p.leadersOnly !== null && (
+            <div className="sm:col-span-2">
+              <label className={labelCls}>Who is this meeting for?</label>
+              <div className="flex flex-wrap gap-2">
+                <button type="button" onClick={() => setLeaders(false)} className={`rounded-full border px-4 py-2 text-xs transition ${!leaders ? "border-white bg-white text-black" : "border-white/20 text-white/60 hover:border-white/50"}`}>All members</button>
+                <button type="button" onClick={() => setLeaders(true)} className={`rounded-full border px-4 py-2 text-xs transition ${leaders ? "border-white bg-white text-black" : "border-white/20 text-white/60 hover:border-white/50"}`}>Leaders only</button>
+              </div>
             </div>
           )}
           {p.showCrews && (

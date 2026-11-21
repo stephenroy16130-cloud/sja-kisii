@@ -1,5 +1,6 @@
 import { Prisma } from "@prisma/client";
 import { z } from "zod";
+import { ADMISSION_HINT, isValidAdmission, normalizeAdmission } from "@/lib/admission";
 import { audit, requirePermission } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { route } from "@/lib/http";
@@ -59,6 +60,15 @@ export const POST = route(async (req: Request) => {
       });
       continue;
     }
+    let admission: string | null = null;
+    if (r.admissionNumber) {
+      admission = normalizeAdmission(r.admissionNumber);
+      if (!isValidAdmission(admission)) {
+        results.push({ name: r.fullName, email: email.data, phone: phone.data, error: "Admission number: " + ADMISSION_HINT });
+        continue;
+      }
+    }
+
     const username = await freeUsername(email.data, taken);
     const temp = tempPassword();
     try {
@@ -69,7 +79,7 @@ export const POST = route(async (req: Request) => {
           phone: phone.data,
           fullName: r.fullName,
           crewId: r.crewId,
-          admissionNumber: r.admissionNumber ? r.admissionNumber.replace(/\s+/g, ' ').toUpperCase() : null,
+          admissionNumber: admission,
           passwordHash: await hashPassword(temp),
           status: "ACTIVE", // added by the DO Admin, so no approval steps
           mustChangePassword: true,
@@ -80,7 +90,12 @@ export const POST = route(async (req: Request) => {
       results.push({ name: r.fullName, email: email.data, phone: phone.data, username, tempPassword: temp });
     } catch (e) {
       if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002") {
-        results.push({ name: r.fullName, email: email.data, phone: phone.data, error: "That email or phone number is already registered" });
+        results.push({
+          name: r.fullName,
+          email: email.data,
+          phone: r.phone,
+          error: "That email, phone number or admission number is already registered",
+        });
       } else {
         throw e;
       }

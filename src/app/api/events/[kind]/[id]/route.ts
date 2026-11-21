@@ -6,7 +6,7 @@ import { db } from "@/lib/db";
 import { EVENT_PATH, eventAudiences, trainingLockReason } from "@/lib/event-edit";
 import { HttpError, route } from "@/lib/http";
 import { fmt } from "@/lib/meetings";
-import { notifyAudience } from "@/lib/push";
+import { notifyAudience, notifyLeaders } from "@/lib/push";
 import { canManageQr, EVENT_TYPE, loadEvent, QR_KINDS, type QrKind } from "@/lib/qr";
 import { hasField } from "@/lib/schema-info";
 
@@ -20,6 +20,7 @@ const body = z.object({
   endsAt: z.string().datetime().nullable().optional(),
   allCrews: z.boolean().optional(),
   crewIds: z.array(z.number().int().min(1).max(4)).max(4).optional(),
+  leadersOnly: z.boolean().optional(),
 });
 
 async function authorise(kind: QrKind, id: string) {
@@ -48,6 +49,7 @@ export const PUT = route(async (req: Request, ctx: { params: Promise<{ kind: str
   data[kind === "training" ? "heldAt" : "startsAt"] = start;
   if (d.description !== undefined && hasField(model, "description")) data.description = d.description;
   if (d.location !== undefined && hasField(model, "location")) data.location = d.location;
+  if (kind === "meeting" && d.leadersOnly !== undefined && hasField("Meeting", "leadersOnly")) data.leadersOnly = d.leadersOnly;
 
   let crewIds = e.crewIds;
   if (kind === "fieldop") {
@@ -67,20 +69,27 @@ export const PUT = route(async (req: Request, ctx: { params: Promise<{ kind: str
 
   await audit(actor.id, "EVENT_EDITED", kind, e.id, { title: d.title });
 
-  // Tell the people it concerns, when the title or time changed on something that has not happened yet
+  const upcoming = start > new Date();
+  const nowLeaders = kind === "meeting" ? (d.leadersOnly ?? e.leadersOnly) : false;
   const changed = d.title !== e.title || start.getTime() !== e.startsAt.getTime();
-  if (changed && start > new Date()) {
-    const aud = eventAudiences({ bandOnly: e.bandOnly, crewIds });
-    after(async () => {
-      for (const a of aud) {
-        await notifyAudience(
-          a.audience,
-          a.crewId,
-          { title: "Updated: " + d.title, body: fmt(start), url: EVENT_PATH[kind] + e.id, tag: "event-" + e.id },
-          actor.id
-        );
-      }
-    });
+
+  if (upcoming) {
+    if (kind === "meeting" && e.leadersOnly && d.leadersOnly === false) {
+      // It was for leaders only and is now for everyone, so members are hearing about it for the first time
+      after(() =>
+        notifyAudience("GENERAL", null, { title: "New meeting: " + d.title, body: fmt(start), url: EVENT_PATH.meeting + e.id, tag: "event-" + e.id }, actor.id)
+      );
+    } else if (changed) {
+      const aud = eventAudiences({ bandOnly: e.bandOnly, crewIds });
+      const payload = { title: "Updated: " + d.title, body: fmt(start), url: EVENT_PATH[kind] + e.id, tag: "event-" + e.id };
+      after(async () => {
+        if (nowLeaders) {
+          await notifyLeaders(payload, actor.id);
+          return;
+        }
+        for (const a of aud) await notifyAudience(a.audience, a.crewId, payload, actor.id);
+      });
+    }
   }
   return Response.json({ id: e.id });
 });
@@ -123,16 +132,14 @@ export const DELETE = route(async (_req: Request, ctx: { params: Promise<{ kind:
   await audit(actor.id, result === "deleted" ? "EVENT_DELETED" : "EVENT_ARCHIVED", kind, e.id, { title: e.title });
 
   if (e.startsAt > new Date()) {
+    const payload = { title: "Cancelled: " + e.title, body: "This was removed by the organiser.", url: "/dashboard", tag: "event-" + e.id };
     const aud = eventAudiences(e);
     after(async () => {
-      for (const a of aud) {
-        await notifyAudience(
-          a.audience,
-          a.crewId,
-          { title: "Cancelled: " + e.title, body: "This was removed by the organiser.", url: "/dashboard", tag: "event-" + e.id },
-          actor.id
-        );
+      if (e.leadersOnly) {
+        await notifyLeaders(payload, actor.id);
+        return;
       }
+      for (const a of aud) await notifyAudience(a.audience, a.crewId, payload, actor.id);
     });
   }
   return Response.json({ result });

@@ -42,6 +42,7 @@ export default async function EventManage({ kind, id }: { kind: QrKind; id: stri
       allCrews={e.crewIds === null}
       crewIds={e.crewIds ?? []}
       locked={locked}
+      leadersOnly={kind === "meeting" && hasField("Meeting", "leadersOnly") ? Boolean(r.leadersOnly) : null}
     />
   );
 }

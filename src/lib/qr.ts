@@ -39,6 +39,7 @@ export type QrEvent = {
   crewIds: number[] | null; // crews the event is for. null means everyone.
   blocked: string | null; // a reason this event cannot take check-ins
   bandOnly: boolean; // a band practice: only band members attend
+  leadersOnly: boolean; // a meeting only leaders can see
   geo: Geo | null; // the venue circle, when a location check is set
 };
 type Key = { id: string } | { token: string };
@@ -55,7 +56,7 @@ export async function loadEvent(kind: QrKind, key: Key): Promise<QrEvent | null>
       qrToken: m.qrToken, qrActivatesAt: m.qrActivatesAt, qrExpiresAt: m.qrExpiresAt,
       createdById: m.createdById, crewIds: null,
       blocked: m.archivedAt ? "This meeting has been archived." : null,
-      bandOnly: false, geo: geoOf(m),
+      bandOnly: false, leadersOnly: m.leadersOnly, geo: geoOf(m),
     };
   }
   if (kind === "fieldop") {
@@ -69,7 +70,7 @@ export async function loadEvent(kind: QrKind, key: Key): Promise<QrEvent | null>
       qrToken: o.qrToken, qrActivatesAt: o.qrActivatesAt, qrExpiresAt: o.qrExpiresAt,
       createdById: o.createdById, crewIds: o.allCrews ? null : o.crews.map((c) => c.id),
       blocked: o.archivedAt ? "This operation has been archived." : null,
-      bandOnly: false, geo: geoOf(o),
+      bandOnly: false, leadersOnly: false, geo: geoOf(o),
     };
   }
   const t = await db.training.findUnique({ where: "id" in key ? { id: key.id } : { qrToken: key.token } });
@@ -79,7 +80,7 @@ export async function loadEvent(kind: QrKind, key: Key): Promise<QrEvent | null>
     qrToken: t.qrToken, qrActivatesAt: t.qrActivatesAt, qrExpiresAt: t.qrExpiresAt,
     createdById: t.createdById, crewIds: t.crewId === null ? null : [t.crewId],
     blocked: t.status === "REJECTED" ? "This training record was rejected." : t.archivedAt ? "This session has been archived." : null,
-    bandOnly: t.type === "BAND", geo: geoOf(t),
+    bandOnly: t.type === "BAND", leadersOnly: false, geo: geoOf(t),
   };
 }
 

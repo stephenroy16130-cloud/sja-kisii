@@ -1,3 +1,4 @@
+import { isLeaderUser } from "@/lib/leaders";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import ContextualTooltip from "@/components/contextual-tooltip";
@@ -93,10 +94,16 @@ export default async function MeetingsPage() {
 
   const isAdmin = can(user, "meeting:manage");
   const canSeeLeadersOnly = isAdmin || isLeader(user);
-  const [meetings, archivedMeetings] = await Promise.all([
+  const [allMeetings, allArchived] = await Promise.all([
     load(user.id, false, canSeeLeadersOnly),
     isAdmin ? load(user.id, true, true) : Promise.resolve([] as MeetingRow[]),
   ]);
+  // Leaders-only meetings are hidden from members
+  const hiddenIds = isLeaderUser(user)
+    ? new Set<string>()
+    : new Set((await db.meeting.findMany({ where: { leadersOnly: true }, select: { id: true } })).map((x) => x.id));
+  const meetings = allMeetings.filter((m) => !hiddenIds.has(m.id));
+  const archivedMeetings = allArchived.filter((m) => !hiddenIds.has(m.id));
   const now = new Date();
   const upcoming = meetings.filter((m) => m.startsAt >= now).reverse();
   const past = meetings.filter((m) => m.startsAt < now);

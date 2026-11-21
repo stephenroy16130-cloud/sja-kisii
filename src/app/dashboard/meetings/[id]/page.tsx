@@ -1,3 +1,4 @@
+import MeetingAudienceGate from "@/components/meeting-audience-gate";
 import EventManage from "@/components/event-manage";
 import EventLinks from "@/components/event-links";
 import PendingCheckins from "@/components/pending-checkins";
@@ -107,6 +108,7 @@ export default async function MeetingPage({ params }: { params: Promise<{ id: st
         {meeting.description && <p className="font-copy mt-5 text-sm leading-relaxed text-white/70">{meeting.description}</p>}
       </section>
 
+      <MeetingAudienceGate id={id} />
       <EventManage kind="meeting" id={id} />
       <QrPanel kind="meeting" id={id} />
       <PendingCheckins kind="meeting" id={id} />

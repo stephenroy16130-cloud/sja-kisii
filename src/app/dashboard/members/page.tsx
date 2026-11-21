@@ -55,7 +55,12 @@ export default async function MembersPage() {
             their record.
           </p>
         </div>
-        <ReportButton />
+        <div className="flex flex-wrap gap-3">
+          <Link href="/dashboard/members/admission" className="rounded-full border border-white/30 px-5 py-2.5 text-xs transition hover:bg-white hover:text-black">
+            Admission numbers
+          </Link>
+          <ReportButton />
+        </div>
       </div>
 
       <AddMembers />
