@@ -1,37 +1,27 @@
-import { aiKey, aiModel, aiReasoning } from "./ai-config";
+import { aiKey, aiModel } from "./ai-config";
 import { HttpError } from "./http";
 
 export type Turn = { role: "user" | "assistant"; content: string };
 export type Usage = { input: number; output: number };
 
-const ENDPOINT = "https://api.openai.com/v1/responses";
+const ENDPOINT = "https://openrouter.ai/api/v1/chat/completions";
 const CUT = "\n\n(The answer ran out of room. Try a shorter question.)";
 const FAIL = "\n\nSorry, something went wrong while answering. Please try again.";
 const EMPTY = "Sorry, I could not come up with an answer. Please try again.";
 
 // The real reason goes to the server log. The member only sees something friendly.
 function failure(status: number, text: string): HttpError {
-  console.error("OpenAI error", status, text.slice(0, 500));
+  console.error("OpenRouter error", status, text.slice(0, 500));
   if (status === 401) return new HttpError(503, "The assistant is not set up correctly yet. Please tell the administrator.");
-  if (status === 429) return new HttpError(503, "The assistant is busy right now. Please try again in a minute.");
-  if (status === 404 || (status === 400 && /model/i.test(text))) {
-    return new HttpError(503, "The assistant's model is not available. Please tell the administrator.");
-  }
+  if (status === 402 || status === 429) return new HttpError(503, "The assistant is busy right now. Please try again in a minute.");
+  if (status === 404 || status === 400) return new HttpError(503, "The assistant's model is not available. Please tell the administrator.");
   return new HttpError(502, "The assistant could not answer just now. Please try again.");
 }
 
-const call = (body: Record<string, unknown>) =>
-  fetch(ENDPOINT, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${aiKey()}`, "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-    signal: AbortSignal.timeout(55_000),
-  });
-
-type StreamEvent = {
-  type?: string;
-  delta?: string;
-  response?: { usage?: { input_tokens?: number; output_tokens?: number } };
+type Chunk = {
+  choices?: { delta?: { content?: string | null }; finish_reason?: string | null }[];
+  usage?: { prompt_tokens?: number; completion_tokens?: number };
+  error?: unknown;
 };
 
 export async function askStream(
@@ -39,23 +29,22 @@ export async function askStream(
   turns: Turn[],
   onDone: (u: Usage | null) => void
 ): Promise<ReadableStream<Uint8Array>> {
-  const base: Record<string, unknown> = {
-    model: aiModel(),
-    instructions,
-    input: turns.map((t) => ({ role: t.role, content: t.content })),
-    max_output_tokens: 1500,
-    store: false, // OpenAI should not keep these conversations
-    stream: true,
-  };
-
-  const effort = aiReasoning();
-  let res = await call(effort ? { ...base, reasoning: { effort } } : base);
-  // A model without reasoning rejects that setting, so try once more without it
-  if (res.status === 400 && effort) {
-    const text = await res.text();
-    if (!/reasoning|unsupported/i.test(text)) throw failure(400, text);
-    res = await call(base);
-  }
+  const res = await fetch(ENDPOINT, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${aiKey()}`,
+      "Content-Type": "application/json",
+      "X-Title": "SJA Kisii",
+    },
+    body: JSON.stringify({
+      model: aiModel(),
+      messages: [{ role: "system", content: instructions }, ...turns.map((t) => ({ role: t.role, content: t.content }))],
+      max_tokens: 2000,
+      stream: true,
+      stream_options: { include_usage: true },
+    }),
+    signal: AbortSignal.timeout(55_000),
+  });
   if (!res.ok || !res.body) throw failure(res.status, await res.text().catch(() => ""));
 
   const reader = res.body.getReader();
@@ -72,7 +61,7 @@ export async function askStream(
         try {
           controller.enqueue(enc.encode(s));
         } catch {
-          // the member left, so there is nobody to send to
+          // the member left
         }
       };
       try {
@@ -86,27 +75,31 @@ export async function askStream(
             const block = buf.slice(0, i);
             buf = buf.slice(i + 2);
             const line = block.split("\n").find((l) => l.startsWith("data:"));
-            if (!line) continue;
-            let ev: StreamEvent;
+            if (!line) continue; // comments such as ": OPENROUTER PROCESSING"
+            const payload = line.slice(5).trim();
+            if (payload === "[DONE]") continue;
+            let ev: Chunk;
             try {
-              ev = JSON.parse(line.slice(5).trim()) as StreamEvent;
+              ev = JSON.parse(payload) as Chunk;
             } catch {
               continue;
             }
-
-            if (ev.type === "response.output_text.delta" && typeof ev.delta === "string") {
-              produced = true;
-              send(ev.delta);
-            } else if (ev.type === "response.completed") {
-              const u = ev.response?.usage;
-              if (u) usage = { input: u.input_tokens ?? 0, output: u.output_tokens ?? 0 };
-            } else if (ev.type === "response.incomplete") {
-              produced = true;
-              send(CUT);
-            } else if (ev.type === "response.failed" || ev.type === "error") {
-              console.error("OpenAI stream error", line.slice(0, 300));
+            if (ev.error) {
+              console.error("OpenRouter stream error", payload.slice(0, 300));
               failed = true;
               send(FAIL);
+              continue;
+            }
+            if (ev.usage) usage = { input: ev.usage.prompt_tokens ?? 0, output: ev.usage.completion_tokens ?? 0 };
+            const c = ev.choices?.[0];
+            const text = c?.delta?.content;
+            if (typeof text === "string" && text) {
+              produced = true;
+              send(text);
+            }
+            if (c?.finish_reason === "length") {
+              produced = true;
+              send(CUT);
             }
           }
         }

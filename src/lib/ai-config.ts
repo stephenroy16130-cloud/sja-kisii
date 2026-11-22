@@ -1,12 +1,6 @@
-export const aiKey = () => process.env.OPENAI_API_KEY ?? "";
+export const aiKey = () => process.env.OPENROUTER_API_KEY ?? "";
 export const aiEnabled = () => Boolean(aiKey()) && process.env.AI_ENABLED !== "false";
-export const aiModel = () => process.env.OPENAI_MODEL?.trim() || "gpt-5-mini";
-
-// "low" suits most reasoning models. Set OPENAI_REASONING to "off" for a model without reasoning, such as gpt-4.1-mini.
-export function aiReasoning(): string | null {
-  const v = (process.env.OPENAI_REASONING ?? "low").trim().toLowerCase();
-  return v === "" || v === "off" ? null : v;
-}
+export const aiModel = () => process.env.OPENROUTER_MODEL?.trim() || "openai/gpt-5-mini";
 
 export function aiDailyLimit(): number {
   const n = Number(process.env.AI_DAILY_LIMIT);
