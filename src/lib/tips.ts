@@ -22,6 +22,7 @@ export const TIPS: { match: RegExp; tip: TipDef }[] = [
   { match: /^\/dashboard\/finance\/collections\/?$/, tip: { id: "Collections", title: "Payment activities", text: "Create something people must pay for, set one fixed price, and watch the payments arrive." } },
   { match: /^\/dashboard\/finance\/alerts\/?$/, tip: { id: "Alerts", title: "Payment alerts", text: "Choose where you are told about each payment. Use Send test alert after saving." } },
   { match: /^\/dashboard\/finance\/?$/, tip: { id: "Finance", title: "Finance", text: "All M-Pesa payments, the registration fee, payment activities and alerts live here." } },
+  { match: /^\/dashboard\/assistant\/?$/, tip: { id: "Assistant", title: "Ask SJA", text: "Ask about points, check-in, your events, or basic first aid. In an emergency, call the number at the top first." } },
   { match: /^\/dashboard\/articles\/?$/, tip: { id: "Articles", title: "Articles", text: "News and notices from your leaders. Leaders can write, edit and add up to 10 photos." } },
   { match: /^\/dashboard\/documents\/?$/, tip: { id: "Documents", title: "Documents", text: "The constitution, manuals and other files. Download them, or open the Google links." } },
   { match: /^\/dashboard\/approvals\/?$/, tip: { id: "Approvals", title: "Approvals", text: "New members wait here for your decision. Approve or reject them." } },

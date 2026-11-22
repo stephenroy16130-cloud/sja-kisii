@@ -13,7 +13,7 @@ import { detachPushFromServer } from "@/lib/push-client";
 type IconName =
   | "home" | "approvals" | "people" | "meetings" | "fieldops" | "training" | "store" | "pay" | "band"
   | "crew" | "profile" | "members" | "articles" | "documents" | "finance" | "attendance"
-  | "analytics" | "scan" | "bell" | "more";
+  | "analytics" | "scan" | "bell" | "assistant" | "more";
 export type NavLink = { href: string; label: string; icon: IconName };
 
 // Phone bar: Attendance, Meetings, Home (badge), Shop, More
@@ -25,7 +25,7 @@ const GROUPS: { name: string; hrefs: string[] }[] = [
   { name: "Activities", hrefs: ["/dashboard/meetings", "/dashboard/fieldops", "/dashboard/training", "/dashboard/band", "/dashboard/crew"] },
   { name: "My record", hrefs: ["/dashboard/notifications", "/dashboard/attendance", "/dashboard/scan", "/dashboard/profile"] },
   { name: "Money", hrefs: ["/dashboard/store", "/dashboard/pay", "/dashboard/finance"] },
-  { name: "Information", hrefs: ["/dashboard/articles", "/dashboard/documents"] },
+  { name: "Information", hrefs: ["/dashboard/articles", "/dashboard/documents", "/dashboard/assistant"] },
   { name: "Management", hrefs: ["/dashboard/approvals", "/dashboard/approve-attendance", "/dashboard/people", "/dashboard/members", "/dashboard/analytics"] },
 ];
 
@@ -71,6 +71,8 @@ function Icon({ name, size = 24 }: { name: IconName; size?: number }) {
       return (<svg {...p}><path d="M5 20V10M12 20V4M19 20v-7" /></svg>);
     case "scan":
       return (<svg {...p}><path d="M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2M7 12h10" /></svg>);
+    case "assistant":
+      return (<svg {...p}><path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z" /><path d="M18 15l.8 2.2L21 18l-2.2.8L18 21l-.8-2.2L15 18l2.2-.8z" /></svg>);
     case "bell":
       return (<svg {...p}><path d="M6 9a6 6 0 0 1 12 0c0 5 2 6 2 6H4s2-1 2-6" /><path d="M10 19a2 2 0 0 0 4 0" /></svg>);
     default:

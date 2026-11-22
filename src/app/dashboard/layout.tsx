@@ -1,3 +1,4 @@
+import { aiEnabled } from "@/lib/ai-config";
 import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
 import OnboardingModal from "@/components/onboarding-modal";
@@ -53,6 +54,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
     { href: "/dashboard/articles", label: "Articles", icon: "articles" },
     { href: "/dashboard/documents", label: "Documents", icon: "documents" }
   );
+  if (aiEnabled()) links.push({ href: "/dashboard/assistant", label: "Ask SJA", icon: "assistant" });
   if (isLeader(user)) links.push({ href: "/dashboard/analytics", label: "Analytics", icon: "analytics" });
   links.push(
     { href: "/dashboard/scan", label: "Check in", icon: "scan" },
