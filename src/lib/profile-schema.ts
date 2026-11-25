@@ -30,12 +30,12 @@ export const officialSchema = z
       }
     }
     const ok =
-      d.idType === "NATIONAL_ID" ? /^\d{7,8}$/.test(d.idNumber) : /^[A-Z0-9][A-Z0-9/-]{4,19}$/.test(d.idNumber);
+      d.idType === "NATIONAL_ID" ? /^\d{7,10}$/.test(d.idNumber) : /^[A-Z0-9][A-Z0-9/-]{4,19}$/.test(d.idNumber);
     if (!ok) {
       ctx.addIssue({
         code: "custom",
         path: ["idNumber"],
-        message: d.idType === "NATIONAL_ID" ? "National ID must be 7 or 8 digits" : "Enter a valid birth certificate number",
+        message: d.idType === "NATIONAL_ID" ? "National ID must be 7 to 10 digits" : "Enter a valid birth certificate number",
       });
     }
   });

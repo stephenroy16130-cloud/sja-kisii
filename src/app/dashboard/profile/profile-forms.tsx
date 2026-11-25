@@ -103,7 +103,7 @@ function OfficialForm({ data }: { data: Official }) {
             name="idNumber"
             required
             defaultValue={data.idNumber}
-            placeholder={idType === "BIRTH_CERTIFICATE" ? "Certificate number" : "8 digits"}
+            placeholder={idType === "BIRTH_CERTIFICATE" ? "Certificate number" : "7 to 10 digits"}
             className={inputCls}
           />
         </div>
