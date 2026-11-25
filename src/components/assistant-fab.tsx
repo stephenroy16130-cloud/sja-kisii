@@ -37,9 +37,15 @@ export default function AssistantFab({ enabled }: { enabled: boolean }) {
     } catch {
       // no saved position
     }
-    // First time: bottom right, above the bottom bar
+    // First time: bottom right, above the bottom bar (on desktop, clear the 288px sidebar)
     const areaH = Math.max(1, window.innerHeight - SIZE - MARGIN * 2);
-    const initial = saved ?? { fx: 1, fy: clamp((window.innerHeight - SIZE - 100 - MARGIN) / areaH, 0, 1) };
+    const areaW = Math.max(1, window.innerWidth - SIZE - MARGIN * 2);
+    const isDesktop = window.innerWidth >= 1024;
+    const defaultX = isDesktop ? Math.max(MARGIN, window.innerWidth - 288 - SIZE - 20) : window.innerWidth - SIZE - MARGIN;
+    const initial = saved ?? {
+      fx: clamp((defaultX - MARGIN) / areaW, 0, 1),
+      fy: clamp((window.innerHeight - SIZE - 100 - MARGIN) / areaH, 0, 1),
+    };
     posRef.current = initial;
     setPos(initial);
 
@@ -117,7 +123,7 @@ export default function AssistantFab({ enabled }: { enabled: boolean }) {
   }
 
   return (
-    <div className="fixed z-40 lg:hidden" style={{ left: x, top: y, width: SIZE, height: SIZE }}>
+    <div className="fixed z-40 block" style={{ left: x, top: y, width: SIZE, height: SIZE }}>
       {hint && !dragging && (
         <div className="pointer-events-none absolute bottom-full right-0 mb-2 whitespace-nowrap rounded-xl border border-gold/50 bg-card px-3 py-2 text-xs text-white/80">
           Ask SJA. Drag me anywhere.

@@ -10,7 +10,6 @@ export const dynamic = "force-dynamic";
 export default async function AssistantPage() {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
-  if (user.isDeveloper) redirect("/dashboard");
 
   const enabled = aiEnabled();
   const limit = aiDailyLimit();
@@ -19,14 +18,14 @@ export default async function AssistantPage() {
     : 0;
   const first = (user.fullName.trim().split(/\s+/)[0] ?? "").toLowerCase().replace(/^\w/, (c) => c.toUpperCase());
 
-  // Only the DO Admin sees why it is off
+  // Only administrators or developers see why it is off
   let hint = "";
-  if (!enabled && can(user, "user:manage_accounts")) {
-    const env = process.env.VERCEL_ENV ?? "local";
+  if (!enabled && (user.isDeveloper || can(user, "user:manage_accounts"))) {
+    const env = process.env.VERCEL_ENV ?? process.env.NODE_ENV ?? "production";
     if (process.env.AI_ENABLED === "false") {
       hint = `Admin note: AI_ENABLED is set to "false" on this deployment (environment: ${env}).`;
-    } else if (!process.env.OPENAI_API_KEY) {
-      hint = `Admin note: OPENAI_API_KEY is not set on this deployment (environment: ${env}). In Vercel open Settings, then Environment Variables, add it with Production ticked, and redeploy.`;
+    } else {
+      hint = `Admin note: Neither OPENROUTER_API_KEY nor OPENAI_API_KEY is set on this deployment (environment: ${env}). In Vercel, open Project Settings → Environment Variables, add OPENROUTER_API_KEY (or OPENAI_API_KEY) with Production ticked, and redeploy.`;
     }
   }
 

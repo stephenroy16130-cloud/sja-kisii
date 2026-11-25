@@ -1,17 +1,16 @@
-import { aiKey, aiModel } from "./ai-config";
+import { aiEndpoint, aiKey, aiModel } from "./ai-config";
 import { HttpError } from "./http";
 
 export type Turn = { role: "user" | "assistant"; content: string };
 export type Usage = { input: number; output: number };
 
-const ENDPOINT = "https://openrouter.ai/api/v1/chat/completions";
 const CUT = "\n\n(The answer ran out of room. Try a shorter question.)";
 const FAIL = "\n\nSorry, something went wrong while answering. Please try again.";
 const EMPTY = "Sorry, I could not come up with an answer. Please try again.";
 
 // The real reason goes to the server log. The member only sees something friendly.
 function failure(status: number, text: string): HttpError {
-  console.error("OpenRouter error", status, text.slice(0, 500));
+  console.error("AI service error", status, text.slice(0, 500));
   if (status === 401) return new HttpError(503, "The assistant is not set up correctly yet. Please tell the administrator.");
   if (status === 402 || status === 429) return new HttpError(503, "The assistant is busy right now. Please try again in a minute.");
   if (status === 404 || status === 400) return new HttpError(503, "The assistant's model is not available. Please tell the administrator.");
@@ -29,7 +28,7 @@ export async function askStream(
   turns: Turn[],
   onDone: (u: Usage | null) => void
 ): Promise<ReadableStream<Uint8Array>> {
-  const res = await fetch(ENDPOINT, {
+  const res = await fetch(aiEndpoint(), {
     method: "POST",
     headers: {
       Authorization: `Bearer ${aiKey()}`,
