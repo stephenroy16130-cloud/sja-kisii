@@ -1,3 +1,5 @@
+import AssistantFab from "@/components/assistant-fab";
+import WaveGreeting from "@/components/wave-greeting";
 import { aiEnabled } from "@/lib/ai-config";
 import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
@@ -54,7 +56,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
     { href: "/dashboard/articles", label: "Articles", icon: "articles" },
     { href: "/dashboard/documents", label: "Documents", icon: "documents" }
   );
-  if (aiEnabled()) links.push({ href: "/dashboard/assistant", label: "Ask SJA", icon: "assistant" });
+  if (aiEnabled() || can(user, "user:manage_accounts")) links.push({ href: "/dashboard/assistant", label: "Ask SJA", icon: "assistant" });
   if (isLeader(user)) links.push({ href: "/dashboard/analytics", label: "Analytics", icon: "analytics" });
   links.push(
     { href: "/dashboard/scan", label: "Check in", icon: "scan" },
@@ -99,6 +101,8 @@ export default async function DashboardLayout({ children }: { children: ReactNod
         />
       )}
       <PageTips userId={user.id} enabled={!needsTour} />
+      <WaveGreeting userId={user.id} fullName={user.fullName} enabled={!needsTour && !user.isDeveloper} />
+      <AssistantFab enabled={aiEnabled() && !user.isDeveloper} />
       <InstallPrompt enabled={!needsTour} />
     </div>
   );

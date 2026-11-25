@@ -114,3 +114,23 @@ select optgroup {
   .reveal-card { transition: none; }
   .reveal-glow, .reveal-float { animation: none; }
 }
+
+/* The wave greeting */
+@keyframes wave-hand {
+  0% { transform: rotate(0deg); }
+  10% { transform: rotate(14deg); }
+  20% { transform: rotate(-8deg); }
+  30% { transform: rotate(14deg); }
+  40% { transform: rotate(-4deg); }
+  50% { transform: rotate(10deg); }
+  60%, 100% { transform: rotate(0deg); }
+}
+@keyframes wave-in {
+  from { opacity: 0; transform: translateY(-12px) scale(0.96); }
+  to { opacity: 1; transform: none; }
+}
+.wave-hand { display: inline-block; transform-origin: 70% 70%; animation: wave-hand 1.8s ease-in-out 0.3s 2; }
+.wave-card { animation: wave-in 0.35s ease-out both; }
+@media (prefers-reduced-motion: reduce) {
+  .wave-hand, .wave-card { animation: none; }
+}
