@@ -9,7 +9,6 @@ export const dynamic = "force-dynamic";
 export default async function AssistantPage() {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
-  if (user.isDeveloper) redirect("/dashboard");
 
   const enabled = aiEnabled();
   const limit = aiDailyLimit();

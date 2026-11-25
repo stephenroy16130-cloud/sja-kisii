@@ -18,7 +18,6 @@ const schema = z.object({
 
 export const POST = route(async (req: Request) => {
   const actor = await requireUser();
-  if (actor.isDeveloper) throw new HttpError(403, "The assistant is for members.");
   if (!aiEnabled()) throw new HttpError(503, "The assistant is not switched on yet.");
 
   const { messages } = schema.parse(await req.json());
