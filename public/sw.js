@@ -1,61 +1,76 @@
-const CACHE = "sja-shell-v1";
-const SHELL = ["/offline.html", "/icons/icon-192.png"];
+// SJA Kisii service worker. Written by scripts/setup-offline.js. Version mwvr9esh
+const VERSION = "mwvr9esh";
+const CACHE = "sja-offline-" + VERSION;
+const OFFLINE = "/offline.html";
+const ICON = "/icons/icon-192.png";
+const BADGE = "/icons/icon-192.png";
 
-self.addEventListener("install", (event) => {
+// Fetch a fresh copy of the offline page, keep it, and take over from any older worker at once
+self.addEventListener("install", function (event) {
   event.waitUntil(
-    caches
-      .open(CACHE)
-      .then((c) => c.addAll(SHELL))
-      .then(() => self.skipWaiting())
+    (async function () {
+      const res = await fetch(OFFLINE, { cache: "reload" });
+      if (!res.ok) throw new Error("The offline page could not be fetched");
+      const cache = await caches.open(CACHE);
+      await cache.put(OFFLINE, res);
+      await self.skipWaiting();
+    })()
   );
 });
 
-self.addEventListener("activate", (event) => {
+self.addEventListener("activate", function (event) {
   event.waitUntil(
-    caches
-      .keys()
-      .then((keys) => Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k))))
-      .then(() => self.clients.claim())
+    (async function () {
+      const keys = await caches.keys();
+      await Promise.all(keys.filter(function (k) { return k !== CACHE; }).map(function (k) { return caches.delete(k); }));
+      await self.clients.claim();
+    })()
   );
 });
 
-// Page loads go to the network. Only when the network fails do we show the offline page.
-self.addEventListener("fetch", (event) => {
+// Opening or reloading a page with no connection shows the offline page
+self.addEventListener("fetch", function (event) {
   const req = event.request;
-  if (req.method !== "GET" || req.mode !== "navigate") return;
-  event.respondWith(fetch(req).catch(() => caches.match("/offline.html")));
+  if (req.mode !== "navigate") return;
+  event.respondWith(
+    fetch(req).catch(async function () {
+      const cache = await caches.open(CACHE);
+      const hit = await cache.match(OFFLINE);
+      return hit || new Response("You are offline.", { status: 503, headers: { "Content-Type": "text/plain" } });
+    })
+  );
 });
 
-self.addEventListener("push", (event) => {
+self.addEventListener("push", function (event) {
   let data = {};
   try {
     data = event.data ? event.data.json() : {};
   } catch (e) {
-    data = { body: event.data ? event.data.text() : "" };
+    data = {};
   }
-  event.waitUntil(
-    self.registration.showNotification(data.title || "St. John Ambulance", {
-      body: data.body || "",
-      icon: "/icons/icon-192.png",
-      badge: "/icons/icon-192.png",
-      tag: data.tag || undefined,
-      data: { url: data.url || "/dashboard" },
-    })
-  );
+  const options = { body: data.body || "", data: { url: data.url || "/dashboard" } };
+  if (data.tag) options.tag = data.tag;
+  if (ICON) options.icon = ICON;
+  if (BADGE) options.badge = BADGE;
+  event.waitUntil(self.registration.showNotification(data.title || "St. John Ambulance", options));
 });
 
-self.addEventListener("notificationclick", (event) => {
+self.addEventListener("notificationclick", function (event) {
   event.notification.close();
   const url = (event.notification.data && event.notification.data.url) || "/dashboard";
   event.waitUntil(
-    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((list) => {
-      for (const c of list) {
+    (async function () {
+      const all = await clients.matchAll({ type: "window", includeUncontrolled: true });
+      for (const c of all) {
         if ("focus" in c) {
-          if ("navigate" in c) c.navigate(url);
-          return c.focus();
+          await c.focus();
+          if ("navigate" in c) {
+            try { await c.navigate(url); } catch (e) { /* ignore */ }
+          }
+          return;
         }
       }
-      return self.clients.openWindow(url);
-    })
+      await clients.openWindow(url);
+    })()
   );
 });
