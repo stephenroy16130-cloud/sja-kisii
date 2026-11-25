@@ -113,7 +113,7 @@ export default function AddMembers() {
       {open && (
         <div className="mt-5 space-y-4">
           <div>
-            <label className={labelCls}>One person per line: full name, phone, email, crew, admission number (optional)</label>
+            <label className={labelCls}>One person per line: full name, phone, email, crew, registration number (optional)</label>
             <textarea
               value={text}
               onChange={(e) => setText(e.target.value)}

@@ -25,6 +25,7 @@ export default async function QrPanel({ kind, id }: { kind: QrKind; id: string }
     <QrControls
       kind={kind}
       id={e.id}
+      title={e.title}
       startsAt={e.startsAt.toISOString()}
       hasQr={Boolean(e.qrToken)}
       version={e.qrToken ? e.qrToken.slice(-6) : ""}

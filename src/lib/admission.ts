@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const ADMISSION_HINT = "End it with the year as two digits, for example SC211/1234/26";
+export const ADMISSION_HINT = "End registration number with the year as two digits, for example SC211/1234/26";
 
 // Capitals and single spaces. A four-digit year at the end becomes two digits: /2026 becomes /26
 export function normalizeAdmission(raw: string): string {

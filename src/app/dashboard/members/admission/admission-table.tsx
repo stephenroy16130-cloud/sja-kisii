@@ -48,8 +48,8 @@ function Line({ row, onSaved }: { row: Row; onSaved: (id: string, v: string) => 
           }}
           placeholder="SC211/1234/26"
           autoCapitalize="characters"
-          className={`${inputCls} !w-44 !py-2`}
-          aria-label={`Admission number for ${row.name}`}
+          className={`${inputCls} !w-44 !py-2 font-bold tracking-wider text-sm`}
+          aria-label={`Registration number for ${row.name}`}
         />
         <button disabled={busy || !dirty} onClick={save} className={`${btnGhostCls} disabled:opacity-40`}>
           {busy ? "Saving..." : "Save"}
@@ -80,7 +80,7 @@ export default function AdmissionTable({ rows }: { rows: Row[] }) {
       <div className="rounded-3xl border border-white/10 bg-card p-6">
         <div className="flex flex-wrap items-baseline justify-between gap-2 text-sm">
           <span>
-            <span className="text-gold">{have}</span> of {list.length} members have an admission number
+            <span className="text-gold font-bold">{have}</span> of {list.length} members have a registration number
           </span>
           <span className="text-white/50">{list.length - have} missing</span>
         </div>

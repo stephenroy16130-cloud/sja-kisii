@@ -13,7 +13,7 @@ export const GET = route(async () => {
   });
 
   const lines = [
-    ["Member", "Crew", "Admission number", "Status"].map(csvCell).join(","),
+    ["Member", "Crew", "Registration number", "Status"].map(csvCell).join(","),
     ...rows.map((r) =>
       [r.fullName, crewName(r.crewId), r.admissionNumber ?? "", r.admissionNumber ? "Added" : "Missing"].map(csvCell).join(",")
     ),
@@ -22,7 +22,7 @@ export const GET = route(async () => {
   return new Response("\uFEFF" + lines.join("\r\n"), {
     headers: {
       "Content-Type": "text/csv; charset=utf-8",
-      "Content-Disposition": 'attachment; filename="admission-numbers.csv"',
+      "Content-Disposition": 'attachment; filename="registration-numbers.csv"',
       "Cache-Control": "no-store",
     },
   });

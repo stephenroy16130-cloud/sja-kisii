@@ -146,8 +146,31 @@ export async function notifyTitles(titles: Title[], payload: PushPayload, except
       select: { id: true },
     });
     await notifyUsers(users.map((u) => u.id), payload);
+    return users.length;
   } catch (e) {
     console.error("push failed", e);
+    return 0;
+  }
+}
+
+// Crew Sergeants and Corporals (optionally filtered to specific crews)
+export async function notifyCrewLeaders(crewIds: number[] | null, payload: PushPayload, exceptUserId?: string) {
+  try {
+    const where: Prisma.UserWhereInput = {
+      status: "ACTIVE",
+      isDeveloper: false,
+      titles: { hasSome: ["SERGEANT", "CORPORAL"] },
+      ...(crewIds !== null ? { crewId: { in: crewIds } } : {}),
+      ...(exceptUserId ? { id: { not: exceptUserId } } : {}),
+    };
+    const users = await db.user.findMany({ where, select: { id: true } });
+    if (users.length > 0) {
+      await notifyUsers(users.map((u) => u.id), payload);
+    }
+    return users.length;
+  } catch (e) {
+    console.error("push to crew leaders failed", e);
+    return 0;
   }
 }
 

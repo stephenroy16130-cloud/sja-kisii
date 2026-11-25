@@ -23,7 +23,7 @@ export default async function AdmissionPage() {
     <div className="space-y-6">
       <div>
         <Link href="/dashboard/members" className="text-sm text-white/50 hover:text-white">← Members</Link>
-        <h1 className="mt-3 text-3xl font-light tracking-tight">Admission numbers</h1>
+        <h1 className="mt-3 text-3xl font-semibold tracking-tight">Registration numbers</h1>
         <p className="mt-1 text-sm text-white/50">
           Every member in one list. Fill the gaps, correct mistakes, and download the list. Numbers end with the year as
           two digits, like SC211/1234/26.

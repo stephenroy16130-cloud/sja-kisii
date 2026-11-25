@@ -24,10 +24,11 @@ const local = (iso: string | null) => {
 };
 
 export default function QrControls({
-  kind, id, startsAt, hasQr, version, activatesAt, expiresAt, state, stateText, manage, devLink, geo,
+  kind, id, title = "Event", startsAt, hasQr, version, activatesAt, expiresAt, state, stateText, manage, devLink, geo,
 }: {
   kind: string;
   id: string;
+  title?: string;
   startsAt: string;
   hasQr: boolean;
   version: string;
@@ -48,6 +49,7 @@ export default function QrControls({
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState("");
   const [error, setError] = useState("");
+  const [copied, setCopied] = useState(false);
 
   async function run(fn: () => Promise<unknown>, ok: string) {
     setBusy(true);
@@ -64,7 +66,25 @@ export default function QrControls({
   }
 
   const base = `/api/qr/${kind}/${id}`;
-  const act = (action: "enable" | "disable" | "regenerate", ok: string) => run(() => api(base, "PUT", { action }), ok);
+  const act = (action: "enable" | "disable" | "regenerate" | "share", ok: string) => run(() => api(base, "PUT", { action }), ok);
+
+  function copyPrintLink() {
+    if (typeof window === "undefined") return;
+    const url = `${window.location.origin}/qr/${kind}/${id}`;
+    navigator.clipboard?.writeText(url).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2500);
+    }).catch(() => {
+      setError("Could not copy link");
+    });
+  }
+
+  const origin = typeof window === "undefined" ? "" : window.location.origin;
+  const printUrl = `${origin}/qr/${kind}/${id}`;
+  const waText = encodeURIComponent(
+    `*SJA Kisii - Check-in QR Code*\n${title}\nView or print QR poster:\n${printUrl}`
+  );
+  const whatsappShareUrl = `https://api.whatsapp.com/send?text=${waText}`;
 
   function saveTimes() {
     if (!a || !x) return setError("Choose both the activation and the expiry time.");
@@ -131,7 +151,7 @@ export default function QrControls({
       {!hasQr && manage && (
         <button
           disabled={busy}
-          onClick={() => act("enable", "QR check-in is on")}
+          onClick={() => act("enable", "QR check-in enabled. Sergeants and Corporals have been notified.")}
           className="mt-4 rounded-full bg-white px-5 py-2.5 text-xs font-medium text-black transition hover:bg-neutral-200 disabled:opacity-50"
         >
           {busy ? "Creating..." : "Enable QR code check-in"}
@@ -224,13 +244,49 @@ export default function QrControls({
                   </div>
                 </div>
 
+                <div className="border-t border-white/10 pt-4">
+                  <p className="text-[11px] uppercase tracking-[0.2em] text-gold font-medium">Share with crew leaders</p>
+                  <p className="mt-1 text-xs text-white/50">
+                    Send the QR code and print poster link to crew Sergeants and Corporals. If you make a new code, it is automatically renewed for them and they are notified.
+                  </p>
+                  <div className="mt-3 flex flex-wrap gap-2 text-xs">
+                    <button
+                      type="button"
+                      disabled={busy}
+                      onClick={() => act("share", "Check-in QR code shared with Sergeants and Corporals!")}
+                      className="rounded-full bg-gold px-4 py-2 font-medium text-black transition hover:bg-gold/90 disabled:opacity-50"
+                    >
+                      {busy ? "Sending..." : "Notify Sergeants & Corporals"}
+                    </button>
+                    <button
+                      type="button"
+                      disabled={busy}
+                      onClick={copyPrintLink}
+                      className={btnGhostCls}
+                    >
+                      {copied ? "Copied print link!" : "Copy print link"}
+                    </button>
+                    <a
+                      href={whatsappShareUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="rounded-full border border-ok/40 bg-ok/20 px-4 py-2 text-ok transition hover:bg-ok/30"
+                    >
+                      Share on WhatsApp
+                    </a>
+                  </div>
+                </div>
+
                 <div className="flex flex-wrap gap-4 border-t border-white/10 pt-4 text-xs text-white/50">
                   <button
                     disabled={busy}
-                    onClick={() => window.confirm("Make a new code? The old printed code will stop working.") && act("regenerate", "New code created. Reprint it.")}
+                    onClick={() =>
+                      window.confirm("Make a new code? The old code will expire, the new code will be renewed for Sergeants & Corporals, and they will be notified.") &&
+                      act("regenerate", "New code created! It is renewed for Sergeants & Corporals, and they have been notified.")
+                    }
                     className="underline hover:text-white"
                   >
-                    Make a new code
+                    Make a new code (renews for leaders)
                   </button>
                   <button
                     disabled={busy}

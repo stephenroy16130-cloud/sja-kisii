@@ -25,7 +25,7 @@ export const PUT = route(async (req: Request, ctx: { params: Promise<{ id: strin
     await db.user.update({ where: { id }, data: { admissionNumber: admissionNumber || null } });
   } catch (e) {
     if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002") {
-      throw new HttpError(409, "That admission number belongs to another member.");
+      throw new HttpError(409, "That registration number belongs to another member.");
     }
     throw e;
   }

@@ -110,7 +110,13 @@ export function canManageQr(u: AuthUser, e: QrEvent) {
 }
 // Sergeants and Corporals of an eligible crew can download, print and verify their own crew
 export function crewLeaderFor(u: AuthUser, e: QrEvent) {
-  return !e.bandOnly && can(u, "crew:record_attendance") && u.crewId !== null && (e.crewIds === null || e.crewIds.includes(u.crewId));
+  if (e.bandOnly) return false;
+  const isSgtOrCpl =
+    can(u, "crew:record_attendance") ||
+    u.titles.includes("SERGEANT") ||
+    u.titles.includes("CORPORAL");
+  if (!isSgtOrCpl) return false;
+  return e.crewIds === null || u.crewId === null || e.crewIds.includes(u.crewId);
 }
 export const canViewQr = (u: AuthUser, e: QrEvent) => canManageQr(u, e) || crewLeaderFor(u, e);
 export function canVerifyFor(u: AuthUser, e: QrEvent, memberCrewId: number | null) {

@@ -64,7 +64,7 @@ export const POST = route(async (req: Request) => {
     if (r.admissionNumber) {
       admission = normalizeAdmission(r.admissionNumber);
       if (!isValidAdmission(admission)) {
-        results.push({ name: r.fullName, email: email.data, phone: phone.data, error: "Admission number: " + ADMISSION_HINT });
+        results.push({ name: r.fullName, email: email.data, phone: phone.data, error: "Registration number: " + ADMISSION_HINT });
         continue;
       }
     }
@@ -94,7 +94,7 @@ export const POST = route(async (req: Request) => {
           name: r.fullName,
           email: email.data,
           phone: r.phone,
-          error: "That email, phone number or admission number is already registered",
+          error: "That email, phone number or registration number is already registered",
         });
       } else {
         throw e;

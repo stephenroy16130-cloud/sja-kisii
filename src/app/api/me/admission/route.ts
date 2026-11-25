@@ -13,7 +13,7 @@ export const PUT = route(async (req: Request) => {
     await db.user.update({ where: { id: actor.id }, data: { admissionNumber: admissionNumber || null } });
   } catch (e) {
     if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002") {
-      throw new HttpError(409, "That admission number is already registered to another member. Check it, or ask the DO Admin.");
+      throw new HttpError(409, "That registration number is already registered to another member. Check it, or ask the DO Admin.");
     }
     throw e;
   }

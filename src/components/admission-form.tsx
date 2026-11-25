@@ -29,14 +29,14 @@ export default function AdmissionForm({ initial }: { initial: string }) {
 
   return (
     <form onSubmit={save} className="mt-4">
-      <label className={labelCls}>Admission number</label>
+      <label className={`${labelCls} text-sm font-bold text-white`}>Registration number</label>
       <div className="flex flex-wrap gap-2">
         <input
           name="admissionNumber"
           defaultValue={initial}
           placeholder="SC211/1234/26"
           autoCapitalize="characters"
-          className={`${inputCls} max-w-xs`}
+          className={`${inputCls} max-w-xs font-bold tracking-wider text-base`}
         />
         <button disabled={busy} className={btnGhostCls}>{busy ? "Saving..." : "Save"}</button>
       </div>

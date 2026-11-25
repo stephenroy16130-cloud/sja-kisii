@@ -34,10 +34,17 @@ const KIND_LABEL: Record<Kinds, string> = { MEETING: "Meetings", FIELD_OP: "Fiel
 const fmtDate = (s: string) => new Date(s).toLocaleDateString("en-KE", { dateStyle: "medium", timeZone: "UTC" });
 
 function Row({ label, value }: { label: string; value: string | null }) {
+  const isReg = label.toLowerCase().includes("registration");
   return (
     <div className="flex items-start justify-between gap-4 border-b border-white/10 py-3 text-sm last:border-0">
-      <span className="text-white/50">{label}</span>
-      {value ? <span className="break-all text-right">{value}</span> : <span className="text-warn">Not provided</span>}
+      <span className={isReg ? "font-bold text-white" : "text-white/50"}>{label}</span>
+      {value ? (
+        <span className={`break-all text-right ${isReg ? "font-bold text-base text-gold tracking-wide" : ""}`}>
+          {value}
+        </span>
+      ) : (
+        <span className="text-warn">Not provided</span>
+      )}
     </div>
   );
 }
@@ -133,7 +140,7 @@ export default function MemberDrawer({ memberId, onClose }: { memberId: string; 
             <Row label="Email" value={data.official.email} />
             <Row label="Identity document" value={data.official.idType ? ID_LABEL[data.official.idType] : null} />
             <Row label="ID number" value={data.official.idNumber} />
-            <Row label="Admission number" value={data.official.admissionNumber} />
+            <Row label="Registration number" value={data.official.admissionNumber} />
             <Row label="Joined" value={fmtDate(data.official.joinedAt)} />
             <AdmissionNumber memberId={memberId} />
             <ResetPassword memberId={memberId} />

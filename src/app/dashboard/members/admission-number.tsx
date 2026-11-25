@@ -40,18 +40,18 @@ export default function AdmissionNumber({ memberId }: { memberId: string }) {
 
   return (
     <div className="mt-4 border-t border-white/10 pt-4">
-      <p className="text-[11px] uppercase tracking-[0.15em] text-white/40">Admission number</p>
+      <p className="text-[11px] font-bold uppercase tracking-[0.15em] text-gold">Registration number</p>
       {value === null ? (
         <p className="mt-1 text-sm text-white/40">Loading...</p>
       ) : editing ? (
         <div className="mt-2 flex flex-wrap gap-2">
-          <input value={draft} onChange={(e) => setDraft(e.target.value)} placeholder="SC211/1234/26" className={`${inputCls} max-w-xs`} />
+          <input value={draft} onChange={(e) => setDraft(e.target.value)} placeholder="SC211/1234/26" className={`${inputCls} max-w-xs font-bold tracking-wider text-base`} />
           <button disabled={busy} onClick={save} className={btnGhostCls}>{busy ? "Saving..." : "Save"}</button>
           <button disabled={busy} onClick={() => { setEditing(false); setDraft(value); setError(""); }} className={btnGhostCls}>Cancel</button>
         </div>
       ) : (
         <div className="mt-1 flex flex-wrap items-center gap-3">
-          <p className="text-sm">{value || <span className="text-white/40">Not added yet</span>}</p>
+          <p className="text-base font-bold tracking-wide text-white">{value || <span className="text-sm font-normal text-white/40">Not added yet</span>}</p>
           <button onClick={() => setEditing(true)} className="text-xs text-white/50 underline hover:text-white">
             {value ? "Edit" : "Add"}
           </button>
