@@ -3,31 +3,36 @@ import AssistantChat from "@/components/assistant-chat";
 import { aiDailyLimit, aiEnabled, nairobiDayStart } from "@/lib/ai-config";
 import { getCurrentUser } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { can } from "@/lib/rbac";
 
 export const dynamic = "force-dynamic";
+
+const KEEP_DAYS = 90; // chats older than this are deleted
 
 export default async function AssistantPage() {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
+  if (user.isDeveloper) redirect("/dashboard");
 
   const enabled = aiEnabled();
   const limit = aiDailyLimit();
-  const used = enabled
-    ? await db.auditLog.count({ where: { actorId: user.id, action: "AI_ASK", createdAt: { gte: nairobiDayStart() } } })
-    : 0;
-  const first = (user.fullName.trim().split(/\s+/)[0] ?? "").toLowerCase().replace(/^\w/, (c) => c.toUpperCase());
 
-  // Only administrators or developers see why it is off
-  let hint = "";
-  if (!enabled && (user.isDeveloper || can(user, "user:manage_accounts"))) {
-    const env = process.env.VERCEL_ENV ?? process.env.NODE_ENV ?? "production";
-    if (process.env.AI_ENABLED === "false") {
-      hint = `Admin note: AI_ENABLED is set to "false" on this deployment (environment: ${env}).`;
-    } else {
-      hint = `Admin note: Neither OPENROUTER_API_KEY nor OPENAI_API_KEY is set on this deployment (environment: ${env}). In Vercel, open Project Settings → Environment Variables, add OPENROUTER_API_KEY (or OPENAI_API_KEY) with Production ticked, and redeploy.`;
-    }
+  try {
+    await db.aiChat.deleteMany({ where: { userId: user.id, updatedAt: { lt: new Date(Date.now() - KEEP_DAYS * 86_400_000) } } });
+  } catch {
+    // not important
   }
+  const [used, chats] = await Promise.all([
+    enabled
+      ? db.auditLog.count({ where: { actorId: user.id, action: "AI_ASK", createdAt: { gte: nairobiDayStart() } } })
+      : Promise.resolve(0),
+    db.aiChat.findMany({
+      where: { userId: user.id },
+      orderBy: { updatedAt: "desc" },
+      take: 100,
+      select: { id: true, title: true, updatedAt: true },
+    }),
+  ]);
+  const first = (user.fullName.trim().split(/\s+/)[0] ?? "").toLowerCase().replace(/^\w/, (c) => c.toUpperCase());
 
   return (
     <div className="space-y-6">
@@ -37,8 +42,13 @@ export default async function AssistantPage() {
           Questions about the division, the app, your points and events, or basic first aid.
         </p>
       </div>
-      {hint && <p className="rounded-2xl border border-warn/40 bg-card p-4 text-sm text-warn">{hint}</p>}
-      <AssistantChat firstName={first || "there"} enabled={enabled} limit={limit} left={Math.max(0, limit - used)} />
+      <AssistantChat
+        firstName={first || "there"}
+        enabled={enabled}
+        limit={limit}
+        left={Math.max(0, limit - used)}
+        chats={chats.map((c) => ({ id: c.id, title: c.title, updatedAt: c.updatedAt.toISOString() }))}
+      />
     </div>
   );
 }
