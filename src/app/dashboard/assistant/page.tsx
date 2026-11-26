@@ -36,7 +36,7 @@ export default async function AssistantPage() {
 
   return (
     <div className="space-y-6">
-      <div>
+      <div className="hidden md:block">
         <h1 className="text-3xl font-light tracking-tight">Ask SJA</h1>
         <p className="mt-1 text-sm text-white/50">
           Questions about the division, the app, your points and events, or basic first aid.

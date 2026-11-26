@@ -11,6 +11,7 @@ export const maxDuration = 60;
 
 const schema = z.object({
   chatId: z.string().min(1).max(64).optional(),
+  editMessageId: z.string().min(1).max(64).optional(),
   message: z.string().trim().min(1, "Ask a question first.").max(800, "Please keep your question under 800 characters."),
 });
 
@@ -24,7 +25,7 @@ export const POST = route(async (req: Request) => {
   if (actor.isDeveloper) throw new HttpError(403, "The assistant is for members.");
   if (!aiEnabled()) throw new HttpError(503, "The assistant is not switched on yet.");
 
-  const { chatId, message } = schema.parse(await req.json());
+  const { chatId, editMessageId, message } = schema.parse(await req.json());
 
   // Limits keep the cost under control
   const limit = aiDailyLimit();
@@ -38,13 +39,26 @@ export const POST = route(async (req: Request) => {
   // Continue the member's own chat, or start a new one
   let chat = chatId ? await db.aiChat.findFirst({ where: { id: chatId, userId: actor.id }, select: { id: true } }) : null;
   if (chatId && !chat) throw new HttpError(404, "That chat no longer exists. Please start a new one.");
+  if (editMessageId && !chat) throw new HttpError(400, "That message cannot be edited.");
+
+  // Editing: everything from the edited message onwards is replaced
+  let cutoff: Date | null = null;
+  if (editMessageId && chat) {
+    const target = await db.aiMessage.findFirst({
+      where: { id: editMessageId, chatId: chat.id, role: "user" },
+      select: { createdAt: true },
+    });
+    if (!target) throw new HttpError(404, "That message no longer exists.");
+    cutoff = target.createdAt;
+  }
+
   const isNew = !chat;
   if (!chat) chat = await db.aiChat.create({ data: { userId: actor.id, title: titleOf(message) }, select: { id: true } });
   const id = chat.id;
 
   try {
     const past = await db.aiMessage.findMany({
-      where: { chatId: id },
+      where: { chatId: id, ...(cutoff ? { createdAt: { lt: cutoff } } : {}) },
       orderBy: { createdAt: "desc" },
       take: 8,
       select: { role: true, content: true },
@@ -61,6 +75,7 @@ export const POST = route(async (req: Request) => {
     const stream = await askStream(instructions, turns, (u) => {
       if (u) void audit(actor.id, "AI_TOKENS", "Ai", undefined, { input: u.input, output: u.output }).catch(() => undefined);
     });
+    if (cutoff) await db.aiMessage.deleteMany({ where: { chatId: id, createdAt: { gte: cutoff } } });
     await db.aiMessage.create({ data: { chatId: id, role: "user", content: message } });
 
     // Pass the answer through to the member and keep a copy for the chat history

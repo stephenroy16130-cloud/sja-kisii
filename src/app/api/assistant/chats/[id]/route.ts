@@ -20,7 +20,7 @@ export const GET = route(async (_req: Request, ctx: Ctx) => {
     where: { chatId: id },
     orderBy: { createdAt: "asc" },
     take: 200,
-    select: { role: true, content: true },
+    select: { id: true, role: true, content: true },
   });
   return Response.json({ messages });
 });
