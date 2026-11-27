@@ -675,3 +675,20 @@ model AiMessage {
 
   @@index([chatId, createdAt])
 }
+
+model BirthdayWish {
+  id         String   @id @default(cuid())
+  toUserId   String
+  fromUserId String
+  year       Int
+  message    String
+  createdAt  DateTime @default(now())
+
+  @@unique([toUserId, fromUserId, year])
+  @@index([toUserId, year])
+}
+
+model BirthdayOptOut {
+  userId    String   @id
+  createdAt DateTime @default(now())
+}

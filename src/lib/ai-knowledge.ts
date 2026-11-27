@@ -86,7 +86,7 @@ Articles, documents and notifications
 - The bell shows notifications and the Notifications page keeps them. Phone alerts are optional.
 
 Profile and account
-- The official profile is private (date of birth, gender, ID, admission number). Only the member and the DO Admin see it. An admission number ends with the year as two digits, like SC211/1234/26.
+- The official profile is private (date of birth, gender, ID, admission number). Only the member and the DO Admin see it, except that other members can see the day and month of a birthday (never the year or age) on the Overview page on the day of the birthday. An admission number ends with the year as two digits, like SC211/1234/26.
 - The social profile is public: preferred name and photo.
 - Change password is in My profile. Fingerprint or face sign-in can be added there. Forgot password sends an email link, and if email fails the DO Admin can give a temporary password. After 5 wrong passwords, sign-in pauses for 15 minutes.
 - To install the app: on Android tap Install app when asked. On iPhone open the site in Safari, tap Share, then Add to Home Screen.`;

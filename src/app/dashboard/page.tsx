@@ -1,3 +1,4 @@
+import BirthdayCard from "@/components/birthday-card";
 import MotwReveal from "@/components/motw-reveal";
 import { Suspense } from "react";
 import ServicePointsCard from "@/components/service-points-card";
@@ -98,6 +99,8 @@ export default async function DashboardPage() {
           </div>
         </div>
       </section>
+
+      <BirthdayCard />
 
       {!user.isDeveloper && (
         <ContextualTooltip

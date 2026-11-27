@@ -1,10 +1,14 @@
 "use client";
 
 import { useEffect } from "react";
+import { initOfflineUi } from "@/lib/offline-ui";
+import { initPhotoZoom } from "@/lib/photo-zoom";
 
 // Starts the service worker, which keeps the offline page ready and receives phone alerts
 export default function PwaRegister() {
   useEffect(() => {
+    initOfflineUi();
+    initPhotoZoom();
     if (!("serviceWorker" in navigator)) return;
 
     const start = async () => {

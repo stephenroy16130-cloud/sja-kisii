@@ -205,3 +205,22 @@ export async function notifyLeaders(payload: PushPayload, exceptUserId?: string)
     console.error("push failed", e);
   }
 }
+
+// One person, for example the owner of a birthday wish
+export async function notifyOne(userId: string, payload: PushPayload) {
+  try {
+    await notifyUsers([userId], payload);
+  } catch (e) {
+    console.error("push failed", e);
+  }
+}
+
+// A list of people, for example every member except the ones celebrating
+export async function notifyMany(userIds: string[], payload: PushPayload) {
+  if (userIds.length === 0) return;
+  try {
+    await notifyUsers(userIds, payload);
+  } catch (e) {
+    console.error("push failed", e);
+  }
+}
