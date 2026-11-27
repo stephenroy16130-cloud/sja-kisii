@@ -1,4 +1,4 @@
-// WhatsApp-style photo viewer for profile photos. Tap a photo to open it full screen.
+// WhatsApp-style photo viewer for profile and birthday photos.
 let started = false;
 let viewerOpen = false;
 
@@ -11,15 +11,12 @@ function el<K extends keyof HTMLElementTagNameMap>(tag: K, css: Partial<CSSStyle
   return n;
 }
 
-// The real address of the picture, even when the app shows it through the Next.js image helper
 function realSrc(img: HTMLImageElement): string {
   const s = img.currentSrc || img.src;
   try {
     const u = new URL(s, location.href);
     if (u.pathname === "/_next/image") return u.searchParams.get("url") || s;
-  } catch {
-    // use s as it is
-  }
+  } catch {}
   return s;
 }
 
@@ -43,7 +40,6 @@ function openViewer(from: HTMLImageElement) {
   const rect = from.getBoundingClientRect();
   const radius = getComputedStyle(from).borderRadius || "0px";
 
-  // The picture, sized to fit the screen
   const nw = from.naturalWidth || rect.width || 1;
   const nh = from.naturalHeight || rect.height || 1;
   const vw = window.innerWidth;
@@ -99,7 +95,6 @@ function openViewer(from: HTMLImageElement) {
   const place = (r: DOMRect) =>
     `translate(${r.left + r.width / 2 - vw / 2}px, ${r.top + r.height / 2 - vh / 2}px) scale(${Math.max(r.width / w, r.height / h)})`;
 
-  // Start from where the small photo is, then grow to full screen
   img.style.transform = place(rect);
   from.style.visibility = "hidden";
   const prevOverflow = document.body.style.overflow;
@@ -145,7 +140,6 @@ function openViewer(from: HTMLImageElement) {
   window.addEventListener("keydown", onKey);
   back.addEventListener("click", close);
 
-  // Moving and zooming
   const limit = () => ({ mx: Math.max(0, (w * state.k - vw) / 2), my: Math.max(0, (h * state.k - vh) / 2) });
   const clamp = (v: number, m: number) => Math.max(-m, Math.min(m, v));
   const settle = () => {
@@ -197,7 +191,6 @@ function openViewer(from: HTMLImageElement) {
       state.tx = clamp(pan0.tx + dx, mx);
       state.ty = clamp(pan0.ty + dy, my);
     } else {
-      // Not zoomed in: dragging up or down closes the viewer
       state.tx = 0;
       state.ty = dy;
       bg.style.opacity = String(0.96 * (1 - Math.min(Math.abs(dy) / 400, 0.8)));
@@ -255,7 +248,6 @@ function openViewer(from: HTMLImageElement) {
   stage.addEventListener("pointerup", end);
   stage.addEventListener("pointercancel", end);
 
-  // Mouse wheel zoom on a computer
   stage.addEventListener(
     "wheel",
     (e) => {
@@ -274,12 +266,12 @@ export function initPhotoZoom() {
   started = true;
 
   const target = (e: Event): HTMLImageElement | null => {
-    if (!location.pathname.startsWith("/dashboard/profile")) return null;
+    // Enable on profile page AND on the overview page (for the birthday card)
+    if (!location.pathname.startsWith("/dashboard/profile") && !location.pathname.startsWith("/dashboard")) return null;
     const img = e.target instanceof HTMLImageElement ? e.target : null;
     if (!img || !isPhoto(img)) return null;
     const main = document.querySelector("main");
     if (main && !main.contains(img)) return null;
-    // A photo that is itself a link, button or upload control keeps its own job
     if (img.closest("a,button,label,[data-no-zoom]")) return null;
     return img;
   };
