@@ -40,12 +40,26 @@ export const officialSchema = z
     }
   });
 
+// Counts what people see as one character, so an emoji counts as 1
+const seen = (s: string): number => {
+  try {
+    return [...new Intl.Segmenter(undefined, { granularity: "grapheme" }).segment(s)].length;
+  } catch {
+    return [...s].length;
+  }
+};
+
+// Letters, numbers, spaces, . ' - and emojis (with their joiners, skin tones, flags and keycaps)
+const NAME_OK = /^[\p{L}\p{N}\p{Extended_Pictographic}\p{Emoji_Modifier}\p{Regional_Indicator} .'\-\u200D\uFE0F\u20E3]*$/u;
+const HAS_CONTENT = /[\p{L}\p{N}\p{Extended_Pictographic}\p{Regional_Indicator}]/u;
+
 export const socialSchema = z.object({
   preferredName: z
     .string()
     .trim()
-    .max(30, "Keep it under 30 characters")
-    .regex(/^[\p{L}\p{N} .'-]*$/u, "Use letters, numbers, spaces, . ' or - only")
+    .refine((s) => seen(s) <= 30, "Keep it under 30 characters")
+    .refine((s) => NAME_OK.test(s), "Use letters, numbers, spaces, emojis, . ' or - only")
+    .refine((s) => s === "" || HAS_CONTENT.test(s), "Use at least one letter, number or emoji")
     .transform((s) => (s.length ? s : null))
-    .refine((v) => v === null || v.length >= 2, "Use at least 2 characters"),
+    .refine((v) => v === null || seen(v) >= 2, "Use at least 2 characters"),
 });

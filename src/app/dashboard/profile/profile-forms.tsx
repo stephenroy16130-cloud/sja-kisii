@@ -176,7 +176,7 @@ function SocialForm({ data }: { data: Social }) {
           <input
             value={nick}
             onChange={(e) => setNick(e.target.value)}
-            maxLength={30}
+            maxLength={80}
             placeholder="A nickname others will see"
             className={inputCls}
           />

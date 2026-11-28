@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import ContextualTooltip from "@/components/contextual-tooltip";
 import PayButton from "@/components/pay-button";
-import PhotoGallery from "@/components/photo-gallery";
+import ProductGallery from "@/components/product-gallery";
 import { getCurrentUser } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { fmt } from "@/lib/meetings";
@@ -77,7 +77,7 @@ export default async function StorePage() {
                   : `${item.quantity} in stock`;
               return (
                 <div key={item.id} className="rounded-3xl border border-white/10 bg-card p-6">
-                  <PhotoGallery images={itemImages(item)} />
+                  <ProductGallery images={itemImages(item)} alt={item.name} className="max-w-xs" />
                   <div className="flex items-start justify-between gap-3">
                     <p className="text-lg font-light">{item.name}</p>
                     <p className="whitespace-nowrap text-gold">{kes(item.price)}</p>

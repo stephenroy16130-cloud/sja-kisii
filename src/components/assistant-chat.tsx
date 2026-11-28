@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { EMERGENCY } from "@/lib/contact";
+import { HELPLINES } from "@/lib/helplines";
 
 type Msg = { id?: string; role: "user" | "assistant"; content: string };
 type Chat = { id: string; title: string; updatedAt: string };
@@ -13,7 +14,10 @@ const SUGGESTIONS = [
   "What is coming up for me?",
   "How do I pay for something in the shop?",
   "Someone is choking. What do I do?",
+  "I am feeling stressed. Can we talk?",
 ];
+
+const CRISIS = /(suicid|kill myself|end my life|want to die|wanna die|don'?t want to (live|be here)|self[- ]?harm|hurt myself|cut myself|kujiua|kujiumiza|sitaki kuishi)/i;
 
 async function call(url: string, method: string, body?: unknown): Promise<Record<string, unknown>> {
   const res = await fetch(url, {
@@ -88,6 +92,7 @@ export default function AssistantChat({
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
   const [paused, setPaused] = useState(false);
+  const [support, setSupport] = useState(false);
   const [error, setError] = useState("");
   const [left, setLeft] = useState(initialLeft);
   const [open, setOpen] = useState(false);
@@ -214,6 +219,7 @@ export default function AssistantChat({
     if (!q || busy || left <= 0) return;
     setError("");
     setEditingMsg(null);
+    if (CRISIS.test(q)) setSupport(true);
     const base: Msg[] = [...(edit ? messages.slice(0, edit.index) : messages), { role: "user", content: q }];
     live.current = { base, acc: "" };
     pausedRef.current = false;
@@ -485,6 +491,25 @@ export default function AssistantChat({
           )}
         </div>
 
+        {support && (
+          <div className="mt-4 rounded-2xl border border-gold/40 bg-black p-4 text-sm">
+            <div className="flex items-start justify-between gap-3">
+              <p className="text-white/90">You matter, and you do not have to carry this alone. Please reach out to someone now:</p>
+              <button onClick={() => setSupport(false)} aria-label="Close" className="text-lg leading-none text-white/40 hover:text-white">×</button>
+            </div>
+            <ul className="mt-3 space-y-2">
+              {HELPLINES.map((h) => (
+                <li key={h.tel} className="flex items-center justify-between gap-3">
+                  <span className="text-white/70">{h.name}</span>
+                  <a href={`tel:${h.tel}`} className="shrink-0 rounded-full border border-gold/50 px-3 py-1 text-xs text-gold">{h.number}</a>
+                </li>
+              ))}
+            </ul>
+            <p className="mt-3 text-xs text-white/50">
+              In immediate danger, call <a href={`tel:${EMERGENCY.tel}`} className="text-bad underline">{EMERGENCY.display}</a> or 999.
+            </p>
+          </div>
+        )}
         {error && <p className="mt-4 text-sm text-bad">{error}</p>}
         {paused && <p className="mt-3 text-center text-[11px] text-gold">Paused. The answer is still arriving. Tap play to show it.</p>}
         {left <= 0 && <p className="mt-4 text-sm text-warn">You have used today&apos;s questions. Come back tomorrow.</p>}
@@ -557,7 +582,11 @@ export default function AssistantChat({
           </div>
           <p className="mt-2 text-center text-[11px] text-white/40">
             AI can make mistakes. Chats are saved to your account and only you can see them. Please do not type private
-            details. In an emergency, call{" "}
+            details. If you are struggling, you can talk to the Kenya Red Cross free on{" "}
+            <a href={`tel:${HELPLINES[0].tel}`} className="text-gold underline">
+              {HELPLINES[0].number}
+            </a>
+            . In an emergency, call{" "}
             <a href={`tel:${EMERGENCY.tel}`} className="text-bad underline">
               {EMERGENCY.display}
             </a>
