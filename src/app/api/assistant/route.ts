@@ -2,6 +2,7 @@ import { z } from "zod";
 import { aiDailyLimit, aiEnabled, nairobiDayStart } from "@/lib/ai-config";
 import { buildUserContext } from "@/lib/ai-context";
 import { SJA_KNOWLEDGE, SYSTEM_PROMPT } from "@/lib/ai-knowledge";
+import { firstAidNotes } from "@/lib/first-aid-notes";
 import { audit, requireUser } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { HttpError, route } from "@/lib/http";
@@ -69,7 +70,9 @@ export const POST = route(async (req: Request) => {
     ];
 
     // The fixed text comes first, so the provider can reuse it from its cache and charge less
-    const instructions = [SYSTEM_PROMPT, SJA_KNOWLEDGE, await buildUserContext(actor)].join("\n\n");
+    const recent = [...past.filter((m) => m.role === "user").map((m) => m.content), message].slice(-3);
+    const notes = firstAidNotes(recent);
+    const instructions = [SYSTEM_PROMPT, SJA_KNOWLEDGE, await buildUserContext(actor), notes].filter(Boolean).join("\n\n");
 
     await audit(actor.id, "AI_ASK", "Ai");
     const stream = await askStream(instructions, turns, (u) => {
