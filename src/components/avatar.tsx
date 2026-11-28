@@ -1,3 +1,4 @@
+import { firstChar } from "@/lib/initial";
 export default function Avatar({
   name,
   src,
@@ -13,7 +14,7 @@ export default function Avatar({
     .trim()
     .split(/\s+/)
     .slice(0, 2)
-    .map((p) => p[0]?.toUpperCase() ?? "")
+    .map((p) => firstChar(p).toUpperCase())
     .join("");
 
   if (src) {
